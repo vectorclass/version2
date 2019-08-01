@@ -1,7 +1,7 @@
 /****************************  vectori512s.h   ********************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2019-07-01
+* Last modified: 2019-08-01
 * Version:       2.00.00
 * Project:       vector classes
 * Description:
