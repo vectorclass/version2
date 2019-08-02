@@ -1,7 +1,7 @@
 /**************************  vector_convert.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-08-01
+* Last modified: 2019-08-02
 * Version:       2.00.00
 * Project:       vector class library
 * Description:
@@ -68,7 +68,7 @@ static inline Vec4uq extend (Vec4ui const a) {
 }
 
 
-#else  // no AVX2. 256 bit vectors are emulated
+#else  // no AVX2. 256 bit integer vectors are emulated
 
 // sign extend and zero extend functions:
 static inline Vec16s extend (Vec16c const a) {
@@ -97,6 +97,40 @@ static inline Vec4uq extend (Vec4ui const a) {
 
 #endif  // AVX2
 
+/*****************************************************************************
+*
+*          Conversions between float and double
+*
+*****************************************************************************/
+#if INSTRSET >= 7  // AVX. 256 bit float vectors
+
+// float to double
+static inline Vec4d to_double (Vec4f const a) {
+    return _mm256_cvtps_pd(a);
+}
+
+// double to float
+static inline Vec4f to_float (Vec4d const a) {
+    return _mm256_cvtpd_ps(a);
+}
+
+#else  // no AVX2. 256 bit float vectors are emulated
+
+// float to double
+static inline Vec4d to_double (Vec4f const a) {
+    Vec2d lo = _mm_cvtps_pd(a);
+    Vec2d hi = _mm_cvtps_pd(_mm_movehl_ps(a, a));
+    return Vec4d(lo,hi);
+}
+
+// double to float
+static inline Vec4f to_float (Vec4d const a) {
+    Vec4f lo = _mm_cvtpd_ps(a.get_low());
+    Vec4f hi = _mm_cvtpd_ps(a.get_high());
+    return _mm_movelh_ps(lo, hi);
+}
+
+#endif
 
 /*****************************************************************************
 *
@@ -312,8 +346,48 @@ static inline Vec8ui compress (Vec8uq const a) {
 
 #endif  // AVX512
 
+/*****************************************************************************
+*
+*          Conversions between float and double
+*
+*****************************************************************************/
+
+#if INSTRSET >= 9  // AVX512. 512 bit float vectors
+
+// float to double
+static inline Vec8d to_double (Vec8f const a) {
+    return _mm512_cvtps_pd(a);
+}
+
+// double to float
+static inline Vec8f to_float (Vec8d const a) {
+    return _mm512_cvtpd_ps(a);
+}
+
+#else  // no AVX512. 512 bit float vectors are emulated
+
+// float to double
+static inline Vec8d to_double (Vec8f const a) {
+    Vec4d lo = to_double(a.get_low());
+    Vec4d hi = to_double(a.get_high());
+    return Vec8d(lo,hi);
+}
+
+// double to float
+static inline Vec8f to_float (Vec8d const a) {
+    Vec4f lo = to_float(a.get_low());
+    Vec4f hi = to_float(a.get_high());
+    return Vec8f(lo, hi);
+}
+
+#endif
+
 #endif // MAX_VECTOR_SIZE >= 512
 
+// double to float
+static inline Vec4f to_float (Vec2d const a) {
+    return _mm_cvtpd_ps(a);
+}
 
 
 /*****************************************************************************
