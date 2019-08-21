@@ -6640,7 +6640,7 @@ static inline Vec4i divide_by_i(Vec4i const x) {
         // d1 is a power of 2. use shift
         constexpr int k = bit_scan_reverse_const(d1);
         __m128i sign;
-        if (k > 1) sign = _mm_srai_epi32(x, abs(k-1)); else sign = x;// k copies of sign bit
+        if (k > 1) sign = _mm_srai_epi32(x, k-1); else sign = x;// k copies of sign bit
         __m128i bias = _mm_srli_epi32(sign, 32 - k);       // bias = x >= 0 ? 0 : k-1
         __m128i xpbias = _mm_add_epi32(x, bias);           // x + bias
         __m128i q = _mm_srai_epi32(xpbias, k);             // (x + bias) >> k
@@ -6766,7 +6766,7 @@ static inline Vec8s divide_by_i(Vec8s const x) {
         // d is a power of 2. use shift
         const int k = bit_scan_reverse_const(uint32_t(d1));
         __m128i sign;
-        if (k > 1) sign = _mm_srai_epi16(x, abs(k-1)); else sign = x;// k copies of sign bit
+        if (k > 1) sign = _mm_srai_epi16(x, k-1); else sign = x;// k copies of sign bit
         __m128i bias = _mm_srli_epi16(sign, 16 - k);       // bias = x >= 0 ? 0 : k-1
         __m128i xpbias = _mm_add_epi16(x, bias);           // x + bias
         __m128i q = _mm_srai_epi16(xpbias, k);             // (x + bias) >> k
