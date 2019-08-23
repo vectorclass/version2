@@ -5408,7 +5408,7 @@ static inline Vec8i divide_by_i(Vec8i const x) {
         // d1 is a power of 2. use shift
         constexpr int k = bit_scan_reverse_const(d1);
         __m256i sign;
-        if (k > 1) sign = _mm256_srai_epi32(x, k-1); else sign = x;  // k copies of sign bit
+        if constexpr (k > 1) sign = _mm256_srai_epi32(x, k-1); else sign = x;  // k copies of sign bit
         __m256i bias    = _mm256_srli_epi32(sign, 32-k);   // bias = x >= 0 ? 0 : k-1
         __m256i xpbias  = _mm256_add_epi32 (x, bias);      // x + bias
         __m256i q       = _mm256_srai_epi32(xpbias, k);    // (x + bias) >> k
