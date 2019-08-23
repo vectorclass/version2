@@ -1,8 +1,8 @@
 /****************************  vectori512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-08-23
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 32 and 64 bit integers.
