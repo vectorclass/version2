@@ -1042,7 +1042,6 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     int ix = 0;                                            // index number i
     const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
     const uint32_t lanesize = N / nlanes;                  // elements per lane
-    const uint32_t elementsize = sizeof(V) / N;            // size of each vector element
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int lanepattern[lanesize] = {0};                       // pattern in each lane
@@ -1150,6 +1149,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             else {
                 r |= blend_rotateab;
             }
+            const uint32_t elementsize = sizeof(V) / N;
             r |= uint64_t((rot & lanesize - 1) * elementsize) << blend_rotpattern;
         }
 #endif

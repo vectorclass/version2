@@ -1511,7 +1511,6 @@ static inline VTYPE pow_template_d(VTYPE const x0, VTYPE const y) {
     const double ln2d_hi = 0.693145751953125;           // log(2) in extra precision, high bits
     const double ln2d_lo = 1.42860682030941723212E-6;   // low bits of log(2)
     const double log2e   = VM_LOG2E;                    // 1/log(2)
-    const double pow2_52 = 4503599627370496.0;          // 2^52
 
     // coefficients for Pade polynomials
     const double P0logl =  2.0039553499201281259648E1;
@@ -2214,7 +2213,6 @@ static inline Vec16ui nan_code(Vec16f const x) {
 // This function returns the code hidden in a NAN. The sign bit is ignored
 static inline Vec8uq nan_code(Vec8d const x) {
     Vec8uq a = Vec8uq(reinterpret_i(x));
-    Vec8q const n = 0x000FFFFFFFFFFFFF;
     return select(Vec8qb(is_nan(x)), a << 12 >> (12+29), 0);
 }
 
