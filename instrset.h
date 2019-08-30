@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-08-30
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -21,7 +21,7 @@
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20000
+#define INSTRSET_H 20001
 
 // Macro to indicate 64 bit mode
 #if (defined(_M_AMD64) || defined(_M_X64) || defined(__amd64) ) && ! defined(__x86_64__)
