@@ -1,8 +1,8 @@
 /****************************  vectormath_exp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-08-30
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of logarithms, exponential 
