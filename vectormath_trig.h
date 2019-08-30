@@ -1,8 +1,8 @@
 /****************************  vectormath_trig.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-08-30
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file containing inline version of trigonometric functions 
@@ -47,8 +47,6 @@ template<typename VTYPE, int SC>
 static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
 
     // define constants
-    const double ONEOPIO4 = 4. / VM_PI;
-
     const double P0sin = -1.66666666666666307295E-1;
     const double P1sin = 8.33333333332211858878E-3;
     const double P2sin = -1.98412698295895385996E-4;
@@ -319,8 +317,6 @@ template<typename VTYPE>
 static inline VTYPE tan_d(VTYPE const x) {
 
     // define constants
-    const double ONEOPIO4 = 4. / VM_PI;
-
     const double DP1 = 7.853981554508209228515625E-1 * 2.;;
     const double DP2 = 7.94662735614792836714E-9 * 2.;;
     const double DP3 = 3.06161699786838294307E-17 * 2.;;

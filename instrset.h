@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-08-30
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -21,7 +21,7 @@
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20000
+#define INSTRSET_H 20001
 
 // Macro to indicate 64 bit mode
 #if (defined(_M_AMD64) || defined(_M_X64) || defined(__amd64) ) && ! defined(__x86_64__)
@@ -1042,7 +1042,6 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     int ix = 0;                                            // index number i
     const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
     const uint32_t lanesize = N / nlanes;                  // elements per lane
-    const uint32_t elementsize = sizeof(V) / N;            // size of each vector element
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int lanepattern[lanesize] = {0};                       // pattern in each lane
@@ -1150,6 +1149,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             else {
                 r |= blend_rotateab;
             }
+            const uint32_t elementsize = sizeof(V) / N;
             r |= uint64_t((rot & lanesize - 1) * elementsize) << blend_rotpattern;
         }
 #endif
