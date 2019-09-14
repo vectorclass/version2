@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-09-14
+* Version:       2.00.01
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -2644,6 +2644,14 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
     else if constexpr ((flags & blend_shufba) != 0 && !blendonly) { // use floating point instruction shufps
         y = _mm_shuffle_ps(b, a, flags >> blend_shufpattern);
     }
+#if INSTRSET >= 4 // SSSE3
+    else if constexpr ((flags & blend_rotateab) != 0) { 
+        y = _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(a), _mm_castps_si128(b), flags >> blend_rotpattern));
+    }
+    else if constexpr ((flags & blend_rotateba) != 0) { 
+        y = _mm_castsi128_ps(_mm_alignr_epi8(_mm_castps_si128(b), _mm_castps_si128(a), flags >> blend_rotpattern));
+    }
+#endif
     else { // No special cases. permute a and b separately, then blend.
 #if INSTRSET >= 5  // SSE4.1
         constexpr bool dozero = false;
@@ -2662,8 +2670,8 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
         y = _mm_mask_mov_ps (ya, (uint8_t)make_bit_mask<4, 0x302>(indexs), yb);
 #elif INSTRSET >= 5  // SSE4.1
         constexpr uint8_t mm = ((i0 & 4) ? 0x01 : 0) | ((i1 & 4) ? 0x02 : 0) | ((i2 & 4) ? 0x04 : 0) | ((i3 & 4) ? 0x08 : 0);
-        if constexpr (mm == 0x01) y = _mm_move_ss(a, b);
-        else if constexpr (mm == 0x0E) y = _mm_move_ss(b, a);
+        if constexpr (mm == 0x01) y = _mm_move_ss(ya, yb);
+        else if constexpr (mm == 0x0E) y = _mm_move_ss(yb, ya);
         else {
             y = _mm_blend_ps (ya, yb, mm);
         }
