@@ -79,7 +79,7 @@
 
 #else   // VECTORCLASS_H
 
-#if VECTORCLASS_H != 20000
+#if VECTORCLASS_H < 20000
 #error Mixed versions of vector class library
 #endif
 
