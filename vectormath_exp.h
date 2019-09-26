@@ -196,7 +196,7 @@ static inline VTYPE exp_d(VTYPE const initial_x) {
 
     z = polynomial_13m(x, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13);
 
-    if (BA == 1) r--;  // 0.5 * exp(x)
+    if constexpr (BA == 1) r--;  // 0.5 * exp(x)
 
     // multiply by power of 2 
     n2 = vm_pow2n(r);
