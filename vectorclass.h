@@ -1,8 +1,8 @@
 /****************************  vectorclass.h   ********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-09-14
-* Version:       2.00.01
+* Last modified: 2019-10-27
+* Version:       2.00.02
 * Project:       vector class library
 * Home:          https://github.com/vectorclass
 * Description:

@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-10-27
+* Version:       2.00.02
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -68,16 +68,16 @@ inline Vec8b::Vec8b(Vec4db const x0, Vec4db const x1) {
     mm = to_bits(x0) | (to_bits(x1) << 4);
 }
 
-Vec8ib Vec16b::get_low() const {
+inline Vec8ib Vec16b::get_low() const {
     return Vec8ib().load_bits(uint8_t(mm));
 }
-Vec8ib Vec16b::get_high() const {
+inline Vec8ib Vec16b::get_high() const {
     return Vec8ib().load_bits(uint8_t((uint16_t)mm >> 8u));
 }
-Vec4qb Vec8b::get_low() const {
+inline Vec4qb Vec8b::get_low() const {
     return Vec4qb().load_bits(mm & 0xF);
 }
-Vec4qb Vec8b::get_high() const {
+inline Vec4qb Vec8b::get_high() const {
     return Vec4qb().load_bits(mm >> 4u);
 }
 
@@ -466,18 +466,36 @@ static inline Vec16fb is_inf(Vec16f const a) {
     Vec16i t2 = t1 << 1;                // shift out sign bit
     return Vec16fb(t2 == 0xFF000000);   // exponent is all 1s, fraction is 0
 #endif
-}
+} 
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
+#if INSTRSET >= 10
 static inline Vec16fb is_nan(Vec16f const a) {
-#if INSTRSET >= 10  // __AVX512DQ__
+    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm512_fpclass_ps_mask(a, 0x81);
-#else
-    return a != a;  // not safe with -ffinite-math-only compiler option
-#endif
 }
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//__attribute__((optimize("-fno-unsafe-math-optimizations")))
+//static inline Vec16fb is_nan(Vec16f const a) {
+//    return a != a; // not safe with -ffinite-math-only compiler option
+//}
+#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+static inline Vec16fb is_nan(Vec16f const a) {
+    __m512 aa = a;
+    __mmask16 unordered;
+    __asm volatile("vcmpps $3, %1, %1, %0" : "=Yk" (unordered) :  "v" (aa) );
+    return Vec16fb(unordered);
+}
+#else
+static inline Vec16fb is_nan(Vec16f const a) {
+    // assume that compiler does not optimize this away with -ffinite-math-only:
+    return Vec16fb().load_bits(_mm512_cmp_ps_mask(a, a, 3)); // compare unordered
+    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+}
+#endif
+
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF
@@ -1088,13 +1106,32 @@ static inline Vec8db is_inf(Vec8d const a) {
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
+// (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
+#if INSTRSET >= 10
 static inline Vec8db is_nan(Vec8d const a) {
-#if INSTRSET >= 10  // __AVX512DQ__
+    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm512_fpclass_pd_mask(a, 0x81);
-#else
-    return a != a;  // not safe with -ffinite-math-only compiler option
-#endif
 }
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//__attribute__((optimize("-fno-unsafe-math-optimizations")))
+//static inline Vec8db is_nan(Vec8d const a) {
+//    return a != a; // not safe with -ffinite-math-only compiler option
+//}
+#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+static inline Vec8db is_nan(Vec8d const a) {
+    __m512d aa = a;
+    __mmask16 unordered;
+    __asm volatile("vcmppd $3, %1, %1, %0" : "=Yk" (unordered) :  "v" (aa) );
+    return Vec8db(unordered);
+}
+#else
+static inline Vec8db is_nan(Vec8d const a) {
+    // assume that compiler does not optimize this away with -ffinite-math-only:
+    return Vec8db().load_bits(_mm512_cmp_pd_mask(a, a, 3)); // compare unordered
+    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+}
+#endif
+
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF

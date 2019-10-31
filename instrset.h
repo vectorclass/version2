@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-30
-* Version:       2.00.01
+* Last modified: 2019-10-31
+* Version:       2.00.02
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -153,6 +153,10 @@ namespace VCL_NAMESPACE {
 }
 #endif
 
+// functions in physical_processors.cpp:
+int physicalProcessors(int * logical_processors = 0);
+
+
 // GCC version
 #if defined(__GNUC__) && !defined (GCC_VERSION) && !defined (__clang__)
 #define GCC_VERSION  ((__GNUC__) * 10000 + (__GNUC_MINOR__) * 100 + (__GNUC_PATCHLEVEL__))
@@ -220,30 +224,30 @@ constexpr int V_DC = -256;
 *****************************************************************************/
 
 // Define interface to cpuid instruction.
-// input:  eax = functionnumber, ecx = 0
+// input:  functionnumber = leaf (eax), ecxleaf = subleaf(ecx)
 // output: output[0] = eax, output[1] = ebx, output[2] = ecx, output[3] = edx
-static inline void cpuid(int output[4], int functionnumber) {
+static inline void cpuid(int output[4], int functionnumber, int ecxleaf = 0) {
 #if defined(__GNUC__) || defined(__clang__)           // use inline assembly, Gnu/AT&T syntax
     int a, b, c, d;
-    __asm("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(0) : );
+    __asm("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(ecxleaf) : );
     output[0] = a;
     output[1] = b;
     output[2] = c;
     output[3] = d;
 
 #elif defined (_MSC_VER)                              // Microsoft compiler, intrin.h included
-    __cpuidex(output, functionnumber, 0);             // intrinsic function for CPUID
+    __cpuidex(output, functionnumber, ecxleaf);       // intrinsic function for CPUID
 
 #else                                                 // unknown platform. try inline assembly with masm/intel syntax
     __asm {
         mov eax, functionnumber
-        xor ecx, ecx
+        mov ecx, ecxleaf
         cpuid;
         mov esi, output
-            mov[esi], eax
-            mov[esi + 4], ebx
-            mov[esi + 8], ecx
-            mov[esi + 12], edx
+        mov[esi], eax
+        mov[esi + 4], ebx
+        mov[esi + 8], ecx
+        mov[esi + 12], edx
     }
 #endif
 }

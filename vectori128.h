@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-23
-* Version:       2.00.01
+* Last modified: 2019-10-27
+* Version:       2.00.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -50,11 +50,14 @@ namespace VCL_NAMESPACE {
 // Generate a constant vector of 4 integers stored in memory.
 template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3>
 static inline constexpr __m128i constant4ui() {
+    /*
     const union {
         uint32_t i[4];
         __m128i  xmm;
     } u = { {i0,i1,i2,i3} };
     return u.xmm;
+    */
+    return _mm_setr_epi32(i0, i1, i2, i3);
 }
 
 
@@ -4834,8 +4837,6 @@ static inline Vec8s permute8(Vec8s const a) {
     constexpr bool L2H = (flags16 & 8) != 0;               // from low  to high 64-bit part
     constexpr uint8_t pL2L = uint8_t(flags16 >> 32);       // low  to low  permute pattern
     constexpr uint8_t pH2H = uint8_t(flags16 >> 40);       // high to high permute pattern
-    constexpr uint8_t pH2L = uint8_t(flags16 >> 48);       // high to low  permute pattern
-    constexpr uint8_t pL2H = uint8_t(flags16 >> 56);       // low  to high permute pattern
     constexpr uint8_t noperm = 0xE4;                       // pattern for no permute
 
     __m128i y = a;                                         // result
@@ -4920,6 +4921,8 @@ static inline Vec8s permute8(Vec8s const a) {
 #else // INSTRSET < 4
         else {
         // Difficult case. Use permutations of low and high half separately
+            constexpr uint8_t pH2L = uint8_t(flags16 >> 48);       // high to low  permute pattern
+            constexpr uint8_t pL2H = uint8_t(flags16 >> 56);       // low  to high permute pattern
             __m128i yswap = _mm_shuffle_epi32(y, 0x4E);    // swap low and high 64-bits
             if constexpr (H2L && pH2L != noperm) {
                 yswap = _mm_shufflelo_epi16(yswap, pH2L);  // permute low 64-bits

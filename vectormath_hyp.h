@@ -79,6 +79,8 @@ static inline VTYPE sinh_d(VTYPE const x0) {
     }
     y1 = select(x_small, y1, y2);                // choose method
     y1 = sign_combine(y1, x0);                   // get original sign
+    // you can avoid the sign_combine by replacing x by x0 above, but at a loss of precision
+
     return y1;
 }
 
@@ -132,6 +134,7 @@ static inline VTYPE sinh_f(VTYPE const x0) {
     }
     y1 = select(x_small, y1, y2);                // choose method
     y1 = sign_combine(y1, x0);                   // get original sign
+    // you can avoid the sign_combine by replacing x by x0 above, but at a loss of precision
 
     return y1;
 }

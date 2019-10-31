@@ -25,7 +25,7 @@ static inline uint64_t xgetbv (int ctr) {
 
     return uint64_t(_xgetbv(ctr));                    // intrinsic function for XGETBV
 
-#elif defined(__GNUC__)                               // use inline assembly, Gnu/AT&T syntax
+#elif defined(__GNUC__) ||  defined (__clang__)       // use inline assembly, Gnu/AT&T syntax
 
    uint32_t a, d;
    __asm("xgetbv" : "=a"(a),"=d"(d) : "c"(ctr) : );

@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-10-27
+* Version:       2.00.02
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -52,11 +52,14 @@ namespace VCL_NAMESPACE {
 // Generate a constant vector of 8 integers stored in memory
 template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7>
 inline __m256 constant8f() {
+    /*
     const union {
         uint32_t i[8];
         __m256   ymm;
     } u = {{i0,i1,i2,i3,i4,i5,i6,i7}};
     return u.ymm;
+    */
+    return _mm256_castsi256_ps(_mm256_setr_epi32(i0,i1,i2,i3,i4,i5,i6,i7));
 }
 
 
@@ -1067,13 +1070,31 @@ static inline Vec8fb is_inf(Vec8f const a) {
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
+#if INSTRSET >= 10
 static inline Vec8fb is_nan(Vec8f const a) {
-#if INSTRSET >= 10  // compact boolean vectors
+    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_fpclass_ps_mask (a, 0x81);
-#else
-    return a != a;  // not safe with -ffinite-math-only compiler option
-#endif
 }
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//__attribute__((optimize("-fno-unsafe-math-optimizations")))
+//static inline Vec8fb is_nan(Vec8f const a) {
+//    return a != a; // not safe with -ffinite-math-only compiler option
+//}
+#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+static inline Vec8fb is_nan(Vec8f const a) {
+    __m256 aa = a;
+    __m256 unordered;
+    __asm volatile("vcmpps $3, %1, %1, %0" : "=v" (unordered) :  "v" (aa) );
+    return Vec8fb(unordered);
+}
+#else
+static inline Vec8fb is_nan(Vec8f const a) {
+    // assume that compiler does not optimize this away with -ffinite-math-only:
+    return _mm256_cmp_ps(a, a, 3); // compare unordered
+    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+}
+#endif
+
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF
@@ -1873,13 +1894,32 @@ static inline Vec4db is_inf(Vec4d const a) {
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
+// (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
+#if INSTRSET >= 10
 static inline Vec4db is_nan(Vec4d const a) {
-#if INSTRSET >= 10  // compact boolean vectors
+    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_fpclass_pd_mask (a, 0x81);
-#else
-    return a != a;  // not safe with -ffinite-math-only compiler option
-#endif
 }
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//__attribute__((optimize("-fno-unsafe-math-optimizations")))
+//static inline Vec4db is_nan(Vec4d const a) {
+//    return a != a; // not safe with -ffinite-math-only compiler option
+//}
+#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+static inline Vec4db is_nan(Vec4d const a) {
+    __m256d aa = a;
+    __m256d unordered;
+    __asm volatile("vcmppd $3, %1, %1, %0" : "=v" (unordered) :  "v" (aa) );
+    return Vec4db(unordered);
+}
+#else
+static inline Vec4db is_nan(Vec4d const a) {
+    // assume that compiler does not optimize this away with -ffinite-math-only:
+    return _mm256_cmp_pd(a, a, 3); // compare unordered
+    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+}
+#endif
+
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF

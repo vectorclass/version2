@@ -1,8 +1,8 @@
 /****************************  vectori256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-23
-* Version:       2.00.01
+* Last modified: 2019-10-27
+* Version:       2.00.02
 * Project:       vector class library
 * Description:
 * Header file defining integer vector classes as interface to intrinsic 
@@ -54,14 +54,16 @@ namespace VCL_NAMESPACE {
 #endif
 
 // Generate a constant vector of 8 integers stored in memory.
-template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, 
-    uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7 >
+template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7 >
     static inline constexpr __m256i constant8ui() {
+    /*
     const union {
         uint32_t i[8];
         __m256i ymm;
     } u = { {i0,i1,i2,i3,i4,i5,i6,i7} };
     return u.ymm;
+    */
+    return _mm256_setr_epi32(i0,i1,i2,i3,i4,i5,i6,i7);
 }
 
 
