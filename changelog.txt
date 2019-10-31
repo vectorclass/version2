@@ -1,6 +1,11 @@
 Change log for Vector class library
 -----------------------------------
 
+2019-10-31 version 2.00.02
+  * bug fix in permute function
+  * is_nan function improved
+  * templates constant4ui etc. improved  
+
 2019-08-02 version 2.00
   Derived from version 1.40
   * use C++17
