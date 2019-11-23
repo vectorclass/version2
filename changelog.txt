@@ -1,6 +1,10 @@
 Change log for Vector class library
 -----------------------------------
 
+2019-11-23 version 2.01.00
+  * problem with performance of permute and blend functions fixed by avoiding 
+    unions in constexpr functions
+
 2019-10-31 version 2.00.02
   * bug fix in permute function
   * is_nan function improved
