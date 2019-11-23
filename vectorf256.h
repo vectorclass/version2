@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-10-27
-* Version:       2.00.02
+* Last modified: 2019-11-17
+* Version:       2.01.00
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -29,7 +29,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20100
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -2411,9 +2411,9 @@ static inline Vec4d permute4(Vec4d const a) {
     if constexpr ((flags & perm_allzero) != 0) return _mm256_setzero_pd(); // just return zero
 
     if constexpr ((flags & perm_largeblock) != 0) {        // permute 128-bit blocks
-        constexpr Indexlist<2> L = largeblock_perm<4>(indexs); // permutation pattern
-        constexpr int j0 = L.i[0];
-        constexpr int j1 = L.i[1];
+        constexpr EList<int, 2> L = largeblock_perm<4>(indexs); // permutation pattern
+        constexpr int j0 = L.a[0];
+        constexpr int j1 = L.a[1];
 #ifndef ZEXT_MISSING
         if constexpr (j0 == 0 && j1 == -1 && !(flags & perm_addz)) { // zero extend
             return _mm256_zextpd128_pd256(_mm256_castpd256_pd128(y)); 
@@ -2477,7 +2477,11 @@ static inline Vec4d permute4(Vec4d const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_pd(zero_mask<4>(indexs), y);
 #else               // use broad mask
-        y = _mm256_and_pd(zero_mask_broad<Vec4d>(indexs), y);
+        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        //y = _mm256_and_pd(_mm256_castsi256_pd( Vec4q().load(bm.a) ), y);  // does not work with INSTRSET = 7
+        __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
+        y = _mm256_and_pd(_mm256_castsi256_pd(bm1), y);
+
 #endif
     }
     return y;
@@ -2499,8 +2503,8 @@ static inline Vec8f permute8(Vec8f const a) {
     if constexpr ((flags & perm_perm) != 0) {              // permutation needed
 
         if constexpr ((flags & perm_largeblock) != 0) {    // use larger permutation
-            constexpr Indexlist<4> L = largeblock_perm<8>(indexs); // permutation pattern
-            y = _mm256_castpd_ps(permute4 <L.i[0], L.i[1], L.i[2], L.i[3]> 
+            constexpr EList<int, 4> L = largeblock_perm<8>(indexs); // permutation pattern
+            y = _mm256_castpd_ps(permute4 <L.a[0], L.a[1], L.a[2], L.a[3]> 
                 (Vec4d(_mm256_castps_pd(a))));
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
@@ -2578,7 +2582,9 @@ static inline Vec8f permute8(Vec8f const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_ps(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        y = _mm256_and_ps(zero_mask_broad<Vec8f>(indexs), y);
+        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
+        y = _mm256_and_ps(_mm256_castsi256_ps(bm1), y);
 #endif
     }
     return y;
@@ -2611,8 +2617,8 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
 #endif        
     }
     else if constexpr ((flags & blend_largeblock) != 0) {  // blend and permute 128-bit blocks
-        constexpr Indexlist<2> L = largeblock_perm<4>(indexs); // get 128-bit blend pattern
-        constexpr uint8_t pp = (L.i[0] & 0xF) | uint8_t(L.i[1] & 0xF) << 4;
+        constexpr EList<int, 2> L = largeblock_perm<4>(indexs); // get 128-bit blend pattern
+        constexpr uint8_t pp = (L.a[0] & 0xF) | uint8_t(L.a[1] & 0xF) << 4;
         y = _mm256_permute2f128_pd(a, b, pp);
     }
     // check if pattern fits special cases
@@ -2629,19 +2635,19 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
         y = _mm256_unpackhi_pd(b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0) { 
-        y = _mm256_shuffle_pd(a, b, flags >> blend_shufpattern);
+        y = _mm256_shuffle_pd(a, b, (flags >> blend_shufpattern) & 0xF);
     }
     else if constexpr ((flags & blend_shufba) != 0) { 
-        y = _mm256_shuffle_pd(b, a, flags >> blend_shufpattern);
+        y = _mm256_shuffle_pd(b, a, (flags >> blend_shufpattern) & 0xF);
     }
     else { // No special cases
 #if INSTRSET >= 10  // AVX512VL. use vpermi2pd
         __m256i const maskp = constant8ui<i0 & 7, 0, i1 & 7, 0, i2 & 7, 0, i3 & 7, 0>();
         return _mm256_maskz_permutex2var_pd (zero_mask<4>(indexs), a, maskp, b);
 #else   // permute a and b separately, then blend.
-        constexpr Indexlist<8> L = blend_perm_indexes<4, 0>(indexs); // get permutation indexes
-        __m256d ya = permute4<L.i[0], L.i[1], L.i[2], L.i[3]>(a);
-        __m256d yb = permute4<L.i[4], L.i[5], L.i[6], L.i[7]>(b);
+        constexpr EList<int, 8> L = blend_perm_indexes<4, 0>(indexs); // get permutation indexes
+        __m256d ya = permute4<L.a[0], L.a[1], L.a[2], L.a[3]>(a);
+        __m256d yb = permute4<L.a[4], L.a[5], L.a[6], L.a[7]>(b);
         constexpr uint8_t mb = (uint8_t)make_bit_mask<4, 0x302>(indexs);  // blend mask
         y = _mm256_blend_pd(ya, yb, mb); 
 #endif
@@ -2650,7 +2656,9 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_pd(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        y = _mm256_and_pd(zero_mask_broad<Vec4d>(indexs), y);
+        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
+        y = _mm256_and_pd(_mm256_castsi256_pd(bm1), y);
 #endif
     }
     return y;
@@ -2669,8 +2677,8 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
     if constexpr ((flags & blend_allzero) != 0) return _mm256_setzero_ps();  // just return zero
 
     if constexpr ((flags & blend_largeblock) != 0) {       // blend and permute 32-bit blocks
-        constexpr Indexlist<4> L = largeblock_perm<8>(indexs); // get 32-bit blend pattern
-        y = _mm256_castpd_ps(blend4 <L.i[0], L.i[1], L.i[2], L.i[3]> 
+        constexpr EList<int, 4> L = largeblock_perm<8>(indexs); // get 32-bit blend pattern
+        y = _mm256_castpd_ps(blend4 <L.a[0], L.a[1], L.a[2], L.a[3]> 
             (Vec4d(_mm256_castps_pd(a)), Vec4d(_mm256_castps_pd(b))));
         if (!(flags & blend_addz)) return y;               // no remaining zeroing        
     } 
@@ -2678,8 +2686,8 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
         return permute8 <i0, i1, i2, i3, i4, i5, i6, i7> (a);
     }
     else if constexpr ((flags & blend_a) == 0) {           // nothing from a. just permute b
-        constexpr Indexlist<16> L = blend_perm_indexes<8, 2>(indexs); // get permutation indexes
-        return permute8 < L.i[8], L.i[9], L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15] > (b);
+        constexpr EList<int, 16> L = blend_perm_indexes<8, 2>(indexs); // get permutation indexes
+        return permute8 < L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] > (b);
     } 
     else if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
@@ -2703,19 +2711,19 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
         y = _mm256_unpackhi_ps(b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0) {      // use floating point instruction shufpd
-        y = _mm256_shuffle_ps(a, b, flags >> blend_shufpattern);
+        y = _mm256_shuffle_ps(a, b, uint8_t(flags >> blend_shufpattern));
     }
     else if constexpr ((flags & blend_shufba) != 0) {      // use floating point instruction shufpd
-        y = _mm256_shuffle_ps(b, a, flags >> blend_shufpattern);
+        y = _mm256_shuffle_ps(b, a, uint8_t(flags >> blend_shufpattern));
     }
     else { // No special cases
 #if INSTRSET >= 10  // AVX512VL. use vpermi2d
         __m256i const maskp = constant8ui<i0 & 15, i1 & 15, i2 & 15, i3 & 15, i4 & 15, i5 & 15, i6 & 15, i7 & 15> ();
         return _mm256_maskz_permutex2var_ps(zero_mask<8>(indexs), a, maskp, b);
 #else   // permute a and b separately, then blend.
-        constexpr Indexlist<16> L = blend_perm_indexes<8, 0>(indexs); // get permutation indexes
-        __m256 ya = permute8<L.i[0], L.i[1], L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7] >(a);
-        __m256 yb = permute8<L.i[8], L.i[9], L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15]>(b);
+        constexpr EList<int, 16> L = blend_perm_indexes<8, 0>(indexs); // get permutation indexes
+        __m256 ya = permute8<L.a[0], L.a[1], L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7] >(a);
+        __m256 yb = permute8<L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15]>(b);
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
         y = _mm256_blend_ps(ya, yb, mb); 
 #endif
@@ -2724,7 +2732,9 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_ps(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        y = _mm256_and_ps(zero_mask_broad<Vec8f>(indexs), y);
+        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
+        y = _mm256_and_ps(_mm256_castsi256_ps(bm1), y);
 #endif
     }
     return y;

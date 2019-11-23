@@ -1,8 +1,8 @@
 /****************************  vectorf256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-11-17
+* Version:       2.01.00
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -30,7 +30,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20100
 #error Incompatible versions of vector class library mixed
 #endif
 

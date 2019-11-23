@@ -1,8 +1,8 @@
 /****************************  vectori512e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-11-17
+* Version:       2.01.00
 * Project:       vector classes
 * Description:
 * Header file defining 512-bit integer vector classes for 32 and 64 bit integers.
@@ -32,7 +32,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20100
 #error Incompatible versions of vector class library mixed
 #endif
 

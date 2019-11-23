@@ -1,8 +1,8 @@
 /****************************  vectori512s.h   ********************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2019-11-17
+* Version:       2.01.00
 * Project:       vector classes
 * Description:
 * Header file defining 512-bit integer vector classes for 8 and 16 bit integers.
@@ -33,7 +33,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20100
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -1415,9 +1415,9 @@ template <int... i0 >
     if constexpr ((flags & perm_perm) != 0) {                   // permutation needed
 
         if constexpr ((flags & perm_largeblock) != 0) {         // use larger permutation
-            constexpr Indexlist<16> L = largeblock_perm<32>(indexs); // permutation pattern
-            y = permute16 <L.i[0], L.i[1], L.i[2], L.i[3], L.i[4], L.i[5], L.i[6], L.i[7],
-                L.i[8], L.i[9], L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15]> (Vec16i(a));
+            constexpr EList<int, 16> L = largeblock_perm<32>(indexs); // permutation pattern
+            y = permute16 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7],
+                L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15]> (Vec16i(a));
             if (!(flags & perm_addz)) return y;                 // no remaining zeroing
         }
         else if constexpr ((flags & perm_same_pattern) != 0) {  // same pattern in all lanes
@@ -1425,14 +1425,14 @@ template <int... i0 >
                 y = _mm512_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF);
             }
             else { // use pshufb
-                __m512i m8 = pshufb_mask<Vec32s>(indexs);
-                return _mm512_shuffle_epi8(a, m8);
+                const EList <int8_t, 64> bm = pshufb_mask<Vec32s>(indexs);
+                return _mm512_shuffle_epi8(a, Vec32s().load(bm.a));
             }
         } 
         else {  // different patterns in all lanes
             if constexpr ((flags & perm_cross_lane) == 0) {     // no lane crossing. Use pshufb
-                __m512i m8 = pshufb_mask<Vec32s>(indexs);
-                return _mm512_shuffle_epi8(a, m8);
+                const EList <int8_t, 64> bm = pshufb_mask<Vec32s>(indexs);
+                return _mm512_shuffle_epi8(a, Vec32s().load(bm.a));
             }
             else if constexpr ((flags & perm_rotate_big) != 0) {// fits full rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count) * 2; // rotate count
@@ -1461,18 +1461,8 @@ template <int... i0 >
             }
 #endif  // AVX512VBMI2
             else {  // full permute needed
-                auto getpmask = [](int const (&indexs)[32]) constexpr {
-                    union U {
-                        uint16_t ix[32];
-                        __m512i m;
-                    } u = {{0}};
-                    for (int i = 0; i < 32; i++) {
-                        u.ix[i] = indexs[i] & 31;
-                    }
-                    return u.m;
-                };
-                const __m512i pmask = getpmask(indexs);
-                y = _mm512_permutexvar_epi16 (pmask, y);
+                const EList <int16_t, 32> bm = perm_mask_broad<Vec32s>(indexs);
+                y = _mm512_permutexvar_epi16 (Vec32s().load(bm.a), y);
             }
         }
     }
@@ -1506,19 +1496,19 @@ static inline Vec64c permute64(Vec64c const a) {
     if constexpr ((flags & perm_perm) != 0) {                             // permutation needed
 
         if constexpr ((flags & perm_largeblock) != 0) {                   // use larger permutation
-            constexpr Indexlist<32> L = largeblock_perm<64>(indexs);      // permutation pattern
+            constexpr EList<int, 32> L = largeblock_perm<64>(indexs);      // permutation pattern
             y = permute32 <
-                L.i[0],  L.i[1],  L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7],
-                L.i[8],  L.i[9],  L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15], 
-                L.i[16], L.i[17], L.i[18], L.i[19], L.i[20], L.i[21], L.i[22], L.i[23], 
-                L.i[24], L.i[25], L.i[26], L.i[27], L.i[28], L.i[29], L.i[30], L.i[31]> 
+                L.a[0],  L.a[1],  L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
+                L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15], 
+                L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23], 
+                L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31]> 
                 (Vec32s(a));
             if (!(flags & perm_addz)) return y;                           // no remaining zeroing
         }
         else {
             if constexpr ((flags & perm_cross_lane) == 0) {               // no lane crossing. Use pshufb
-                __m512i m8 = pshufb_mask<Vec64c>(indexs);
-                return _mm512_shuffle_epi8(a, m8);
+                const EList <int8_t, 64> bm = pshufb_mask<Vec64c>(indexs);
+                return _mm512_shuffle_epi8(a, Vec64c().load(bm.a));
             }
             else if constexpr ((flags & perm_rotate_big) != 0) {          // fits full rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count); // rotate count
@@ -1548,54 +1538,37 @@ static inline Vec64c permute64(Vec64c const a) {
 #endif  // AVX512VBMI2
             else {      // full permute needed
 #ifdef __AVX512VBMI__   // full permute instruction available
-                // lambda getpmask: get permutation mask
-                auto getpmask = [](int const (&indexs)[64]) constexpr {
-                    union U {
-                        uint8_t ix[64];
-                        __m512i m;
-                    } u = {{0}};
-                    for (int i = 0; i < 64; i++) {
-                        u.ix[i] = indexs[i] & 63;
-                    }
-                    return u.m;
-                };
-                const __m512i pmask = getpmask(indexs);
-                y = _mm512_permutexvar_epi8(pmask, y);
+                const EList <int8_t, 64> bm = perm_mask_broad<Vec64c>(indexs);
+                y = _mm512_permutexvar_epi8(Vec64c().load(bm.a), y);
 #else
                 // There is no 8-bit full permute. Use 16-bit permute
                 // getevenmask: get permutation mask for destination bytes with even position
                 auto getevenmask = [](int const (&indexs)[64]) constexpr {
-                    union U {
-                        uint16_t ie[32];
-                        __m512i m;
-                    } u = {{0}};
-                    for (int i = 0; i < 64; i += 2) {  // loop through even indexes
+                    EList<uint16_t, 32> u = {{0}};       // list to return
+                    for (int i = 0; i < 64; i += 2) {    // loop through even indexes
                         uint16_t ix = indexs[i] & 63;
                         // source bytes with odd position are in opposite 16-bit word becase of 32-bit rotation
-                        u.ie[i>>1] = ((ix >> 1) ^ (ix & 1)) | (((ix & 1) ^ 1) << 5); 
+                        u.a[i>>1] = ((ix >> 1) ^ (ix & 1)) | (((ix & 1) ^ 1) << 5); 
                     }
-                    return u.m;
+                    return u;
                 };
                 // getoddmask: get permutation mask for destination bytes with odd position
                 auto getoddmask = [](int const (&indexs)[64]) constexpr {
-                    union U {
-                        uint16_t ie[32];
-                        __m512i m;
-                    } u = {{0}};
+                    EList<uint16_t, 32> u = {{0}};       // list to return
                     for (int i = 1; i < 64; i += 2) {  // loop through odd indexes
                         uint16_t ix = indexs[i] & 63;
-                        u.ie[i>>1] = (ix >> 1) | ((ix & 1) << 5);
+                        u.a[i>>1] = (ix >> 1) | ((ix & 1) << 5);
                     }
-                    return u.m;
+                    return u;
                 };
-                const __m512i evenmask = getevenmask(indexs);
-                const __m512i oddmask  = getoddmask (indexs);
+                EList<uint16_t, 32> evenmask = getevenmask(indexs);
+                EList<uint16_t, 32> oddmask  = getoddmask (indexs);
                 // Rotate to get odd bytes into even position, and vice versa.
                 // There is no 16-bit rotate, use 32-bit rotate.
                 // The wrong position of the odd bytes is compensated for in getevenmask
                 __m512i ro    = _mm512_rol_epi32 (a, 8);                     // rotate
-                __m512i yeven = _mm512_permutex2var_epi16(ro, evenmask, a);  // destination bytes with even position
-                __m512i yodd  = _mm512_permutex2var_epi16(ro, oddmask,  a);  // destination bytes with odd  position
+                __m512i yeven = _mm512_permutex2var_epi16(ro, Vec32s().load(evenmask.a), a);  // destination bytes with even position
+                __m512i yodd  = _mm512_permutex2var_epi16(ro, Vec32s().load(oddmask.a),  a);  // destination bytes with odd  position
                 __mmask64 maske = 0x5555555555555555;                        // mask for even position
                 y = _mm512_mask_mov_epi8(yodd, maske, yeven);                // interleave even and odd position bytes
 #endif         
@@ -1636,27 +1609,27 @@ static inline Vec32s blend32(Vec32s const a, Vec32s const b) {
         return permute32 <i0 ... >(a);
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
-        constexpr Indexlist<64> L = blend_perm_indexes<32, 2>(indexs); // get permutation indexes
+        constexpr EList<int, 64> L = blend_perm_indexes<32, 2>(indexs); // get permutation indexes
         return permute32 <
-            L.i[32], L.i[33], L.i[34], L.i[35], L.i[36], L.i[37], L.i[38], L.i[39],
-            L.i[40], L.i[41], L.i[42], L.i[43], L.i[44], L.i[45], L.i[46], L.i[47],
-            L.i[48], L.i[49], L.i[50], L.i[51], L.i[52], L.i[53], L.i[54], L.i[55],
-            L.i[56], L.i[57], L.i[58], L.i[59], L.i[60], L.i[61], L.i[62], L.i[63] > (b);
+            L.a[32], L.a[33], L.a[34], L.a[35], L.a[36], L.a[37], L.a[38], L.a[39],
+            L.a[40], L.a[41], L.a[42], L.a[43], L.a[44], L.a[45], L.a[46], L.a[47],
+            L.a[48], L.a[49], L.a[50], L.a[51], L.a[52], L.a[53], L.a[54], L.a[55],
+            L.a[56], L.a[57], L.a[58], L.a[59], L.a[60], L.a[61], L.a[62], L.a[63] > (b);
     }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint32_t mb = (uint32_t)make_bit_mask<32, 0x305>(indexs);  // blend mask
         y = _mm512_mask_mov_epi16(a, mb, b);
     }
     else if constexpr ((flags & blend_largeblock) != 0) {  // blend and permute 32-bit blocks
-        constexpr Indexlist<16> L = largeblock_perm<32>(indexs); // get 32-bit blend pattern
-        y = blend16 <L.i[0], L.i[1], L.i[2], L.i[3], L.i[4], L.i[5], L.i[6], L.i[7],
-            L.i[8], L.i[9], L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15] >
+        constexpr EList<int, 16> L = largeblock_perm<32>(indexs); // get 32-bit blend pattern
+        y = blend16 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7],
+            L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] >
             (Vec16i(a), Vec16i(b));
         if (!(flags & blend_addz)) return y;               // no remaining zeroing
     }
     else { // No special cases
-        __m512i pm = perm_mask_broad<Vec32s>(indexs);      // full permute
-        y = _mm512_permutex2var_epi16(a, pm, b);
+        const EList <int16_t, 32> bm = perm_mask_broad<Vec32s>(indexs);      // full permute
+        y = _mm512_permutex2var_epi16(a, Vec32s().load(bm.a), b);
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
         y = _mm512_maskz_mov_epi16(zero_mask<32>(indexs), y);
@@ -1685,16 +1658,16 @@ static inline Vec64c blend64(Vec64c const a, Vec64c const b) {
         return permute64 <i0 ... >(a);
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
-        constexpr Indexlist<128> L = blend_perm_indexes<64, 2>(indexs); // get permutation indexes
+        constexpr EList<int, 128> L = blend_perm_indexes<64, 2>(indexs); // get permutation indexes
         return permute64 <
-            L.i[64],  L.i[65],  L.i[66],  L.i[67],  L.i[68],  L.i[69],  L.i[70],  L.i[71],
-            L.i[72],  L.i[73],  L.i[74],  L.i[75],  L.i[76],  L.i[77],  L.i[78],  L.i[79],
-            L.i[80],  L.i[81],  L.i[82],  L.i[83],  L.i[84],  L.i[85],  L.i[86],  L.i[87],
-            L.i[88],  L.i[89],  L.i[90],  L.i[91],  L.i[92],  L.i[93],  L.i[94],  L.i[95],
-            L.i[96],  L.i[97],  L.i[98],  L.i[99],  L.i[100], L.i[101], L.i[102], L.i[103],
-            L.i[104], L.i[105], L.i[106], L.i[107], L.i[108], L.i[109], L.i[110], L.i[111],
-            L.i[112], L.i[113], L.i[114], L.i[115], L.i[116], L.i[117], L.i[118], L.i[119],
-            L.i[120], L.i[121], L.i[122], L.i[123], L.i[124], L.i[125], L.i[126], L.i[127]
+            L.a[64],  L.a[65],  L.a[66],  L.a[67],  L.a[68],  L.a[69],  L.a[70],  L.a[71],
+            L.a[72],  L.a[73],  L.a[74],  L.a[75],  L.a[76],  L.a[77],  L.a[78],  L.a[79],
+            L.a[80],  L.a[81],  L.a[82],  L.a[83],  L.a[84],  L.a[85],  L.a[86],  L.a[87],
+            L.a[88],  L.a[89],  L.a[90],  L.a[91],  L.a[92],  L.a[93],  L.a[94],  L.a[95],
+            L.a[96],  L.a[97],  L.a[98],  L.a[99],  L.a[100], L.a[101], L.a[102], L.a[103],
+            L.a[104], L.a[105], L.a[106], L.a[107], L.a[108], L.a[109], L.a[110], L.a[111],
+            L.a[112], L.a[113], L.a[114], L.a[115], L.a[116], L.a[117], L.a[118], L.a[119],
+            L.a[120], L.a[121], L.a[122], L.a[123], L.a[124], L.a[125], L.a[126], L.a[127]
         > (b);
     }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
@@ -1702,40 +1675,40 @@ static inline Vec64c blend64(Vec64c const a, Vec64c const b) {
         y = _mm512_mask_mov_epi8(a, mb, b);
     }
     else if constexpr ((flags & blend_largeblock) != 0) {  // blend and permute 16-bit blocks
-        constexpr Indexlist<32> L = largeblock_perm<64>(indexs); // get 16-bit blend pattern
+        constexpr EList<int, 32> L = largeblock_perm<64>(indexs); // get 16-bit blend pattern
         y = blend32 <
-            L.i[0],  L.i[1],  L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7],
-            L.i[8],  L.i[9],  L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15],
-            L.i[16], L.i[17], L.i[18], L.i[19], L.i[20], L.i[21], L.i[22], L.i[23],
-            L.i[24], L.i[25], L.i[26], L.i[27], L.i[28], L.i[29], L.i[30], L.i[31]
+            L.a[0],  L.a[1],  L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
+            L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15],
+            L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
+            L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31]
         > (Vec32s(a), Vec32s(b));
         if (!(flags & blend_addz)) return y;               // no remaining zeroing
     }
     else { // No special cases
-#ifdef  __AVX512VBMI__   // AVX512VBMI 
-        __m512i pm = perm_mask_broad<Vec64c>(indexs);      // full permute
-        y = _mm512_permutex2var_epi8(a, pm, b);
+#ifdef  __AVX512VBMI__   // AVX512VBMI
+        const EList <int8_t, 64> bm = perm_mask_broad<Vec64c>(indexs);      // full permute
+        y = _mm512_permutex2var_epi8(a, Vec64c().load(bm.a), b);
 #else   // split into two permutes
-        constexpr Indexlist<128> L = blend_perm_indexes<64, 0> (indexs);
+        constexpr EList<int, 128> L = blend_perm_indexes<64, 0> (indexs);
         __m512i ya = permute64 <
-            L.i[0],  L.i[1],  L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7],
-            L.i[8],  L.i[9],  L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15],
-            L.i[16], L.i[17], L.i[18], L.i[19], L.i[20], L.i[21], L.i[22], L.i[23],
-            L.i[24], L.i[25], L.i[26], L.i[27], L.i[28], L.i[29], L.i[30], L.i[31],
-            L.i[32], L.i[33], L.i[34], L.i[35], L.i[36], L.i[37], L.i[38], L.i[39],
-            L.i[40], L.i[41], L.i[42], L.i[43], L.i[44], L.i[45], L.i[46], L.i[47],
-            L.i[48], L.i[49], L.i[50], L.i[51], L.i[52], L.i[53], L.i[54], L.i[55],
-            L.i[56], L.i[57], L.i[58], L.i[59], L.i[60], L.i[61], L.i[62], L.i[63]
+            L.a[0],  L.a[1],  L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
+            L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15],
+            L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
+            L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31],
+            L.a[32], L.a[33], L.a[34], L.a[35], L.a[36], L.a[37], L.a[38], L.a[39],
+            L.a[40], L.a[41], L.a[42], L.a[43], L.a[44], L.a[45], L.a[46], L.a[47],
+            L.a[48], L.a[49], L.a[50], L.a[51], L.a[52], L.a[53], L.a[54], L.a[55],
+            L.a[56], L.a[57], L.a[58], L.a[59], L.a[60], L.a[61], L.a[62], L.a[63]
         > (a);
         __m512i yb = permute64 <
-            L.i[64],  L.i[65],  L.i[66],  L.i[67],  L.i[68],  L.i[69],  L.i[70],  L.i[71],
-            L.i[72],  L.i[73],  L.i[74],  L.i[75],  L.i[76],  L.i[77],  L.i[78],  L.i[79],
-            L.i[80],  L.i[81],  L.i[82],  L.i[83],  L.i[84],  L.i[85],  L.i[86],  L.i[87],
-            L.i[88],  L.i[89],  L.i[90],  L.i[91],  L.i[92],  L.i[93],  L.i[94],  L.i[95],
-            L.i[96],  L.i[97],  L.i[98],  L.i[99],  L.i[100], L.i[101], L.i[102], L.i[103],
-            L.i[104], L.i[105], L.i[106], L.i[107], L.i[108], L.i[109], L.i[110], L.i[111],
-            L.i[112], L.i[113], L.i[114], L.i[115], L.i[116], L.i[117], L.i[118], L.i[119],
-            L.i[120], L.i[121], L.i[122], L.i[123], L.i[124], L.i[125], L.i[126], L.i[127]
+            L.a[64],  L.a[65],  L.a[66],  L.a[67],  L.a[68],  L.a[69],  L.a[70],  L.a[71],
+            L.a[72],  L.a[73],  L.a[74],  L.a[75],  L.a[76],  L.a[77],  L.a[78],  L.a[79],
+            L.a[80],  L.a[81],  L.a[82],  L.a[83],  L.a[84],  L.a[85],  L.a[86],  L.a[87],
+            L.a[88],  L.a[89],  L.a[90],  L.a[91],  L.a[92],  L.a[93],  L.a[94],  L.a[95],
+            L.a[96],  L.a[97],  L.a[98],  L.a[99],  L.a[100], L.a[101], L.a[102], L.a[103],
+            L.a[104], L.a[105], L.a[106], L.a[107], L.a[108], L.a[109], L.a[110], L.a[111],
+            L.a[112], L.a[113], L.a[114], L.a[115], L.a[116], L.a[117], L.a[118], L.a[119],
+            L.a[120], L.a[121], L.a[122], L.a[123], L.a[124], L.a[125], L.a[126], L.a[127]
         > (b);
         uint64_t bm = make_bit_mask<64, 0x306> (indexs);
         y = _mm512_mask_mov_epi8(ya, bm, yb);

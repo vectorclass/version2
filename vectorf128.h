@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-10-27
-* Version:       2.00.02
+* Last modified: 2019-11-23
+* Version:       2.01.00
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -29,7 +29,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20100
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -2004,14 +2004,26 @@ static inline Vec2db is_zero_or_subnormal(Vec2d const a) {
 
 // Horizontal add: Calculates the sum of all vector elements.
 static inline double horizontal_add(Vec2d const a) {
-#if  INSTRSET >= 3  // SSE3
+
+#if false &&  INSTRSET >= 3  // SSE3     
+    // This version causes errors in Clang version 9.0 (https://bugs.llvm.org/show_bug.cgi?id=44111)
+    // It is also inefficient on most processors, so we drop it
     __m128d t1 = _mm_hadd_pd(a, a);
     return _mm_cvtsd_f64(t1);
+
+#elif true
+    // This version is OK
+    __m128d t1 = _mm_unpackhi_pd(a, a);
+    __m128d t2 = _mm_add_pd(a, t1);
+    return _mm_cvtsd_f64(t2);
+
 #else
+    // This version is also OK
     __m128  t0 = _mm_castpd_ps(a);
     __m128d t1 = _mm_castps_pd(_mm_movehl_ps(t0, t0));
     __m128d t2 = _mm_add_sd(a, t1);
     return _mm_cvtsd_f64(t2);
+
 #endif
 }
 
@@ -2487,14 +2499,15 @@ static inline Vec4f permute4(Vec4f const a) {
 
         if constexpr ((flags & perm_largeblock) != 0) {
             // use larger permutation
-            constexpr Indexlist<2> L = largeblock_perm<4>(indexs); // permutation pattern
-            y = reinterpret_f(permute2 <L.i[0], L.i[1]> (Vec2d(reinterpret_d(a))));
+            constexpr EList<int, 2> L = largeblock_perm<4>(indexs); // permutation pattern
+            y = reinterpret_f(permute2 <L.a[0], L.a[1]> (Vec2d(reinterpret_d(a))));
             if (!(flags & perm_addz)) return y;                 // no remaining zeroing
         }
 #if  INSTRSET >= 4 && INSTRSET < 10 // SSSE3, but no compact mask
         else if constexpr ((flags & perm_zeroing) != 0) {  
             // Do both permutation and zeroing with PSHUFB instruction
-            return _mm_castsi128_ps(_mm_shuffle_epi8(_mm_castps_si128(a), pshufb_mask<Vec4i>(indexs)));
+            const EList <int8_t, 16> bm = pshufb_mask<Vec4i>(indexs);
+            return _mm_castsi128_ps(_mm_shuffle_epi8(_mm_castps_si128(a), Vec4i().load(bm.a)));
         }
 #endif 
         else if constexpr ((flags & perm_punpckh) != 0) {  // fits punpckhi
@@ -2531,7 +2544,8 @@ static inline Vec4f permute4(Vec4f const a) {
         // I don't want to clutter all the branches above with this
         y = _mm_maskz_mov_ps (zero_mask<4>(indexs), y);
 #else  // use broad mask
-        y = _mm_and_ps(zero_mask_broad<Vec4f>(indexs), y);
+        const EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
+        y = _mm_and_ps(_mm_castsi128_ps(Vec4i().load(bm.a)), y);
 #endif
     }  
     return y;
@@ -2567,8 +2581,8 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
 #elif INSTRSET >= 5  // SSE4.1
         y = _mm_blend_pd (a, b, ((i0 & 2) ? 0x01 : 0) | ((i1 & 2) ? 0x02 : 0));
 #else  // SSE2
-        __m128d sel = make_broad_mask<Vec2d>(make_bit_mask<2, 0x301>(indexs));
-        y = selectd(sel, b, a);
+        const EList <int64_t, 2> bm = make_broad_mask<Vec2d>(make_bit_mask<2, 0x301>(indexs));
+        y = selectd(_mm_castsi128_pd(Vec2q().load(bm.a)), b, a);
 #endif        
     }
     // check if pattern fits special cases
@@ -2585,10 +2599,10 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
         y = _mm_unpackhi_pd (b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0) {      // use floating point instruction shufpd
-        y = _mm_shuffle_pd(a, b, flags >> blend_shufpattern);
+        y = _mm_shuffle_pd(a, b, (flags >> blend_shufpattern) & 3);
     }
     else if constexpr ((flags & blend_shufba) != 0) {      // use floating point instruction shufpd
-        y = _mm_shuffle_pd(b, a, flags >> blend_shufpattern);
+        y = _mm_shuffle_pd(b, a, (flags >> blend_shufpattern) & 3);
     }
     else { // No special cases. permute a and b separately, then blend.
            // This will not occur if ALLOW_FP_PERMUTE is true
@@ -2597,9 +2611,9 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
 #else  // SSE2
         constexpr bool dozero = true;
 #endif
-        constexpr Indexlist<4> L = blend_perm_indexes<2, (int)dozero>(indexs); // get permutation indexes
-        __m128d ya = permute2<L.i[0], L.i[1]>(a);
-        __m128d yb = permute2<L.i[2], L.i[3]>(b);
+        constexpr EList<int, 4> L = blend_perm_indexes<2, (int)dozero>(indexs); // get permutation indexes
+        __m128d ya = permute2<L.a[0], L.a[1]>(a);
+        __m128d yb = permute2<L.a[2], L.a[3]>(b);
 #if INSTRSET >= 10 // AVX512VL
         y = _mm_mask_mov_pd (ya, (uint8_t)make_bit_mask<2, 0x301>(indexs), yb);
 #elif INSTRSET >= 5  // SSE4.1
@@ -2612,7 +2626,8 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm_maskz_mov_pd(zero_mask<2>(indexs), y);
 #else  // use broad mask
-        y = _mm_and_pd(zero_mask_broad<Vec2d>(indexs), y);
+        const EList <int64_t, 2> bm = zero_mask_broad<Vec2q>(indexs);
+        y = _mm_and_pd(_mm_castsi128_pd(Vec2q().load(bm.a)), y);
 #endif
     }
     return y;
@@ -2639,8 +2654,8 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
         return permute4 < i0<0?i0:i0&3, i1<0?i1:i1&3, i2<0?i2:i2&3, i3<0?i3:i3&3> (b);
     }
     if constexpr ((flags & blend_largeblock) != 0) {       // fits blending with larger block size
-        constexpr Indexlist<2> L = largeblock_indexes<4>(indexs);
-        y = _mm_castpd_ps(blend2 <L.i[0], L.i[1]> (Vec2d(_mm_castps_pd(a)), Vec2d(_mm_castps_pd(b))));
+        constexpr EList<int, 2> L = largeblock_indexes<4>(indexs);
+        y = _mm_castpd_ps(blend2 <L.a[0], L.a[1]> (Vec2d(_mm_castps_pd(a)), Vec2d(_mm_castps_pd(b))));
         if constexpr ((flags & blend_addz) == 0) {
             return y;                                      // any zeroing has been done by larger blend
         }
@@ -2659,10 +2674,10 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
         y = _mm_unpackhi_ps (b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0 && !blendonly) { // use floating point instruction shufps
-        y = _mm_shuffle_ps(a, b, flags >> blend_shufpattern);
+        y = _mm_shuffle_ps(a, b, uint8_t(flags >> blend_shufpattern));
     }
     else if constexpr ((flags & blend_shufba) != 0 && !blendonly) { // use floating point instruction shufps
-        y = _mm_shuffle_ps(b, a, flags >> blend_shufpattern);
+        y = _mm_shuffle_ps(b, a, uint8_t(flags >> blend_shufpattern));
     }
 #if INSTRSET >= 4 // SSSE3
     else if constexpr ((flags & blend_rotateab) != 0) { 
@@ -2679,12 +2694,12 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
         constexpr bool dozero = true;
 #endif
         Vec4f ya = a, yb = b;   // a and b permuted
-        constexpr Indexlist<8> L = blend_perm_indexes<4, (int)dozero>(indexs); // get permutation indexes
+        constexpr EList<int, 8> L = blend_perm_indexes<4, (int)dozero>(indexs); // get permutation indexes
         if constexpr ((flags & blend_perma) != 0 || dozero) {
-            ya = permute4 <L.i[0], L.i[1], L.i[2], L.i[3]>(a);
+            ya = permute4 <L.a[0], L.a[1], L.a[2], L.a[3]>(a);
         }
         if constexpr ((flags & blend_permb) != 0 || dozero) {
-            yb = permute4 <L.i[4], L.i[5], L.i[6], L.i[7]>(b);
+            yb = permute4 <L.a[4], L.a[5], L.a[6], L.a[7]>(b);
         }
 #if INSTRSET >= 10 // AVX512VL
         y = _mm_mask_mov_ps (ya, (uint8_t)make_bit_mask<4, 0x302>(indexs), yb);
@@ -2703,7 +2718,8 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm_maskz_mov_ps(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        y = _mm_and_ps(zero_mask_broad<Vec4f>(indexs), y);
+        const EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
+        y = _mm_and_ps(_mm_castsi128_ps(Vec4i().load(bm.a)), y);
 #endif
     }
     return y;
