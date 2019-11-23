@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-10-31
-* Version:       2.00.02
+* Last modified: 2019-11-18
+* Version:       2.01.00
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -21,7 +21,14 @@
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20001
+#define INSTRSET_H 20100
+
+
+// Allow the use of floating point permute instructions on integer vectors.
+// Some CPU's have an extra latency of 1 or 2 clock cycles for this, but
+// it may still be faster than alternative implementations:
+#define ALLOW_FP_PERMUTE  true
+
 
 // Macro to indicate 64 bit mode
 #if (defined(_M_AMD64) || defined(_M_X64) || defined(__amd64) ) && ! defined(__x86_64__)
@@ -437,12 +444,26 @@ static inline VTYPE nan_vec(uint32_t payload = 0x100) {
 *
 *    Helper functions for permute and blend functions
 *
+******************************************************************************
+Rules for constexpr functions:
+
+> All variable declarations must include initialization
+
+> Do not put variable declarations inside a for-clause, e.g. avoid: for (int i=0; ..
+  Instead, you have to declare the loop counter before the for-loop.
+  
+> Do not make constexpr functions that return vector types. This requires type
+  punning with a union, which is not allowed in constexpr functions under C++17.
+  It may be possible under C++20
+
 *****************************************************************************/
 
-// Allow the use of floating point permute instructions on integer vectors.
-// Some CPU's have an extra latency of 1 or 2 clock cycles for this, but
-// it may still be faster than alternative implementations:
-#define ALLOW_FP_PERMUTE  true
+// Define type for Encapsulated array to use as return type:
+template <typename T, int N>
+struct EList {
+    T a[N];
+};
+
 
 // get_inttype: get an integer of a size that matches the element size 
 // of vector class V with the value -1
@@ -470,7 +491,9 @@ constexpr auto get_inttype() {
 template <int N>
 constexpr auto zero_mask(int const (&a)[N]) {
     uint64_t mask = 0;
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+
+    for (i = 0; i < N; i++) {
         if (a[i] >= 0) mask |= uint64_t(1) << i;
     }
     if constexpr      (N <= 8 ) return uint8_t(mask);
@@ -483,16 +506,15 @@ constexpr auto zero_mask(int const (&a)[N]) {
 // zero_mask_broad: return a broad byte mask for zeroing.
 // Parameter a is a reference to a constexpr int array of permutation indexes
 template <typename V>
-constexpr auto zero_mask_broad(int const (&a)[V::size()]) {
-    constexpr int N = V::size(); // number of vector elements
-    union U {
-        decltype(get_inttype<V>()) b[N];
-        typename V::registertype x;
-    } u = {{0}};
-    for (int i = 0; i < N; i++) {
-        u.b[i] = a[i] >= 0 ? get_inttype<V>() : 0;    
+constexpr auto zero_mask_broad(int const (&A)[V::size()]) {
+    constexpr int N = V::size();                 // number of vector elements
+    typedef decltype(get_inttype<V>()) Etype;    // element type
+    EList <Etype, N> u = {{0}};                  // list for return
+    int i = 0;
+    for (i = 0; i < N; i++) {
+        u.a[i] = A[i] >= 0 ? get_inttype<V>() : 0;    
     }
-    return u.x;  // return vector register
+    return u;                                    // return encapsulated array
 }
 
 
@@ -511,7 +533,8 @@ constexpr uint64_t make_bit_mask(int const (&a)[N]) {
     uint8_t  j = uint8_t(B);                     // index to selected bit
     uint64_t s = 0;                              // bit number i in r
     uint64_t f = 0;                              // 1 if bit not flipped
-    for (int i = 0; i < N; i++) {
+    int i = 0;
+    for (i = 0; i < N; i++) {
         int ix = a[i];
         if (ix < 0) {                            // -1 or V_DC
             s = (B >> 10) & 1;
@@ -536,32 +559,29 @@ constexpr uint64_t make_bit_mask(int const (&a)[N]) {
 // The return value will be a broad boolean mask with elementsize matching vector class V
 template <typename V>
 constexpr auto make_broad_mask(uint64_t const m) {
-    constexpr int N = V::size(); // number of vector elements
-    union U {
-        decltype(get_inttype<V>()) b[N];
-        typename V::registertype x;
-    } u = {{0}};
-    for (int i = 0; i < N; i++) {
-        u.b[i] = ((m >> i) & 1) != 0 ? get_inttype<V>() : 0;    
+    constexpr int N = V::size();                 // number of vector elements
+    typedef decltype(get_inttype<V>()) Etype;    // element type
+    EList <Etype, N> u = {{0}};                  // list for returning
+    int i = 0;
+    for (i = 0; i < N; i++) {
+        u.a[i] = ((m >> i) & 1) != 0 ? get_inttype<V>() : 0;    
     }
-    return u.x;  // return vector register
+    return u;                                    // return encapsulated array
 }
 
 
 // perm_mask_broad: return a mask for permutation by a vector register index.
-// Parameter a is a reference to a constexpr int array of permutation indexes
+// Parameter A is a reference to a constexpr int array of permutation indexes
 template <typename V>
-constexpr auto perm_mask_broad(int const (&a)[V::size()]) {
+constexpr auto perm_mask_broad(int const (&A)[V::size()]) {
     constexpr int N = V::size();                 // number of vector elements
-    typedef decltype(get_inttype<V>()) itype;    // vector element type
-    union U {
-        itype b[N];
-        typename V::registertype x;
-    } u = {{0}};
-    for (int i = 0; i < N; i++) {
-        u.b[i] = itype(a[i]);
+    typedef decltype(get_inttype<V>()) Etype;    // vector element type
+    EList <Etype, N> u = {{0}};                  // list for returning
+    int i = 0;
+    for (i = 0; i < N; i++) {
+        u.a[i] = Etype(A[i]);
     }
-    return u.x;  // return vector register
+    return u;                                    // return encapsulated array
 }
 
 
@@ -596,6 +616,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
     constexpr int N = V::size();                           // number of elements
     uint64_t r = perm_largeblock | perm_same_pattern | perm_allzero; // return value
     uint32_t i = 0;                                        // loop counter
+    int      j = 0;                                        // loop counter
     int ix = 0;                                            // index number i
     const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
     const uint32_t lanesize = N / nlanes;                  // elements per lane
@@ -695,7 +716,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
     else if ((patfail & 2) == 0) {
         r |= perm_compress;                                // fits compression
         if ((addz2 & 2) != 0) {                            // check if additional zeroing needed
-            for (int j = 0; j < compresslastp; j++) {
+            for (j = 0; j < compresslastp; j++) {
                 if (a[j] == -1) r |= perm_addz2;
             }            
         }
@@ -703,7 +724,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
     else if ((patfail & 4) == 0) {
         r |= perm_expand;                                  // fits expansion
         if ((addz2 & 4) != 0) {                            // check if additional zeroing needed
-            for (int j = 0; j < expandlastp; j++) {
+            for (j = 0; j < expandlastp; j++) {
                 if (a[j] == -1) r |= perm_addz2;
             }            
         }
@@ -818,11 +839,12 @@ constexpr uint64_t compress_mask(int const (&a)[N]) {
     // a is a reference to a constexpr array of permutation indexes
     int ix = 0, lasti = -1, lastp = -1;
     uint64_t m = 0;
-    for (int i = 0; i < N; i++) {
+    int i = 0; int j = 1;                                  // loop counters
+    for (i = 0; i < N; i++) {
         ix = a[i];                                         // permutation index
         if (ix >= 0) {
             m |= (uint64_t)1 << ix;                        // mask for compression source
-            for (int j = 1; j < i - lastp; j++) {
+            for (j = 1; j < i - lastp; j++) {
                 m |= (uint64_t)1 << (lasti + j);           // dummy filling source
             }
             lastp = i; lasti = ix;
@@ -839,11 +861,12 @@ constexpr uint64_t expand_mask(int const (&a)[N]) {
     // a is a reference to a constexpr array of permutation indexes
     int ix = 0, lasti = -1, lastp = -1;
     uint64_t m = 0;
-    for (int i = 0; i < N; i++) {
+    int i = 0; int j = 1;
+    for (i = 0; i < N; i++) {
         ix = a[i];                                         // permutation index
         if (ix >= 0) {
             m |= (uint64_t)1 << i;                         // mask for expansion destination
-            for (int j = 1; j < ix - lasti; j++) {
+            for (j = 1; j < ix - lasti; j++) {
                 m |= (uint64_t)1 << (lastp + j);           // dummy filling destination
             }
             lastp = i; lasti = ix;
@@ -925,7 +948,7 @@ constexpr uint64_t perm16_flags(int const (&a)[V::size()]) {
 // The pshufb instruction provides fast permutation and zeroing,
 // allowing different patterns in each lane but no crossing of lane boundaries
 template <typename V, int oppos = 0>
-constexpr auto pshufb_mask(int const (&a)[V::size()]) {
+constexpr auto pshufb_mask(int const (&A)[V::size()]) {
     // Parameter a is a reference to a constexpr array of permutation indexes
     // V is a vector class
     // oppos = 1 for data from the opposite 128-bit lane in 256-bit vectors
@@ -934,17 +957,19 @@ constexpr auto pshufb_mask(int const (&a)[V::size()]) {
     constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128 bit lanes in vector
     constexpr uint32_t elements_per_lane = N / nlanes;     // number of vector elements per lane
 
-    union U {                                              // get result in this union
-        int8_t b[sizeof(V)];                               // bytes
-        typename V::registertype x;                        // vector register
-    } u = {{0}};
+    EList <int8_t, sizeof(V)> u = {{0}};                   // list for returning
 
-    int m = 0, k = 0;                                      // loop counters
-    for (uint32_t lane = 0; lane < nlanes; lane++) {       // loop through lanes
-        for (uint32_t i = 0; i < elements_per_lane; i++) { // loop through elements in lane
+    uint32_t i = 0;                                        // loop counters
+    uint32_t j = 0;
+    int m = 0;
+    int k = 0;
+    uint32_t lane = 0;
+
+    for (lane = 0; lane < nlanes; lane++) {                // loop through lanes
+        for (i = 0; i < elements_per_lane; i++) {          // loop through elements in lane
             // permutation index for element within lane
             int8_t p = -1;
-            int ix = a[m];
+            int ix = A[m];
             if (ix >= 0) {
                 ix ^= oppos * elements_per_lane;           // flip bit if opposite lane
             }
@@ -952,21 +977,14 @@ constexpr auto pshufb_mask(int const (&a)[V::size()]) {
             if (ix >= 0 && ix < (int)elements_per_lane) {  // index points to desired lane
                 p = ix * elementsize;
             }
-            for (uint32_t j = 0; j < elementsize; j++) {   // loop through bytes in element
-                u.b[k++] = p < 0 ? -1 : p + j;             // store byte permutation index
+            for (j = 0; j < elementsize; j++) {            // loop through bytes in element
+                u.a[k++] = p < 0 ? -1 : p + j;             // store byte permutation index
             }
             m++;
         }
     }
-    return u.x;    // vector register
+    return u;                                              // return encapsulated array
 }
-
-
-// Indexlist: list of indexes, used as return from various constexpr functions
-template <int N>
-struct Indexlist {
-    int i[N];
-};
 
 
 // largeblock_perm: return indexes for replacing a permute or blend with 
@@ -974,16 +992,17 @@ struct Indexlist {
 // Note: it is presupposed that perm_flags() indicates perm_largeblock
 // It is required that additional zeroing is added if perm_flags() indicates perm_addz
 template <int N>
-constexpr Indexlist<N/2> largeblock_perm(int const (&a)[N]) {
+constexpr EList<int, N/2> largeblock_perm(int const (&a)[N]) {
     // Parameter a is a reference to a constexpr array of permutation indexes
-    Indexlist<N/2> list = {{0}};                 // result indexes
+    EList<int, N/2> list = {{0}};                 // result indexes
     int ix = 0;                                  // even index
     int iy = 0;                                  // odd index
     int iz = 0;                                  // combined index
     bool fit_addz = false;                       // additional zeroing needed at the lower block level
+    int i = 0;                                   // loop counter
 
     // check if additional zeroing is needed at current block size
-    for (int i = 0; i < N; i += 2) {
+    for (i = 0; i < N; i += 2) {
         ix = a[i];                               // even index
         iy = a[i+1];                             // odd index
         if ((ix == -1 && iy >= 0) || (iy == -1 && ix >= 0)) {
@@ -992,7 +1011,7 @@ constexpr Indexlist<N/2> largeblock_perm(int const (&a)[N]) {
     }
 
     // loop through indexes
-    for (int i = 0; i < N; i += 2) {
+    for (i = 0; i < N; i += 2) {
         ix = a[i];                               // even index
         iy = a[i+1];                             // odd index
         if (ix >= 0) {
@@ -1005,7 +1024,7 @@ constexpr Indexlist<N/2> largeblock_perm(int const (&a)[N]) {
             iz = ix | iy;                        // -1 or V_DC. -1 takes precedence
             if (fit_addz) iz = V_DC;             // V_DC, because result will be zeroed later
         }
-        list.i[i/2] = iz;                        // save to list
+        list.a[i/2] = iz;                        // save to list
     }
     return list;
 }
@@ -1042,7 +1061,8 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     // V is a vector class
     constexpr int N = V::size();                           // number of elements
     uint64_t r = blend_largeblock | blend_same_pattern | blend_allzero; // return value
-    uint32_t i = 0;                                        // loop counter
+    uint32_t iu = 0;                                       // loop counter
+    int32_t ii = 0;                                        // loop counter
     int ix = 0;                                            // index number i
     const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
     const uint32_t lanesize = N / nlanes;                  // elements per lane
@@ -1053,8 +1073,8 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         r |= blend_shufab | blend_shufba;                  // check if it fits shufpd
     }
 
-    for (i = 0; i < N; i++) {                              // loop through indexes
-        ix = a[i];                                         // index
+    for (ii = 0; ii < N; ii++) {                           // loop through indexes
+        ix = a[ii];                                        // index
         if (ix < 0) {
             if (ix == -1) r |= blend_zeroing;              // set to zero
             else if (ix != V_DC) {
@@ -1065,11 +1085,11 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             r &= ~ blend_allzero;
             if (ix < N) {
                 r |= blend_a;                              // data from a
-                if (ix != i) r |= blend_perma;             // permutation of a
+                if (ix != ii) r |= blend_perma;            // permutation of a
             }
             else if (ix < 2*N) {
                 r |= blend_b;                              // data from b
-                if (ix != i + N) r |= blend_permb;         // permutation of b
+                if (ix != ii + N) r |= blend_permb;        // permutation of b
             }
             else {
                 r = blend_outofrange;  break;              // illegal index
@@ -1077,17 +1097,17 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         }
         // check if pattern fits a larger block size:
         // even indexes must be even, odd indexes must fit the preceding even index + 1
-        if ((i & 1) == 0) {                                // even index
+        if ((ii & 1) == 0) {                               // even index
             if (ix >= 0 && (ix&1)) r &= ~blend_largeblock; // not even. does not fit larger block size 
-            int iy = a[i+1];                               // next odd index
+            int iy = a[ii+1];                              // next odd index
             if (iy >= 0 && (iy & 1) == 0) r &= ~ blend_largeblock; // not odd. does not fit larger block size 
             if (ix >= 0 && iy >= 0 && iy != ix+1) r &= ~ blend_largeblock; // does not fit preceding index + 1
             if (ix == -1 && iy >= 0) r |= blend_addz;      // needs additional zeroing at current block size
             if (iy == -1 && ix >= 0) r |= blend_addz;      // needs additional zeroing at current block size
         } 
-        lane = i / lanesize;                               // current lane
+        lane = (uint32_t)ii / lanesize;                    // current lane
         if (lane == 0) {                                   // first lane, or no pattern yet
-            lanepattern[i] = ix;                           // save pattern
+            lanepattern[ii] = ix;                          // save pattern
         }
         // check if crossing lanes
         if (ix >= 0) {
@@ -1097,15 +1117,15 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             }
             if (lanesize == 2) {   // check if it fits pshufd
                 if (lanei != lane) r &= ~(blend_shufab | blend_shufba);
-                if ((((ix & N) != 0) ^ i) & 1) r &= ~blend_shufab;
+                if ((((ix & N) != 0) ^ ii) & 1) r &= ~blend_shufab;
                 else r &= ~blend_shufba;
             }
         }
         // check if same pattern in all lanes
         if (lane != 0 && ix >= 0) {                        // not first lane
-            int j  = i - int(lane * lanesize);             // index into lanepattern
+            int j  = ii - int(lane * lanesize);            // index into lanepattern
             int jx = ix - int(lane * lanesize);            // pattern within lane
-            if (jx < 0 || (jx & ~N) >= lanesize) r &= ~blend_same_pattern; // source is in another lane
+            if (jx < 0 || (jx & ~N) >= (int)lanesize) r &= ~blend_same_pattern; // source is in another lane
             if (lanepattern[j] < 0) {
                 lanepattern[j] = jx;                       // pattern not known from previous lane
             }
@@ -1122,22 +1142,22 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     if (r & blend_same_pattern) {
         // same pattern in all lanes. check if it fits unpack patterns
         r |= blend_punpckhab | blend_punpckhba | blend_punpcklab | blend_punpcklba;
-        for (i = 0; i < lanesize; i++) {                   // loop through lanepattern
-            ix = lanepattern[i];
+        for (iu = 0; iu < lanesize; iu++) {                // loop through lanepattern
+            ix = lanepattern[iu];
             if (ix >= 0) {
-                if (ix != i / 2 + (i & 1) * N)                    r &= ~ blend_punpcklab;
-                if (ix != i / 2 + ((i & 1) ^ 1) * N)              r &= ~ blend_punpcklba;
-                if (ix != (i + lanesize) / 2 + (i & 1) * N)       r &= ~ blend_punpckhab;
-                if (ix != (i + lanesize) / 2 + ((i & 1) ^ 1) * N) r &= ~ blend_punpckhba;
+                if ((uint32_t)ix != iu / 2 + (iu & 1) * N)                    r &= ~ blend_punpcklab;
+                if ((uint32_t)ix != iu / 2 + ((iu & 1) ^ 1) * N)              r &= ~ blend_punpcklba;
+                if ((uint32_t)ix != (iu + lanesize) / 2 + (iu & 1) * N)       r &= ~ blend_punpckhab;
+                if ((uint32_t)ix != (iu + lanesize) / 2 + ((iu & 1) ^ 1) * N) r &= ~ blend_punpckhba;
             }
         }
 #if INSTRSET >= 4  // SSSE3. check if it fits palignr 
-        for (i = 0; i < lanesize; i++) {
-            ix = lanepattern[i];
+        for (iu = 0; iu < lanesize; iu++) {
+            ix = lanepattern[iu];
             if (ix >= 0) {
                 uint32_t t = ix & ~N;
                 if (ix & N) t += lanesize;
-                uint32_t tb = (t + 2*lanesize - i) % (lanesize * 2);
+                uint32_t tb = (t + 2*lanesize - iu) % (lanesize * 2);
                 if (rot == 999) {
                     rot = tb;
                 }
@@ -1154,21 +1174,21 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
                 r |= blend_rotateab;
             }
             const uint32_t elementsize = sizeof(V) / N;
-            r |= uint64_t((rot & lanesize - 1) * elementsize) << blend_rotpattern;
+            r |= uint64_t((rot & (lanesize - 1)) * elementsize) << blend_rotpattern;
         }
 #endif
         if (lanesize == 4) {
             // check if it fits shufps
             r |= blend_shufab | blend_shufba;
-            for (i = 0; i < 2; i++) {
-                ix = lanepattern[i];
+            for (ii = 0; ii < 2; ii++) {
+                ix = lanepattern[ii];
                 if (ix >= 0) {
                     if (ix & N) r &= ~ blend_shufab;
                     else        r &= ~ blend_shufba;
                 }
             }
-            for (; i < 4; i++) {
-                ix = lanepattern[i];
+            for (; ii < 4; ii++) {
+                ix = lanepattern[ii];
                 if (ix >= 0) {
                     if (ix & N) r &= ~ blend_shufba;
                     else        r &= ~ blend_shufab;
@@ -1176,8 +1196,8 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             }
             if (r & (blend_shufab | blend_shufba)) {       // fits shufps/shufpd
                 uint8_t shufpattern = 0;                   // get pattern
-                for (i = 0; i < lanesize; i++) {
-                    shufpattern |= (lanepattern[i] & 3) << i * 2;
+                for (iu = 0; iu < lanesize; iu++) {
+                    shufpattern |= (lanepattern[iu] & 3) << iu * 2;
                 }
                 r |= (uint64_t)shufpattern << blend_shufpattern; // return pattern
             }
@@ -1185,10 +1205,10 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     }
     else if  (nlanes > 1) {  // not same pattern in all lanes
         rot = 999;                                         // check if it fits big rotate
-        for (i = 0; i < N; i++) {
-            ix = a[i];
+        for (ii = 0; ii < N; ii++) {
+            ix = a[ii];
             if (ix >= 0) {
-                uint32_t rot2 = (ix + 2 * N - i) % (2 * N);// rotate count
+                uint32_t rot2 = (ix + 2 * N - ii) % (2 * N);// rotate count
                 if (rot == 999) {
                     rot = rot2;                            // save rotate count
                 }
@@ -1202,7 +1222,9 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         }
     }
     if (lanesize == 2 && (r & (blend_shufab | blend_shufba))) {  // fits shufpd. Get pattern
-        for (i = 0; i < N; i++) r |= uint64_t(a[i] & 1) << (blend_shufpattern + i);
+        for (ii = 0; ii < N; ii++) {
+            r |= uint64_t(a[ii] & 1) << (blend_shufpattern + ii);
+        }
     }
     return r;
 }
@@ -1213,32 +1235,33 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
 // dozero = 1: zero unused elements in each permuation. The two permutation results can be OR'ed
 // dozero = 2: indexes that are -1 or V_DC are preserved
 template <int N, int dozero>
-constexpr Indexlist<2*N> blend_perm_indexes(int const (&a)[N]) {
+constexpr EList<int, 2*N> blend_perm_indexes(int const (&a)[N]) {
     // a is a reference to a constexpr array of permutation indexes
-    Indexlist<2*N> list = {{0}};       // list to return
+    EList<int, 2*N> list = {{0}};       // list to return
     int u = dozero ? -1 : V_DC;        // value to use for unused entries
+    int j = 0;
 
-    for (int j = 0; j < N; j++) {      // loop through indexes
+    for (j = 0; j < N; j++) {          // loop through indexes
         int ix = a[j];                 // current index
         if (ix < 0) {                  // zero or don't care
             if (dozero == 2) {
-                // list.i[j] = list.i[j + N] = ix;  // fails in gcc in complicated cases
-                list.i[j] = ix;
-                list.i[j + N] = ix;
+                // list.a[j] = list.a[j + N] = ix;  // fails in gcc in complicated cases
+                list.a[j] = ix;
+                list.a[j + N] = ix;
             }
             else {
-                // list.i[j] = list.i[j + N] = u;
-                list.i[j] = u;
-                list.i[j + N] = u;
+                // list.a[j] = list.a[j + N] = u;
+                list.a[j] = u;
+                list.a[j + N] = u;
             }
         }
         else if (ix < N) {             // value from a
-            list.i[j]   = ix;  
-            list.i[j+N] = u;
+            list.a[j]   = ix;  
+            list.a[j+N] = u;
         }
         else {
-            list.i[j]   = u;           // value from b  
-            list.i[j+N] = ix - N;
+            list.a[j]   = u;           // value from b  
+            list.a[j+N] = ix - N;
         }
     }
     return list;
@@ -1250,16 +1273,17 @@ constexpr Indexlist<2*N> blend_perm_indexes(int const (&a)[N]) {
 // It is required that additional zeroing is added if perm_flags or blend_flags 
 // indicates _addz
 template <int N>
-constexpr Indexlist<N/2> largeblock_indexes(int const (&a)[N]) {
+constexpr EList<int, N/2> largeblock_indexes(int const (&a)[N]) {
     // Parameter a is a reference to a constexpr array of N permutation indexes
-    Indexlist<N/2> list = {{0}};                 // list to return
+    EList<int, N/2> list = {{0}};                 // list to return
 
     bool fit_addz = false;                       // additional zeroing needed at the lower block level
     int ix = 0;                                  // even index
     int iy = 0;                                  // odd index
     int iz = 0;                                  // combined index
+    int i  = 0;                                  // loop counter
 
-    for (int i = 0; i < N; i += 2) {
+    for (i = 0; i < N; i += 2) {
         ix = a[i];                               // even index
         iy = a[i+1];                             // odd index
         if (ix >= 0) {             
@@ -1269,7 +1293,7 @@ constexpr Indexlist<N/2> largeblock_indexes(int const (&a)[N]) {
             iz = iy / 2;                         // half index
         }
         else iz = ix | iy;                       // -1 or V_DC. -1 takes precedence
-        list.i[i/2] = iz;                        // save to list
+        list.a[i/2] = iz;                        // save to list
         // check if additional zeroing is needed at current block size
         if ((ix == -1 && iy >= 0) || (iy == -1 && ix >= 0)) {
             fit_addz = true;
@@ -1277,8 +1301,8 @@ constexpr Indexlist<N/2> largeblock_indexes(int const (&a)[N]) {
     }
     // replace -1 by V_DC if fit_addz
     if (fit_addz) {
-        for (int i = 0; i < N/2; i++) {
-            if (list.i[i] < 0) list.i[i] = V_DC;
+        for (i = 0; i < N/2; i++) {
+            if (list.a[i] < 0) list.a[i] = V_DC;
         }
     }
     return list;
@@ -1308,25 +1332,26 @@ template <typename dummy> void blend32(){}
 // dozero = 2: indexes that are -1 or V_DC are preserved
 // src1, src2: sources to blend in a partial implementation
 template <int N, int dozero, int src1, int src2>
-constexpr Indexlist<N> blend_half_indexes(int const (&a)[N]) {
+constexpr EList<int, N> blend_half_indexes(int const (&a)[N]) {
     // a is a reference to a constexpr array of permutation indexes
-    Indexlist<N> list = {{0}};         // list to return
+    EList<int, N> list = {{0}};         // list to return
     int u = dozero ? -1 : V_DC;        // value to use for unused entries
+    int j = 0;                         // loop counter
 
-    for (int j = 0; j < N; j++) {      // loop through indexes
+    for (j = 0; j < N; j++) {          // loop through indexes
         int ix = a[j];                 // current index
         if (ix < 0) {                  // zero or don't care                
-            list.i[j] = (dozero == 2) ? ix : u;
+            list.a[j] = (dozero == 2) ? ix : u;
         }
         else {
             int src = ix / N;          // source
             if (src == src1) {
-                list.i[j] = ix & (N - 1);
+                list.a[j] = ix & (N - 1);
             }
             else if (src == src2) {
-                list.i[j] = (ix & (N - 1)) + N;
+                list.a[j] = (ix & (N - 1)) + N;
             }
-            else list.i[j] = u;
+            else list.a[j] = u;
         }
     }
     return list;
@@ -1356,10 +1381,11 @@ auto blend_half(W const& a, W const& b) {
     constexpr int ind[N] = { i0... };            // array of indexes
 
     // lambda to find which of the four possible sources are used
-    // return: Indexlist<5> containing a list of up to 4 sources. The last element is the number of sources used
+    // return: EList<int, 5> containing a list of up to 4 sources. The last element is the number of sources used
     auto listsources = [](int const n, int const (&ind)[N]) constexpr {
         bool source_used[4] = { false,false,false,false }; // list of sources used
-        for (int i = 0; i < n; i++) {
+        int i = 0;
+        for (i = 0; i < n; i++) {
             int ix = ind[i];                     // index
             if (ix >= 0) {
                 int src = ix / n;                // source used
@@ -1367,71 +1393,71 @@ auto blend_half(W const& a, W const& b) {
             }
         }
         // return a list of sources used. The last element is the number of sources used
-        Indexlist<5> sources = {{0}};
+        EList<int, 5> sources = {{0}};
         int nsrc = 0;                            // number of sources
-        for (int i = 0; i < 4; i++) {
+        for (i = 0; i < 4; i++) {
             if (source_used[i]) {
-                sources.i[nsrc++] = i;
+                sources.a[nsrc++] = i;
             }
         }
-        sources.i[4] = nsrc;
+        sources.a[4] = nsrc;
         return sources;
     };
     // list of sources used
-    constexpr Indexlist<5> sources = listsources(N, ind);
-    constexpr int nsrc = sources.i[4];           // number of sources used
+    constexpr EList<int, 5> sources = listsources(N, ind);
+    constexpr int nsrc = sources.a[4];           // number of sources used
 
     if constexpr (nsrc == 0) {                   // no sources
         return V(0);
     }
     // get indexes for the first one or two sources
     constexpr int uindex = (nsrc > 2) ? 1 : 2;   // unused elements set to zero if two blends are combined
-    constexpr Indexlist<N> L = blend_half_indexes<N, uindex, sources.i[0], sources.i[1]>(ind);
+    constexpr EList<int, N> L = blend_half_indexes<N, uindex, sources.a[0], sources.a[1]>(ind);
     V x0;
-    V src0 = selectblend<W, sources.i[0]>(a, b); // first source
-    V src1 = selectblend<W, sources.i[1]>(a, b); // second source
+    V src0 = selectblend<W, sources.a[0]>(a, b); // first source
+    V src1 = selectblend<W, sources.a[1]>(a, b); // second source
     if constexpr (N == 2) {
-        x0 = blend2  <L.i[0], L.i[1]> (src0, src1);
+        x0 = blend2  <L.a[0], L.a[1]> (src0, src1);
     }
     else if constexpr (N == 4) {
-        x0 = blend4  <L.i[0], L.i[1], L.i[2], L.i[3]> (src0, src1);
+        x0 = blend4  <L.a[0], L.a[1], L.a[2], L.a[3]> (src0, src1);
     }
     else if constexpr (N == 8) {
-        x0 = blend8  <L.i[0], L.i[1], L.i[2], L.i[3], L.i[4], L.i[5], L.i[6], L.i[7]> (src0, src1);
+        x0 = blend8  <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7]> (src0, src1);
     }
     else if constexpr (N == 16) {
-        x0 = blend16 <L.i[0], L.i[1], L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7],
-            L.i[8], L.i[9], L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15] > (src0, src1);
+        x0 = blend16 <L.a[0], L.a[1], L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
+            L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] > (src0, src1);
     }
     else if constexpr (N == 32) {
-        x0 = blend32 <L.i[0], L.i[1],  L.i[2],  L.i[3],  L.i[4],  L.i[5],  L.i[6],  L.i[7],
-            L.i[8],  L.i[9],  L.i[10], L.i[11], L.i[12], L.i[13], L.i[14], L.i[15],
-            L.i[16], L.i[17], L.i[18], L.i[19], L.i[20], L.i[21], L.i[22], L.i[23],
-            L.i[24], L.i[25], L.i[26], L.i[27], L.i[28], L.i[29], L.i[30], L.i[31] > (src0, src1);
+        x0 = blend32 <L.a[0], L.a[1],  L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
+            L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15],
+            L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
+            L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31] > (src0, src1);
     }
     if constexpr (nsrc > 2) {    // get last one or two sources
-        constexpr Indexlist<N> M = blend_half_indexes<N, 1, sources.i[2], sources.i[3]>(ind);
+        constexpr EList<int, N> M = blend_half_indexes<N, 1, sources.a[2], sources.a[3]>(ind);
         V x1;
-        V src2 = selectblend<W, sources.i[2]>(a, b);  // third source
-        V src3 = selectblend<W, sources.i[3]>(a, b);  // fourth source
+        V src2 = selectblend<W, sources.a[2]>(a, b);  // third source
+        V src3 = selectblend<W, sources.a[3]>(a, b);  // fourth source
         if constexpr (N == 2) {
-            x1 = blend2  <M.i[0], M.i[1]> (src0, src1);
+            x1 = blend2  <M.a[0], M.a[1]> (src0, src1);
         }
         else if constexpr (N == 4) {
-            x1 = blend4  <M.i[0], M.i[1], M.i[2], M.i[3]> (src2, src3);
+            x1 = blend4  <M.a[0], M.a[1], M.a[2], M.a[3]> (src2, src3);
         }
         else if constexpr (N == 8) {
-            x1 = blend8  <M.i[0], M.i[1], M.i[2], M.i[3], M.i[4], M.i[5], M.i[6], M.i[7]> (src2, src3);
+            x1 = blend8  <M.a[0], M.a[1], M.a[2], M.a[3], M.a[4], M.a[5], M.a[6], M.a[7]> (src2, src3);
         }
         else if constexpr (N == 16) {
-            x1 = blend16 <M.i[0], M.i[1], M.i[2],  M.i[3],  M.i[4],  M.i[5],  M.i[6],  M.i[7],
-                M.i[8], M.i[9], M.i[10], M.i[11], M.i[12], M.i[13], M.i[14], M.i[15] > (src2, src3);
+            x1 = blend16 <M.a[0], M.a[1], M.a[2],  M.a[3],  M.a[4],  M.a[5],  M.a[6],  M.a[7],
+                M.a[8], M.a[9], M.a[10], M.a[11], M.a[12], M.a[13], M.a[14], M.a[15] > (src2, src3);
         }
         else if constexpr (N == 32) {
-            x1 = blend32 <M.i[0], M.i[1],  M.i[2],   M.i[3],  M.i[4],  M.i[5],  M.i[6],  M.i[7],
-                M.i[8], M.i[9],  M.i[10],  M.i[11], M.i[12], M.i[13], M.i[14], M.i[15],
-                M.i[16], M.i[17], M.i[18], M.i[19], M.i[20], M.i[21], M.i[22], M.i[23],
-                M.i[24], M.i[25], M.i[26], M.i[27], M.i[28], M.i[29], M.i[30], M.i[31] > (src2, src3);
+            x1 = blend32 <M.a[0], M.a[1],  M.a[2],   M.a[3],  M.a[4],  M.a[5],  M.a[6],  M.a[7],
+                M.a[8], M.a[9],  M.a[10],  M.a[11], M.a[12], M.a[13], M.a[14], M.a[15],
+                M.a[16], M.a[17], M.a[18], M.a[19], M.a[20], M.a[21], M.a[22], M.a[23],
+                M.a[24], M.a[25], M.a[26], M.a[27], M.a[28], M.a[29], M.a[30], M.a[31] > (src2, src3);
         }   
         x0 |= x1;      // combine result of two blends. Unused elements are zero
     }
