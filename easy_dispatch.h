@@ -66,10 +66,6 @@ DEBUG build in IDE) and set VCL_INSTRSETS to INSTRSET so that the
 dispatcher gets also implemented in the current (single) translation
 unit.
 
-If the dispatche fails it throws a 'vcl_dispatch_exception' (inherited
-from std::exception).  This happens, if the running host in not
-compatible with any of the compiled functions (instruction sets).
-
 The translation unit must be compiled for all instruction sets specified
 in VCL_INSTRSETS otherwise linking will fail.  If it is compiled for
 additional instruction sets not specified in VCL_INSTRSTETS they will
@@ -82,7 +78,6 @@ Apache License version 2.0 or later.
 #ifndef EASY_DISPATCH_H
 #define EASY_DISPATCH_H
 
-#include <exception>
 #include <utility>
 
 #include "instrset.h"
@@ -129,20 +124,9 @@ Apache License version 2.0 or later.
 //  Here, VCL_DISPATCHED(myfun) expands e.g. to 'vcl_myfun_5' if the
 //  translation unit gets compiled with 'INSTRSET == 5'.
 
-struct vcl_dispatch_exception : std::exception {
-    char const * what() const noexcept override;
-};
-
-//^ vcl_dispatch_exception: since the interface of 'myfun' is defined by client code
-//  there is no way to 'amend' it in any way to report errors reliable, therefore
-//  throw in case no allowed instruction set is available.  The exception must be
-//  unique to the dispatcher since the client code could use any other exception
-//  type itself for business logic errors.  Therefore, it has to be a self defined
-//  exception.  Override 'what' in a cpp file to prevent -Wweak-vtables warnings.
-
-template <typename T>
-T * vcl_select(int, std::integer_sequence<int>) {
-    return nullptr;
+template <typename T, T * f, int i>
+T * vcl_select(int, std::integer_sequence<int, i>) {
+    return f; // in any case return the last possibility
 }
 
 template <typename T, T * f, T * ... fs, int i, int ... is>
@@ -156,9 +140,7 @@ T * vcl_select(int n, std::integer_sequence<int, i, is ...>) {
 template <typename T, T * & ptr, typename Instrsets, T * ... fs,
           typename R, typename ... A, R(A ...) = static_cast<T *>(nullptr)> // return type and argument deduction from T
 R vcl_dispatch(A ... a) {
-    T * f = vcl_select<T, fs ...>(instrset_detect(), Instrsets());
-    if (! f) throw vcl_dispatch_exception();
-    ptr = f;
+    ptr = vcl_select<T, fs ...>(instrset_detect(), Instrsets());
     return f(std::forward<A>(a) ...);
 }
 
@@ -166,11 +148,12 @@ R vcl_dispatch(A ... a) {
 //  (e.g. Instrsets = std::integer_sequence<int, 5, 8>) and according function pointer 'fs'
 //  (e.g. fs = <vcl_myfun_5, vcl_myfun_8> parameter pack) the last function pointer (first
 //  from the end of the list) that is compatible with the host platform (therefore, the
-//  list must be ordered asscending).  If a compatible implementation is found, the global
-//  function pointer of the function is replaced (e.g. &ptr == &vcl_myfunc_ptr) for
-//  immediate access in subsequent calls and the current call is forwarded to the selected
-//  implementation 'f'. Throws 'vcl_dispatch_exception' if no compatible implementation is
-//  available ('ptr' still points on dispatcher and will throw on susequent calls again).
+//  list must be ordered asscending) and replaces the global function pointer of the function
+//  (e.g. &ptr == &vcl_myfunc_ptr) with it for immediate access in subsequent calls.  Finally,
+//  the current call is forwarded to the selected implementation 'f'.  In case no better
+//  implementation is found, the first in the list (last from the end) is selected.  This is
+//  the "safest" bet as it should correspond to the implementation with the most basic
+//  instruction set
 
 #define VCL_FUNLIST_1(fun,  n)      VCL_CONCAT(fun, n)
 #define VCL_FUNLIST_2(fun,  n, ...) VCL_CONCAT(fun, n), VCL_FUNLIST_1(fun, __VA_ARGS__)
@@ -192,6 +175,7 @@ R vcl_dispatch(A ... a) {
 #define VCL_DISPATCHER_IMPLEMENTATION(fun) VCL_DISPATCHER_IMPLEMENTATION_(fun, VCL_FUNLIST(fun, VCL_COUNT_ARGS(VCL_INSTRSETS)))
 #define VCL_DISPATCHER_IMPLEMENTATION_(fun, ...) \
     extern decltype(fun) __VA_ARGS__; \
+    extern decltype(fun) * VCL_CONCAT(fun, ptr); /* prevent warnings */ \
     decltype(fun) * VCL_CONCAT(fun, ptr) = vcl_dispatch<decltype(fun), VCL_CONCAT(fun, ptr), std::integer_sequence<int, VCL_INSTRSETS>, __VA_ARGS__>
 
 //^ VCL_DISPATCHER_IMPLEMENTATION
