@@ -2,13 +2,13 @@ Change log for Vector class library
 -----------------------------------
 
 2019-11-23 version 2.01.00
-  * problem with performance of permute and blend functions fixed by avoiding 
+  * problem with performance of permute and blend functions fixed by avoiding
     unions in constexpr functions
 
 2019-10-31 version 2.00.02
   * bug fix in permute function
   * is_nan function improved
-  * templates constant4ui etc. improved  
+  * templates constant4ui etc. improved
 
 2019-08-02 version 2.00
   Derived from version 1.40
@@ -16,7 +16,7 @@ Change log for Vector class library
   * use compact boolean vectors of all sizes if AVX512VL is enabled
   * permute and blend functions improved, using C++17 metaprogramming features
   * deprecated functions removed
-  
+
 2019-08-02 version 1.40
   * hosted on github
   * license changed to Apache 2.0.
@@ -34,25 +34,25 @@ Change log for Vector class library
   * renamed functions: to_Vec.. Replaced by load_bits member functions
   * deprecated functions: set_bit, get_bit
   * deprecated bit vector classes: Vec128b, Vec256b, Vec512b
-  
+
 2017-07-27 version 1.30
-  * fixed bug in permute8f for a particular combination of indexes  
-  
+  * fixed bug in permute8f for a particular combination of indexes
+
 2017-05-10 version 1.29
   * Reversed Apple Clang patch in version 1.28 because the problem has reoccurred in
     later versions of Clang
-  
+
 2017-05-02 version 1.28
   * Fixed problem with Apple Clang version 6.2 in vectorf128.h
-  * Fixed return type for Vec8sb operator > (Vec8us, Vec8us)  
+  * Fixed return type for Vec8sb operator > (Vec8us, Vec8us)
   * cpuid function modified in instrset_detect.cpp
-  
+
 2017-02-19 version 1.27
-  * fixed problem with scatter functions in MS Visual Studio  
-  
+  * fixed problem with scatter functions in MS Visual Studio
+
 2016-12-21 version 1.26
   * added constant4ui template
-  * fixed error for complexvec.h with clang  
+  * fixed error for complexvec.h with clang
   * fixed error in vectormath_exp.h for MAX_VECTOR_SIZE < 512
 
 2016-11-25 version 1.25
@@ -61,7 +61,7 @@ Change log for Vector class library
   * instrset_detect function can detect AVX512VL, AVX512BW, AVX512DQ
   * functions hasF16C and hasAVX512ER for detecting instruction set extensions
   * fix bugs in horizontal_and and pow(0,0) for AVX512
-  * functions improved for AVX512 and AVX512VL: pow, approx_recipr,  
+  * functions improved for AVX512 and AVX512VL: pow, approx_recipr,
       approx_rsqrt
   * functions improved for AVX512DQ: 64 bit multiplication, to_double,
       32 and 64 bit rotate_left, round_to_int64, truncate_to_int64
@@ -76,13 +76,13 @@ Change log for Vector class library
 
 2016-05-03 version 1.22
   * added optional namespace
-  * fixed problem with decimal.h  
+  * fixed problem with decimal.h
 
 2016-04-24 version 1.21
   * fix problems with XOP option in gcc
   * improved horizontal_and/or for sse2
   * improved Vec2q and Vec4q constructor on Microsoft Visual Studio 2015
-  * removed warnings by gcc option -Wcast-qual  
+  * removed warnings by gcc option -Wcast-qual
 
 2015-12-04 version 1.20
   * round functions: suppress precision exception under SSE4.1 and higher
@@ -105,7 +105,7 @@ Change log for Vector class library
   * fixed bug in Vec4db constructor
 
 2014-10-24 version 1.16
-  * workaround for problem in Clang compiler extended to version 3.09 because not 
+  * workaround for problem in Clang compiler extended to version 3.09 because not
       fixed yet by Clang (vectorf128.h line 134)
   * recognize problem with Apple version of Clang reporting wrong version number
   * remove various minor problems with Clang
@@ -122,7 +122,7 @@ Change log for Vector class library
       to integer vectors
   * nmul_add functions
   * mul_add etc. moved to main header files
-  * explicit fused multiply-and-add used in math functions to improve performance 
+  * explicit fused multiply-and-add used in math functions to improve performance
       on compilers that don't automatically insert FMA
 
 2014-07-24 version 1.14
@@ -167,11 +167,11 @@ Change log for Vector class library
   * fixed missing unsigned operators >>= in vectori256.h
 
 2013-10-04 version 1.10
-  * clear distinction between boolean vectors and integer vectors for the sake of 
+  * clear distinction between boolean vectors and integer vectors for the sake of
       compatibility with mask registers in forthcoming AVX512 instruction set
   * added function if_add
   * tentative support for clang version 3.3 with workaround for bugs
-  * remove ambiguity for builtin m128i operator == in clang compiler. 
+  * remove ambiguity for builtin m128i operator == in clang compiler.
   * problems in clang compiler, bug reports filed at clang
       (http://llvm.org/bugs/show_bug.cgi?id=17164, 17312)
   * instrset.h fixes problem with macros named min and max in MS windows.h
@@ -186,11 +186,11 @@ Change log for Vector class library
   * added file complexvec.h for complex numbers and complex vectors
   * added file quaternion.h for quaternions
   * added function change_sign for floating point vectors
-  * added operators +, -, *, / between floating point vectors and scalars to remove 
+  * added operators +, -, *, / between floating point vectors and scalars to remove
       overloading ambiguity
 
 2012-07-08 version 1.01 beta
-  * added file decimal.h with Number <-> string conversion functions: 
+  * added file decimal.h with Number <-> string conversion functions:
       bin2bcd, bin2ascii, bin2hex_ascii, ascii2bin
   * added andnot function for boolean vectors
   * added functions shift_bytes_up and shift_bytes_down

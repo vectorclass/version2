@@ -19,8 +19,8 @@ namespace VCL_NAMESPACE {
 
 
 // Define interface to xgetbv instruction
-static inline uint64_t xgetbv (int ctr) {	
-#if (defined (_MSC_FULL_VER) && _MSC_FULL_VER >= 160040000) || (defined (__INTEL_COMPILER) && __INTEL_COMPILER >= 1200) 
+static inline uint64_t xgetbv (int ctr) {
+#if (defined (_MSC_FULL_VER) && _MSC_FULL_VER >= 160040000) || (defined (__INTEL_COMPILER) && __INTEL_COMPILER >= 1200)
     // Microsoft or Intel compiler supporting _xgetbv intrinsic
 
     return uint64_t(_xgetbv(ctr));                    // intrinsic function for XGETBV
@@ -98,11 +98,11 @@ int instrset_detect(void) {
     if ((abcd[1] & (1 << 16)) == 0) return iset;           // no AVX512
     cpuid(abcd, 0xD);                                      // call cpuid leaf 0xD for feature flags
     if ((abcd[0] & 0x60) != 0x60)   return iset;           // no AVX512
-    iset = 9; 
+    iset = 9;
     cpuid(abcd, 7);                                        // call cpuid leaf 7 for feature flags
     if ((abcd[1] & (1 << 31)) == 0) return iset;           // no AVX512VL
     if ((abcd[1] & 0x40020000) != 0x40020000) return iset; // no AVX512BW, AVX512DQ
-    iset = 10; 
+    iset = 10;
     return iset;
 }
 

@@ -156,7 +156,7 @@ public:
     static constexpr int elementtype() {
         return 2;
     }
-    // I would like to prevent implicit conversion from int, but this is 
+    // I would like to prevent implicit conversion from int, but this is
     // not possible because __mmask16 and int16_t are treated as the same type:
     // Vec16b(int b) = delete;
     // Vec16b & operator = (int x) = delete;
@@ -165,7 +165,7 @@ public:
 #if INSTRSET >= 10
 class Vec2b;
 class Vec4b;
-#endif 
+#endif
 
 // Compact vector of 8 booleans
 class Vec8b {
@@ -177,9 +177,9 @@ class Vec8b {
     // in this case to avoid that the compiler generates 8-bit mask instructions.
     // We may get warnings in MS compiler when using __mmask16 on intrinsic functions
     // that require __mmask8, but I would rather have warnings than code that crashes.
-    #define Vec8b_masktype __mmask16 
+    #define Vec8b_masktype __mmask16
 #else
-    #define Vec8b_masktype __mmask8 
+    #define Vec8b_masktype __mmask8
 #endif
 protected:
     Vec8b_masktype mm;  // Boolean mask register
@@ -234,7 +234,7 @@ public:
 #elif INSTRSET == 9 && MAX_VECTOR_SIZE >= 512    // special case of mixed compact and broad vectors
     Vec4qb get_low()  const;                     // in vectorf512.h
     Vec4qb get_high() const;                     // in vectorf512.h
-#endif 
+#endif
     // Member function to change a single element in vector
     Vec8b const insert(int index, bool value) {
         mm = Vec8b_masktype(((uint8_t)mm & ~(1 << index)) | (int)value << index);
@@ -371,7 +371,7 @@ inline Vec4b Vec8b::get_low() const {
 }
 inline Vec4b Vec8b::get_high() const {
     return Vec4b().load_bits(mm >> 4u);
-} 
+}
 //  Members of Vec4b that refer to Vec2b:
 inline Vec4b::Vec4b(Vec2b const x0, Vec2b const x1) {
     mm = (uint8_t(x0) & 0x03) | (uint8_t(x1) << 2);
@@ -381,7 +381,7 @@ inline Vec2b Vec4b::get_low() const {
 }
 inline Vec2b Vec4b::get_high() const {
     return Vec2b().load_bits(mm >> 2u);
-} 
+}
 
 #endif
 
@@ -656,7 +656,7 @@ static inline bool horizontal_or(Vec4b const a) {
 // function andnot: a & ~ b
 static inline Vec4b andnot(Vec4b const a, Vec4b const b) {
     return __mmask8(andnot(Vec8b(a), Vec8b(b)));
-} 
+}
 
 
 /*****************************************************************************
@@ -863,8 +863,8 @@ static inline Vec128b andnot(Vec128b const a, Vec128b const b) {
 // Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or 0xFF (true). No other values are allowed.
-// The implementation depends on the instruction set: 
-// If SSE4.1 is supported then only bit 7 in each byte of s is checked, 
+// The implementation depends on the instruction set:
+// If SSE4.1 is supported then only bit 7 in each byte of s is checked,
 // otherwise all bits in s are used.
 static inline __m128i selectb(__m128i const s, __m128i const a, __m128i const b) {
 #if INSTRSET >= 5    // SSE4.1
@@ -1022,9 +1022,9 @@ public:
 
     // cut off vector to n elements. The last 16-n elements are set to zero
     Vec16c & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi8(__mmask16((1u << n) - 1), xmm);
-#else 
+#else
         if (uint32_t(n) >= 16) return *this;
         const char mask[32] = { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,
             0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
@@ -1056,7 +1056,7 @@ public:
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m128i x = _mm_maskz_compress_epi8(__mmask16(1u << index), xmm);
         return (int8_t)_mm_cvtsi128_si32(x);
-#else   
+#else
         int8_t x[16];
         store(x);
         return x[index & 0x0F];
@@ -1122,7 +1122,7 @@ public:
         __m128i dist = constant4ui<0, 0, 0x01010101, 0x01010101>();
         __m128i a2 = _mm_shuffle_epi8(a1, dist); // one byte of a in each element
         __m128i mask = constant4ui<0x08040201, 0x80402010, 0x08040201, 0x80402010>();
-        __m128i a3 = _mm_and_si128(a2, mask);    // isolate one bit in each byte       
+        __m128i a3 = _mm_and_si128(a2, mask);    // isolate one bit in each byte
 #else
         __m128i b1 = _mm_set1_epi8((int8_t)an);  // broadcast low byte
         __m128i b2 = _mm_set1_epi8((int8_t)(an >> 8));  // broadcast high byte
@@ -1453,7 +1453,7 @@ static inline Vec16cb operator ! (Vec16c const a) {
     return _mm_cmp_epi8_mask(a, _mm_setzero_si128(), 0);
 #else
     return _mm_cmpeq_epi8(a, _mm_setzero_si128());
-#endif    
+#endif
 }
 
 // Functions for this class
@@ -1466,7 +1466,7 @@ static inline Vec16c select(Vec16cb const s, Vec16c const a, Vec16c const b) {
     return _mm_mask_mov_epi8(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -1509,7 +1509,7 @@ static inline int32_t horizontal_add_x(Vec16c const a) {
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
     __m128i sum3 = _mm_add_epi32(sum1, sum2);              // sum
     return         _mm_cvtsi128_si32(sum3);
-#else  
+#else
     __m128i aeven = _mm_slli_epi16(a, 8);                  // even numbered elements of a. get sign bit in position
     aeven = _mm_srai_epi16(aeven, 8);                      // sign extend even numbered elements
     __m128i aodd = _mm_srai_epi16(a, 8);                   // sign extend odd  numbered elements
@@ -1587,7 +1587,7 @@ static inline Vec16c abs_saturated(Vec16c const a) {
 #endif
 }
 
-// function rotate_left: rotate each element left by b bits 
+// function rotate_left: rotate each element left by b bits
 // Use negative count to rotate right
 static inline Vec16c rotate_left(Vec16c const a, int b) {
 #ifdef __XOP__  // AMD XOP instruction set
@@ -1950,9 +1950,9 @@ public:
 
     // cut off vector to n elements. The last 8-n elements are set to zero
     Vec8s & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi16(__mmask8((1u << n) - 1), xmm);
-#else 
+#else
         *this = Vec16c(xmm).cutoff(n * 2);
 #endif
         return *this;
@@ -1988,7 +1988,7 @@ public:
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m128i x = _mm_maskz_compress_epi16(__mmask8(1u << index), xmm);
         return (int16_t)_mm_cvtsi128_si32(x);
-#else 
+#else
         switch (index) {
         case 0:
             return (int16_t)_mm_extract_epi16(xmm, 0);
@@ -2367,7 +2367,7 @@ static inline Vec8s select(Vec8sb const s, Vec8s const a, Vec8s const b) {
     return _mm_mask_mov_epi16(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -2499,7 +2499,7 @@ static inline Vec8s rotate_left(Vec8s const a, int b) {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec8s)_mm_rot_epi16(a, _mm_set1_epi16(b));
 #else  // SSE2 instruction set
-    __m128i left  = _mm_sll_epi16(a, _mm_cvtsi32_si128(b & 0x0F));     // a << b 
+    __m128i left  = _mm_sll_epi16(a, _mm_cvtsi32_si128(b & 0x0F));     // a << b
     __m128i right = _mm_srl_epi16(a, _mm_cvtsi32_si128((-b) & 0x0F));  // a >> (16 - b)
     __m128i rot   = _mm_or_si128(left, right);                         // or
     return  rot;
@@ -2622,7 +2622,7 @@ static inline Vec8sb operator >= (Vec8us const a, Vec8us const b) {
     return _mm_cmpeq_epi16(a, max_ab);                      // a == max(a,b)
 #else  // SSE2 instruction set
     __m128i s = _mm_subs_epu16(b, a);                       // b-a, saturated
-    return  _mm_cmpeq_epi16(s, _mm_setzero_si128());       // s == 0 
+    return  _mm_cmpeq_epi16(s, _mm_setzero_si128());       // s == 0
 #endif
 }
 
@@ -2690,7 +2690,7 @@ static inline Vec8us select(Vec8sb const s, Vec8us const a, Vec8us const b) {
     return _mm_mask_mov_epi16(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -2773,7 +2773,7 @@ static inline uint32_t horizontal_add_x(Vec8us const a) {
 #else
     __m128i mask  = _mm_set1_epi32(0x0000FFFF);            // mask for even positions
     __m128i aeven = _mm_and_si128(a, mask);                // even numbered elements of a
-#endif    
+#endif
     __m128i aodd = _mm_srli_epi32(a, 16);                  // zero extend odd numbered elements
     __m128i sum1 = _mm_add_epi32(aeven, aodd);             // add even and odd elements
     __m128i sum2 = _mm_unpackhi_epi64(sum1, sum1);         // 2 high elements
@@ -2890,7 +2890,7 @@ public:
     void store_partial(int n, void * p) const {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi32(p, __mmask8((1u << n) - 1), xmm);
-#else 
+#else
         union {
             int32_t i[4];
             int64_t q[2];
@@ -2916,9 +2916,9 @@ public:
 
     // cut off vector to n elements. The last 4-n elements are set to zero
     Vec4i & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi32(__mmask8((1u << n) - 1), xmm);
-#else 
+#else
         * this = Vec16c(xmm).cutoff(n * 4);
 #endif
         return *this;
@@ -3177,8 +3177,8 @@ static inline Vec4i operator * (Vec4i const a, Vec4i const b) {
     __m128i b13 = _mm_shuffle_epi32(b, 0xF5);              // (-,b3,-,b1)
     __m128i prod02 = _mm_mul_epu32(a, b);                  // (-,a2*b2,-,a0*b0)
     __m128i prod13 = _mm_mul_epu32(a13, b13);              // (-,a3*b3,-,a1*b1)
-    __m128i prod01 = _mm_unpacklo_epi32(prod02, prod13);   // (-,-,a1*b1,a0*b0) 
-    __m128i prod23 = _mm_unpackhi_epi32(prod02, prod13);   // (-,-,a3*b3,a2*b2) 
+    __m128i prod01 = _mm_unpacklo_epi32(prod02, prod13);   // (-,-,a1*b1,a0*b0)
+    __m128i prod23 = _mm_unpackhi_epi32(prod02, prod13);   // (-,-,a3*b3,a2*b2)
     return           _mm_unpacklo_epi64(prod01, prod23);   // (ab3,ab2,ab1,ab0)
 #endif
 }
@@ -3326,7 +3326,7 @@ static inline Vec4i select(Vec4ib const s, Vec4i const a, Vec4i const b) {
     return _mm_mask_mov_epi32(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -3485,7 +3485,7 @@ static inline Vec4i rotate_left(Vec4i const a, int b) {
 #elif defined __XOP__  // AMD XOP instruction set
     return _mm_rot_epi32(a, _mm_set1_epi32(b));
 #else  // SSE2 instruction set
-    __m128i left = _mm_sll_epi32(a, _mm_cvtsi32_si128(b & 0x1F));    // a << b 
+    __m128i left = _mm_sll_epi32(a, _mm_cvtsi32_si128(b & 0x1F));    // a << b
     __m128i right = _mm_srl_epi32(a, _mm_cvtsi32_si128((-b) & 0x1F));// a >> (32 - b)
     __m128i rot = _mm_or_si128(left, right);                         // or
     return  rot;
@@ -3586,7 +3586,7 @@ static inline Vec4ui & operator >>= (Vec4ui & a, int b) {
 // vector operator << : shift left all elements
 static inline Vec4ui operator << (Vec4ui const a, uint32_t b) {
     return Vec4ui((Vec4i)a << (int32_t)b);
-} 
+}
 // vector operator << : shift left all elements
 static inline Vec4ui operator << (Vec4ui const a, int32_t b) {
     return Vec4ui((Vec4i)a << (int32_t)b);
@@ -3675,7 +3675,7 @@ static inline Vec4ui select(Vec4ib const s, Vec4ui const a, Vec4ui const b) {
     return _mm_mask_mov_epi32(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -3835,7 +3835,7 @@ public:
     void store_partial(int n, void * p) const {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi64(p, __mmask8((1u << n) - 1), xmm);
-#else 
+#else
         switch (n) {
         case 1:
             int64_t q[2];
@@ -3850,9 +3850,9 @@ public:
     }
     // cut off vector to n elements. The last 2-n elements are set to zero
     Vec2q & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi64(__mmask8((1u << n) - 1), xmm);
-#else 
+#else
         *this = Vec16c(xmm).cutoff(n * 8);
 #endif
         return *this;
@@ -4331,7 +4331,7 @@ static inline Vec2q select(Vec2qb const s, Vec2q const a, Vec2q const b) {
     return _mm_mask_mov_epi64(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -4358,7 +4358,7 @@ static inline Vec2q if_mul(Vec2qb const f, Vec2q const a, Vec2q const b) {
     return _mm_mask_mullo_epi64(a, f, a, b);
 #else
     return select(f, a * b, a);
-#endif    
+#endif
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
@@ -4397,7 +4397,7 @@ static inline Vec2q abs(Vec2q const a) {
 // function abs_saturated: same as abs, saturate if overflow
 static inline Vec2q abs_saturated(Vec2q const a) {
 #if INSTRSET >= 10
-    return _mm_min_epu64(abs(a), Vec2q(0x7FFFFFFFFFFFFFFF));    
+    return _mm_min_epu64(abs(a), Vec2q(0x7FFFFFFFFFFFFFFF));
 #elif INSTRSET >= 6     // SSE4.2 supported
     __m128i absa = abs(a);                                 // abs(a)
     __m128i overfl = _mm_cmpgt_epi64(_mm_setzero_si128(), absa);// 0 > a
@@ -4418,7 +4418,7 @@ static inline Vec2q rotate_left(Vec2q const a, int b) {
 #elif defined __XOP__  // AMD XOP instruction set
     return (Vec2q)_mm_rot_epi64(a, Vec2q(b));
 #else  // SSE2 instruction set
-    __m128i left = _mm_sll_epi64(a, _mm_cvtsi32_si128(b & 0x3F));    // a << b 
+    __m128i left = _mm_sll_epi64(a, _mm_cvtsi32_si128(b & 0x3F));    // a << b
     __m128i right = _mm_srl_epi64(a, _mm_cvtsi32_si128((-b) & 0x3F));// a >> (64 - b)
     __m128i rot = _mm_or_si128(left, right);                         // or
     return  (Vec2q)rot;
@@ -4616,7 +4616,7 @@ static inline Vec2uq select(Vec2qb const s, Vec2uq const a, Vec2uq const b) {
     return _mm_mask_mov_epi64(b, s, a);
 #else
     return selectb(s, a, b);
-#endif    
+#endif
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
@@ -4671,11 +4671,11 @@ static inline Vec2uq min(Vec2uq const a, Vec2uq const b) {
 * These permute functions can reorder the elements of a vector and optionally
 * set some elements to zero.
 *
-* The indexes are inserted as template parameters in <>. 
-* These indexes must be constants. 
-* Each template parameter is an index to the element you want to select. 
-* An index of -1 will generate zero. 
-* An index of V_DC means don't care. This gives the best instruction that 
+* The indexes are inserted as template parameters in <>.
+* These indexes must be constants.
+* Each template parameter is an index to the element you want to select.
+* An index of -1 will generate zero.
+* An index of V_DC means don't care. This gives the best instruction that
 * fits the remaining indexes
 *
 * Example:
@@ -4685,7 +4685,7 @@ static inline Vec2uq min(Vec2uq const a, Vec2uq const b) {
 * c = permute4<3,2,-1,-1>(a);  // c is (13,12, 0, 0)
 *
 * A lot of the code here is metaprogramming aiming to find the instructions
-* that best fits the template parameters and instruction set. 
+* that best fits the template parameters and instruction set.
 * The final optimized code will contain only one or a few instructions.
 * Higher instruction sets may give you more efficient code.
 *
@@ -4707,7 +4707,7 @@ static inline Vec2q permute2(Vec2q const a) {
     constexpr bool fit_shright = (flags & perm_shright) != 0;
     constexpr bool fit_punpckh = (flags & perm_punpckh) != 0;
     constexpr bool fit_punpckl = (flags & perm_punpckl) != 0;
-    constexpr bool fit_zeroing = (flags & perm_zeroing) != 0;    
+    constexpr bool fit_zeroing = (flags & perm_zeroing) != 0;
 
     if constexpr ((flags & perm_perm) != 0) {              // permutation needed
         // try to fit various instructions
@@ -4716,7 +4716,7 @@ static inline Vec2q permute2(Vec2q const a) {
             // pslldq does both permutation and zeroing. if zeroing not needed use punpckl instead
             return _mm_bslli_si128(a, 8);
         }
-        if constexpr (fit_shright && fit_zeroing) {       
+        if constexpr (fit_shright && fit_zeroing) {
             // psrldq does both permutation and zeroing. if zeroing not needed use punpckh instead
             return _mm_bsrli_si128(a, 8);
         }
@@ -4744,7 +4744,7 @@ static inline Vec2q permute2(Vec2q const a) {
 #endif
     }
     return y;
-} 
+}
 
 template <int i0, int i1>
 static inline Vec2uq permute2(Vec2uq const a) {
@@ -4773,20 +4773,20 @@ static inline Vec4i permute4(Vec4i const a) {
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
         else if constexpr ((flags & perm_shleft) != 0) {   // fits pslldq
-            y = _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF); 
+            y = _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF);
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
-        else if constexpr ((flags & perm_shright) != 0) {  // fits psrldq 
-            y = _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_shright) != 0) {  // fits psrldq
+            y = _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF);
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
 #if  INSTRSET >= 4 && INSTRSET < 10 // SSSE3, but no compact mask
-        else if constexpr ((flags & perm_zeroing) != 0) {  
+        else if constexpr ((flags & perm_zeroing) != 0) {
             // Do both permutation and zeroing with PSHUFB instruction
             const EList <int8_t, 16> bm = pshufb_mask<Vec4i>(indexs);
             return _mm_shuffle_epi8(a, Vec4i().load(bm.a));
         }
-#endif 
+#endif
         else if constexpr ((flags & perm_punpckh) != 0) {  // fits punpckhi
             y = _mm_unpackhi_epi32(a, a);
         }
@@ -4794,8 +4794,8 @@ static inline Vec4i permute4(Vec4i const a) {
             y = _mm_unpacklo_epi32(a, a);
         }
 #if INSTRSET >= 4  // SSSE3
-        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr 
-            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr
+            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF);
         }
 #endif
         else {  // needs general permute
@@ -4813,9 +4813,9 @@ static inline Vec4i permute4(Vec4i const a) {
         const EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
         y = _mm_and_si128(Vec4i().load(bm.a), y);
 #endif
-    }  
+    }
     return y;
-} 
+}
 
 template <int i0, int i1, int i2, int i3>
 static inline Vec4ui permute4(Vec4ui const a) {
@@ -4857,10 +4857,10 @@ static inline Vec8s permute8(Vec8s const a) {
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
         else if constexpr ((flags & perm_shleft) != 0 && (flags & perm_addz) == 0) {// fits pslldq
-            return _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF); 
+            return _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF);
         }
-        else if constexpr ((flags & perm_shright) != 0 && (flags & perm_addz) == 0) {// fits psrldq 
-            return _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_shright) != 0 && (flags & perm_addz) == 0) {// fits psrldq
+            return _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF);
         }
         else if constexpr ((flags & perm_broadcast) != 0 && (flags & perm_zeroing) == 0 && (flags >> perm_rot_count & 0xF) == 0) {
 #if INSTRSET >= 8   // AVX2
@@ -4868,15 +4868,15 @@ static inline Vec8s permute8(Vec8s const a) {
 #else
             y = _mm_shufflelo_epi16(a, 0);                 // broadcast of first element
             return _mm_unpacklo_epi64(y, y);
-#endif 
+#endif
         }
 #if  INSTRSET >= 4 && INSTRSET < 10                        // SSSE3, but no compact mask
-        else if constexpr (fit_zeroing) {  
+        else if constexpr (fit_zeroing) {
             // Do both permutation and zeroing with PSHUFB instruction
             const EList <int8_t, 16> bm = pshufb_mask<Vec8s>(indexs);
             return _mm_shuffle_epi8(a, Vec8s().load(bm.a));
         }
-#endif 
+#endif
         else if constexpr ((flags & perm_punpckh) != 0) {  // fits punpckhi
             y = _mm_unpackhi_epi16(a, a);
         }
@@ -4884,8 +4884,8 @@ static inline Vec8s permute8(Vec8s const a) {
             y = _mm_unpacklo_epi16(a, a);
         }
 #if INSTRSET >= 4  // SSSE3
-        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr 
-            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr
+            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF);
         }
 #endif
         else if constexpr (!H2L && !L2H) {                 // no crossing of 64-bit boundary
@@ -4969,7 +4969,7 @@ static inline Vec8us permute8(Vec8us const a) {
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15 >
     static inline Vec16c permute16(Vec16c const a) {
-    
+
     // indexes as array
     constexpr int indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
     // get flags for possibilities that fit the permutation pattern
@@ -4993,20 +4993,20 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
         else if constexpr ((flags & perm_shleft) != 0) {   // fits pslldq
-            y = _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF); 
+            y = _mm_bslli_si128(a, (16-(flags >> perm_rot_count)) & 0xF);
             if ((flags & perm_addz) == 0) return y;
         }
-        else if constexpr ((flags & perm_shright) != 0) {  // fits psrldq 
-            y = _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_shright) != 0) {  // fits psrldq
+            y = _mm_bsrli_si128(a, (flags >> perm_rot_count) & 0xF);
             if ((flags & perm_addz) == 0) return y;
         }
 #if  INSTRSET >= 4 && INSTRSET < 10 // SSSE3, but no compact mask
-        else if constexpr (fit_zeroing) {  
+        else if constexpr (fit_zeroing) {
             // Do both permutation and zeroing with PSHUFB instruction
             const EList <int8_t, 16> bm = pshufb_mask<Vec16c>(indexs);
             return _mm_shuffle_epi8(a, Vec16c().load(bm.a));
         }
-#endif 
+#endif
         else if constexpr ((flags & perm_punpckh) != 0) {  // fits punpckhi
             y = _mm_unpackhi_epi8(a, a);
         }
@@ -5029,8 +5029,8 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
         }
 #endif
 #if INSTRSET >= 4  // SSSE3
-        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr 
-            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF); 
+        else if constexpr ((flags & perm_rotate) != 0) {   // fits palignr
+            y = _mm_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF);
         }
         else {  // needs general permute
             const EList <int8_t, 16> bm = pshufb_mask<Vec16c>(indexs);
@@ -5070,16 +5070,16 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 
             if constexpr (e2o || o2e) swapped = rotate_left(Vec8s(a), 8); // swap odd and even bytes
 
-            if constexpr (e2e) te2e = permute8 < int8_t(ixe2e), int8_t(ixe2e>>8), int8_t(ixe2e>>16), int8_t(ixe2e>>24), 
+            if constexpr (e2e) te2e = permute8 < int8_t(ixe2e), int8_t(ixe2e>>8), int8_t(ixe2e>>16), int8_t(ixe2e>>24),
                 int8_t(ixe2e>>32), int8_t(ixe2e>>40), int8_t(ixe2e>>48), int8_t(ixe2e>>56)> (Vec8s(a));
 
-            if constexpr (e2o) te2o = permute8 < int8_t(ixe2o), int8_t(ixe2o>>8), int8_t(ixe2o>>16), int8_t(ixe2o>>24), 
+            if constexpr (e2o) te2o = permute8 < int8_t(ixe2o), int8_t(ixe2o>>8), int8_t(ixe2o>>16), int8_t(ixe2o>>24),
                 int8_t(ixe2o>>32), int8_t(ixe2o>>40), int8_t(ixe2o>>48), int8_t(ixe2o>>56)> (Vec8s(swapped));
 
-            if constexpr (o2e) to2e = permute8 < int8_t(ixo2e), int8_t(ixo2e>>8), int8_t(ixo2e>>16), int8_t(ixo2e>>24), 
+            if constexpr (o2e) to2e = permute8 < int8_t(ixo2e), int8_t(ixo2e>>8), int8_t(ixo2e>>16), int8_t(ixo2e>>24),
                 int8_t(ixo2e>>32), int8_t(ixo2e>>40), int8_t(ixo2e>>48), int8_t(ixo2e>>56)> (Vec8s(swapped));
 
-            if constexpr (o2o) to2o = permute8 < int8_t(ixo2o), int8_t(ixo2o>>8), int8_t(ixo2o>>16), int8_t(ixo2o>>24), 
+            if constexpr (o2o) to2o = permute8 < int8_t(ixo2o), int8_t(ixo2o>>8), int8_t(ixo2o>>16), int8_t(ixo2o>>24),
                 int8_t(ixo2o>>32), int8_t(ixo2o>>40), int8_t(ixo2o>>48), int8_t(ixo2o>>56)> (Vec8s(a));
 
             if constexpr (e2e && o2e) combeven = te2e | to2e;
@@ -5134,16 +5134,16 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 *
 ******************************************************************************
 *
-* These blend functions can mix elements from two different vectors of N 
+* These blend functions can mix elements from two different vectors of N
 * elements eadh and optionally set some elements to zero.
 *
-* The N indexes are inserted as template parameters in <>. 
-* These indexes must be compile-time constants. Each template parameter 
+* The N indexes are inserted as template parameters in <>.
+* These indexes must be compile-time constants. Each template parameter
 * selects an element from one of the input vectors a and b.
 * An index in the range 0 .. N-1 selects the corresponding element from a.
 * An index in the range N .. 2*N-1 selects an element from b.
 * An index with the value -1 gives zero in the corresponding element of
-* the result. 
+* the result.
 * An index with the value V_DC means don't care. The code will select the
 * optimal sequence of instructions that fits the remaining indexes.
 *
@@ -5185,26 +5185,26 @@ static inline Vec2q blend2(Vec2q const a, Vec2q const b) {
 #else  // SSE2
         const EList <int64_t, 2> bm = make_broad_mask<Vec2q>(make_bit_mask<2, 0x301>(indexs));
         y = selectb(Vec2q().load(bm.a), b, a);
-#endif        
+#endif
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm_unpacklo_epi64 (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm_unpacklo_epi64 (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm_unpackhi_epi64 (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm_unpackhi_epi64 (b, a);
     }
 #if INSTRSET >= 4 // SSSE3
-    else if constexpr ((flags & blend_rotateab) != 0) { 
+    else if constexpr ((flags & blend_rotateab) != 0) {
         y = _mm_alignr_epi8(a, b, flags >> blend_rotpattern);
     }
-    else if constexpr ((flags & blend_rotateba) != 0) { 
+    else if constexpr ((flags & blend_rotateba) != 0) {
         y = _mm_alignr_epi8(b, a, flags >> blend_rotpattern);
     }
 #endif
@@ -5279,23 +5279,23 @@ static inline Vec4i blend4(Vec4i const a, Vec4i const b) {
         }
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm_unpacklo_epi32 (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm_unpacklo_epi32 (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm_unpackhi_epi32 (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm_unpackhi_epi32 (b, a);
     }
 #if INSTRSET >= 4 // SSSE3
-    else if constexpr ((flags & blend_rotateab) != 0) { 
+    else if constexpr ((flags & blend_rotateab) != 0) {
         y = _mm_alignr_epi8(a, b, flags >> blend_rotpattern);
     }
-    else if constexpr ((flags & blend_rotateba) != 0) { 
+    else if constexpr ((flags & blend_rotateba) != 0) {
         y = _mm_alignr_epi8(b, a, flags >> blend_rotpattern);
     }
 #endif
@@ -5362,7 +5362,7 @@ static inline Vec8s blend8(Vec8s const a, Vec8s const b) {
         return permute8 <i0, i1, i2, i3, i4, i5, i6, i7> (a);
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
-        return permute8 < i0<0?i0:i0&7, i1<0?i1:i1&7, i2<0?i2:i2&7, i3<0?i3:i3&7, 
+        return permute8 < i0<0?i0:i0&7, i1<0?i1:i1&7, i2<0?i2:i2&7, i3<0?i3:i3&7,
                           i4<0?i4:i4&7, i5<0?i5:i5&7, i6<0?i6:i6&7, i7<0?i7:i7&7 > (b);
     }
     if constexpr ((flags & blend_largeblock) != 0) {       // fits blending with larger block size
@@ -5373,32 +5373,32 @@ static inline Vec8s blend8(Vec8s const a, Vec8s const b) {
         }
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm_unpacklo_epi16 (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm_unpacklo_epi16 (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm_unpackhi_epi16 (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm_unpackhi_epi16 (b, a);
     }
 #if INSTRSET >= 4 // SSSE3
-    else if constexpr ((flags & blend_rotateab) != 0) { 
+    else if constexpr ((flags & blend_rotateab) != 0) {
         y = _mm_alignr_epi8(a, b, flags >> blend_rotpattern);
     }
-    else if constexpr ((flags & blend_rotateba) != 0) { 
+    else if constexpr ((flags & blend_rotateba) != 0) {
         y = _mm_alignr_epi8(b, a, flags >> blend_rotpattern);
     }
 #endif
     else { // No special cases.
 #if INSTRSET >= 10  // AVX512BW
         const EList <int16_t, 8> bm = perm_mask_broad<Vec8s>(indexs);
-        return _mm_maskz_permutex2var_epi16(zero_mask<8>(indexs), a, Vec8s().load(bm.a), b);  
-#endif 
-        // full blend instruction not available,        
+        return _mm_maskz_permutex2var_epi16(zero_mask<8>(indexs), a, Vec8s().load(bm.a), b);
+#endif
+        // full blend instruction not available,
         // permute a and b separately, then blend.
 #if INSTRSET >= 5  // SSE4.1
         constexpr bool dozero = (flags & blend_zeroing) != 0;
@@ -5414,7 +5414,7 @@ static inline Vec8s blend8(Vec8s const a, Vec8s const b) {
             yb = permute8 <L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15]> (b);
         }
         if constexpr (dozero) {  // unused elements are zero
-            return _mm_or_si128(ya, yb);    
+            return _mm_or_si128(ya, yb);
         }
         else { // blend ya and yb
 
@@ -5452,7 +5452,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 
     static_assert((flags & blend_outofrange) == 0, "Index out of range in blend function");
 
-    if constexpr ((flags & blend_allzero) != 0) return _mm_setzero_si128(); 
+    if constexpr ((flags & blend_allzero) != 0) return _mm_setzero_si128();
 
     else if constexpr ((flags & blend_b) == 0) {           // nothing from b. just permute a
         return permute16 <i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15> (a);
@@ -5463,10 +5463,10 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
             L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31] > (b);
     }
 #if INSTRSET >= 4 // SSSE3
-    else if constexpr ((flags & blend_rotateab) != 0) { 
+    else if constexpr ((flags & blend_rotateab) != 0) {
         y = _mm_alignr_epi8(a, b, flags >> blend_rotpattern);
     }
-    else if constexpr ((flags & blend_rotateba) != 0) { 
+    else if constexpr ((flags & blend_rotateba) != 0) {
         y = _mm_alignr_epi8(b, a, flags >> blend_rotpattern);
     }
 #endif
@@ -5478,27 +5478,27 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
         }
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm_unpacklo_epi8 (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm_unpacklo_epi8 (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm_unpackhi_epi8 (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm_unpackhi_epi8 (b, a);
     }
     else { // No special cases. Full permute needed
-#if INSTRSET >= 10 && defined ( __AVX512VBMI__ ) // AVX512VBMI 
+#if INSTRSET >= 10 && defined ( __AVX512VBMI__ ) // AVX512VBMI
         const EList <int8_t, 16> bm = perm_mask_broad<Vec16c>(indexs);
         return _mm_maskz_permutex2var_epi8(zero_mask<16>(indexs), a, Vec16c().load(bm.a), b);
 #endif // __AVX512VBMI__
-    
+
         // full blend instruction not available,
         // permute a and b separately, then blend.
-#if INSTRSET >= 10  // AVX512VL           
+#if INSTRSET >= 10  // AVX512VL
 //#elif INSTRSET >= 5  // SSE4.1    // This is optimal only if both permute16<> calls below have simple special cases
         constexpr bool dozero = (flags & blend_zeroing) != 0;
 #else  // SSE2
@@ -5507,7 +5507,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
         Vec16c ya = a, yb = b;   // a and b permuted
         constexpr EList<int, 32> L = blend_perm_indexes<16, (int)dozero>(indexs); // get permutation indexes
         if constexpr ((flags & blend_perma) != 0 || dozero) {
-            ya = permute16 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7], 
+            ya = permute16 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7],
                 L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15]> (a);
         }
         if constexpr ((flags & blend_permb) != 0 || dozero) {
@@ -5538,7 +5538,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15 >
     static inline Vec16uc blend16(Vec16uc const a, Vec16uc const b) {
     return Vec16uc(blend16<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15>(Vec16c(a), Vec16c(b)));
-} 
+}
 
 
 /*****************************************************************************
@@ -6575,7 +6575,7 @@ static inline Vec4ui operator / (Vec4ui const a, Divisor_ui const d) {
     __m128i t8 = _mm_sub_epi32(a, t7);                     // subtract
     __m128i t9 = _mm_srl_epi32(t8, d.gets1());             // shift right logical
     __m128i t10 = _mm_add_epi32(t7, t9);                   // add
-    return        _mm_srl_epi32(t10, d.gets2());           // shift right logical 
+    return        _mm_srl_epi32(t10, d.gets2());           // shift right logical
 }
 
 // vector of 8 16-bit signed integers
@@ -6595,7 +6595,7 @@ static inline Vec8us operator / (Vec8us const a, Divisor_us const d) {
     __m128i t2 = _mm_sub_epi16(a, t1);                     // subtract
     __m128i t3 = _mm_srl_epi16(t2, d.gets1());             // shift right logical
     __m128i t4 = _mm_add_epi16(t1, t3);                    // add
-    return        _mm_srl_epi16(t4, d.gets2());            // shift right logical 
+    return        _mm_srl_epi16(t4, d.gets2());            // shift right logical
 }
 
 
@@ -6781,7 +6781,7 @@ static inline Vec4ui & operator /= (Vec4ui & a, Const_int_t<d> b) {
 }
 
 
-// Divide Vec8s by compile-time constant 
+// Divide Vec8s by compile-time constant
 template <int d>
 static inline Vec8s divide_by_i(Vec8s const x) {
     constexpr int16_t d0 = int16_t(d);                     // truncate d to 16 bits

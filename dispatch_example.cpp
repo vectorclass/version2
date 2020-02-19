@@ -40,7 +40,7 @@ Apache License version 2.0 or later.
 typedef float MyFuncType(float*);
 
 // function prototypes for each version
-MyFuncType  myfunc, myfunc_SSE2, myfunc_SSE41, myfunc_AVX2, myfunc_AVX512, myfunc_dispatch; 
+MyFuncType  myfunc, myfunc_SSE2, myfunc_SSE41, myfunc_AVX2, myfunc_AVX512, myfunc_dispatch;
 
 // Define function name depending on which instruction set we compile for
 #if   INSTRSET >= 10                   // AVX512VL
@@ -51,7 +51,7 @@ MyFuncType  myfunc, myfunc_SSE2, myfunc_SSE41, myfunc_AVX2, myfunc_AVX512, myfun
 #define FUNCNAME myfunc_SSE41
 #elif INSTRSET == 2
 #define FUNCNAME myfunc_SSE2           // SSE2
-#else 
+#else
 #error Unsupported instruction set
 #endif
 

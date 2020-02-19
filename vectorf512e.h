@@ -835,7 +835,7 @@ static inline Vec16f nmul_add(Vec16f const a, Vec16f const b, Vec16f const c) {
     return Vec16f(nmul_add(a.get_low(), b.get_low(), c.get_low()), nmul_add(a.get_high(), b.get_high(), c.get_high()));
 }
 
-// Multiply and subtract with extra precision on the intermediate calculations, 
+// Multiply and subtract with extra precision on the intermediate calculations,
 // even if FMA instructions not supported, using Veltkamp-Dekker split
 static inline Vec16f mul_sub_x(Vec16f const a, Vec16f const b, Vec16f const c) {
     return Vec16f(mul_sub_x(a.get_low(), b.get_low(), c.get_low()), mul_sub_x(a.get_high(), b.get_high(), c.get_high()));
@@ -853,7 +853,7 @@ static inline Vec16i exponent(Vec16f const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f 
+// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
 static inline Vec16f fraction(Vec16f const a) {
     return Vec16f(fraction(a.get_low()), fraction(a.get_high()));
 }
@@ -885,7 +885,7 @@ static inline Vec16f sign_combine(Vec16f const a, Vec16f const b) {
     return Vec16f(sign_combine(a.get_low(), b.get_low()), sign_combine(a.get_high(), b.get_high()));
 }
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
 static inline Vec16fb is_finite(Vec16f const a) {
@@ -932,7 +932,7 @@ static inline Vec16f nan16f(int n = 0x10) {
 
 // change signs on vectors Vec16f
 // Each index i0 - i7 is 1 for changing sign on the corresponding element, 0 for no change
-// ("static" is removed from change_sign templates because it seems to generate problems for 
+// ("static" is removed from change_sign templates because it seems to generate problems for
 // the Clang compiler with nested template calls. "static" is probably superfluous anyway.)
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 inline Vec16f change_sign(Vec16f const a) {
@@ -1039,7 +1039,7 @@ public:
     double extract(int index) const {
         double a[8];
         store(a);
-        return a[index & 7];        
+        return a[index & 7];
     }
 
     // Extract a single element. Use store function if extracting more than one element.
@@ -1060,7 +1060,7 @@ public:
     static constexpr int elementtype() {
         return 17;
     }
-}; 
+};
 
 
 /*****************************************************************************
@@ -1484,7 +1484,7 @@ static inline Vec8d nmul_add(Vec8d const a, Vec8d const b, Vec8d const c) {
     return Vec8d(nmul_add(a.get_low(), b.get_low(), c.get_low()), nmul_add(a.get_high(), b.get_high(), c.get_high()));
 }
 
-// Multiply and subtract with extra precision on the intermediate calculations, 
+// Multiply and subtract with extra precision on the intermediate calculations,
 // even if FMA instructions not supported, using Veltkamp-Dekker split
 static inline Vec8d mul_sub_x(Vec8d const a, Vec8d const b, Vec8d const c) {
     return Vec8d(mul_sub_x(a.get_low(), b.get_low(), c.get_low()), mul_sub_x(a.get_high(), b.get_high(), c.get_high()));
@@ -1501,7 +1501,7 @@ static inline Vec8q exponent(Vec8d const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0) = 1.0, fraction(5.0) = 1.25 
+// fraction(1.0) = 1.0, fraction(5.0) = 1.25
 static inline Vec8d fraction(Vec8d const a) {
     return Vec8d(fraction(a.get_low()), fraction(a.get_high()));
 }
@@ -1532,7 +1532,7 @@ static inline Vec8d sign_combine(Vec8d const a, Vec8d const b) {
     return Vec8d(sign_combine(a.get_low(), b.get_low()), sign_combine(a.get_high(), b.get_high()));
 }
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 static inline Vec8db is_finite(Vec8d const a) {
     return Vec8db(is_finite(a.get_low()), is_finite(a.get_high()));
@@ -1660,15 +1660,15 @@ static inline Vec16f permute16(Vec16f const a) {
 *****************************************************************************/
 
 // blend vectors Vec8d
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
-static inline Vec8d blend8(Vec8d const a, Vec8d const b) {  
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
+static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
     Vec4d x0 = blend_half<Vec8d, i0, i1, i2, i3>(a, b);
     Vec4d x1 = blend_half<Vec8d, i4, i5, i6, i7>(a, b);
     return Vec8d(x0, x1);
 }
 
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
     Vec8f x0 = blend_half<Vec16f, i0, i1, i2, i3, i4, i5, i6, i7>(a, b);
     Vec8f x1 = blend_half<Vec16f, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
@@ -1720,7 +1720,7 @@ static inline Vec8d lookup8(Vec8q const index, Vec8d const table) {
     Vec4d t0 = reinterpret_d(lookup<8>(index.get_low(), tab));
     Vec4d t1 = reinterpret_d(lookup<8>(index.get_high(), tab));
     return Vec8d(t0, t1);
-} 
+}
 
 template <int n>
 static inline Vec8d lookup(Vec8q const index, double const * table) {
@@ -1749,7 +1749,7 @@ static inline Vec8d lookup(Vec8q const index, double const * table) {
 *****************************************************************************/
 
 // Load elements from array a with indices i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16f gather16f(void const * a) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
@@ -1772,7 +1772,7 @@ static inline Vec16f gather16f(void const * a) {
         }
     }
     if constexpr ((i0<imin+16  || i0>imax-16)  && (i1<imin+16  || i1>imax-16)  && (i2<imin+16  || i2>imax-16)  && (i3<imin+16  || i3>imax-16)
-    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)    
+    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)
     &&  (i8<imin+16  || i8>imax-16)  && (i9<imin+16  || i9>imax-16)  && (i10<imin+16 || i10>imax-16) && (i11<imin+16 || i11>imax-16)
     &&  (i12<imin+16 || i12>imax-16) && (i13<imin+16 || i13>imax-16) && (i14<imin+16 || i14>imax-16) && (i15<imin+16 || i15>imax-16) ) {
         // load two contiguous blocks and blend
@@ -1847,12 +1847,12 @@ static inline Vec8d gather8d(void const * a) {
 ******************************************************************************
 *
 * These functions write the elements of a vector to arbitrary positions in an
-* array in memory. Each vector element is written to an array position 
+* array in memory. Each vector element is written to an array position
 * determined by an index. An element is not written if the corresponding
 * index is out of range.
 * The indexes can be specified as constant template parameters or as an
 * integer vector.
-* 
+*
 *****************************************************************************/
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,

@@ -40,7 +40,7 @@
 // check combination of header files
 #ifdef VECTORI512S_H
 #error Two different versions of vectorf256.h included
-#endif 
+#endif
 
 
 #ifdef VCL_NAMESPACE
@@ -70,21 +70,21 @@ public:
     // Constructor to broadcast the same value into all elements:
     Vec64c(int8_t i) {
         z0 = z1 = Vec32c(i);
-    } 
+    }
     // Constructor to build from all elements:
     Vec64c(int8_t i0, int8_t i1, int8_t i2, int8_t i3, int8_t i4, int8_t i5, int8_t i6, int8_t i7,
-        int8_t i8, int8_t i9, int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15,        
+        int8_t i8, int8_t i9, int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15,
         int8_t i16, int8_t i17, int8_t i18, int8_t i19, int8_t i20, int8_t i21, int8_t i22, int8_t i23,
         int8_t i24, int8_t i25, int8_t i26, int8_t i27, int8_t i28, int8_t i29, int8_t i30, int8_t i31,
-        int8_t i32, int8_t i33, int8_t i34, int8_t i35, int8_t i36, int8_t i37, int8_t i38, int8_t i39,        
-        int8_t i40, int8_t i41, int8_t i42, int8_t i43, int8_t i44, int8_t i45, int8_t i46, int8_t i47,        
-        int8_t i48, int8_t i49, int8_t i50, int8_t i51, int8_t i52, int8_t i53, int8_t i54, int8_t i55,        
+        int8_t i32, int8_t i33, int8_t i34, int8_t i35, int8_t i36, int8_t i37, int8_t i38, int8_t i39,
+        int8_t i40, int8_t i41, int8_t i42, int8_t i43, int8_t i44, int8_t i45, int8_t i46, int8_t i47,
+        int8_t i48, int8_t i49, int8_t i50, int8_t i51, int8_t i52, int8_t i53, int8_t i54, int8_t i55,
         int8_t i56, int8_t i57, int8_t i58, int8_t i59, int8_t i60, int8_t i61, int8_t i62, int8_t i63) {
         // _mm512_set_epi8 and _mm512_set_epi16 missing in GCC 7.4.0
         int8_t aa[64] = {
-            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,        
+            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,
             i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31,
-            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,        
+            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
             i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63 };
         load(aa);
     }
@@ -135,7 +135,7 @@ public:
     }
     // Partial load. Load n elements and set the rest to 0
     Vec64c & load_partial(int n, void const * p) {
-        Vec32c lo, hi; 
+        Vec32c lo, hi;
         if ((uint32_t)n < 32) {
             lo = Vec32c().load_partial(n,p);
             hi = Vec32c(0);
@@ -166,7 +166,7 @@ public:
             get_low().store(p);
             get_high().store_partial(n-32, ((int8_t*)p)+32);
         }
-    } 
+    }
     // cut off vector to n elements. The last 64-n elements are set to zero
     Vec64c & cutoff(int n) {
         Vec32c lo, hi;
@@ -241,7 +241,7 @@ public:
     // Constructor to build from all elements: Not implemented
 
     // Constructor to convert from type __mmask64 used in intrinsics: not possible
-    // Vec64cb (__mmask64 x); 
+    // Vec64cb (__mmask64 x);
 
     // Constructor to broadcast single value:
     Vec64cb(bool b) {
@@ -274,9 +274,9 @@ public:
             z1 = get_high().insert(index-32, a);
         }
         return *this;
-    }    
+    }
     // Member function extract a single element from vector
-    bool extract(int index) const { 
+    bool extract(int index) const {
         if (index < 32) {
             return get_low().extract(index);
         }
@@ -495,7 +495,7 @@ static inline Vec64cb operator == (Vec64c const a, Vec64c const b) {
 static inline Vec64cb operator != (Vec64c const a, Vec64c const b) {
     return Vec64cb(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
-  
+
 // vector operator > : returns true for elements for which a > b
 static inline Vec64cb operator > (Vec64c const a, Vec64c const b) {
     return Vec64cb(a.get_low() > b.get_low(), a.get_high() > b.get_high());
@@ -647,18 +647,18 @@ public:
     }
     // Constructor to build from all elements:
     Vec64uc(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7,
-        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15,        
+        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15,
         uint8_t i16, uint8_t i17, uint8_t i18, uint8_t i19, uint8_t i20, uint8_t i21, uint8_t i22, uint8_t i23,
         uint8_t i24, uint8_t i25, uint8_t i26, uint8_t i27, uint8_t i28, uint8_t i29, uint8_t i30, uint8_t i31,
-        uint8_t i32, uint8_t i33, uint8_t i34, uint8_t i35, uint8_t i36, uint8_t i37, uint8_t i38, uint8_t i39,        
-        uint8_t i40, uint8_t i41, uint8_t i42, uint8_t i43, uint8_t i44, uint8_t i45, uint8_t i46, uint8_t i47,        
-        uint8_t i48, uint8_t i49, uint8_t i50, uint8_t i51, uint8_t i52, uint8_t i53, uint8_t i54, uint8_t i55,        
+        uint8_t i32, uint8_t i33, uint8_t i34, uint8_t i35, uint8_t i36, uint8_t i37, uint8_t i38, uint8_t i39,
+        uint8_t i40, uint8_t i41, uint8_t i42, uint8_t i43, uint8_t i44, uint8_t i45, uint8_t i46, uint8_t i47,
+        uint8_t i48, uint8_t i49, uint8_t i50, uint8_t i51, uint8_t i52, uint8_t i53, uint8_t i54, uint8_t i55,
         uint8_t i56, uint8_t i57, uint8_t i58, uint8_t i59, uint8_t i60, uint8_t i61, uint8_t i62, uint8_t i63) {
         // _mm512_set_epi8 and _mm512_set_epi16 missing in GCC 7.4.0
         uint8_t aa[64] = {
-            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,        
+            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,
             i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31,
-            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,        
+            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
             i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63 };
         load(aa);
     }
@@ -679,7 +679,7 @@ public:
     Vec64uc & operator = (Vec512b const x) {
         return *this = Vec64uc(x);
     }
-#endif 
+#endif
     // Member function to load from array (unaligned)
     Vec64uc & load(void const * p) {
         Vec64c::load(p);
@@ -732,7 +732,7 @@ static inline Vec64uc operator - (Vec64uc const a, Vec64uc const b) {
 // vector operator ' : multiply element by element
 static inline Vec64uc operator * (Vec64uc const a, Vec64uc const b) {
     return Vec64uc(a.get_low() * b.get_low(), a.get_high() * b.get_high());
-} 
+}
 
 // vector operator / : divide
 // See bottom of file
@@ -749,7 +749,7 @@ static inline Vec64uc operator >> (Vec64uc const a, int b) {
 static inline Vec64uc & operator >>= (Vec64uc & a, uint32_t b) {
     a = a >> b;
     return a;
-} 
+}
 
 // vector operator >>= : shift right logical (signed b)
 static inline Vec64uc & operator >>= (Vec64uc & a, int32_t b) {
@@ -778,7 +778,7 @@ static inline Vec64cb operator > (Vec64uc const a, Vec64uc const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec64cb operator >= (Vec64uc const a, Vec64uc const b) {
     return Vec64cb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec64cb operator <= (Vec64uc const a, Vec64uc const b) {
@@ -826,7 +826,7 @@ static inline Vec64uc if_sub (Vec64cb const f, Vec64uc const a, Vec64uc const b)
 // Conditional multiply
 static inline Vec64uc if_mul (Vec64cb const f, Vec64uc const a, Vec64uc const b) {
     return Vec64uc(if_mul(f.get_low(), a.get_low(), b.get_low()), if_mul(f.get_high(), a.get_high(), b.get_high()));
-} 
+}
 
 // function add_saturated: add element by element, unsigned with saturation
 static inline Vec64uc add_saturated(Vec64uc const a, Vec64uc const b) {
@@ -866,7 +866,7 @@ public:
     }
     // Constructor to build from all elements:
     Vec32s(int16_t i0, int16_t i1, int16_t i2, int16_t i3, int16_t i4, int16_t i5, int16_t i6, int16_t i7,
-        int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15,        
+        int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15,
         int16_t i16, int16_t i17, int16_t i18, int16_t i19, int16_t i20, int16_t i21, int16_t i22, int16_t i23,
         int16_t i24, int16_t i25, int16_t i26, int16_t i27, int16_t i28, int16_t i29, int16_t i30, int16_t i31) {
         Vec16s x0 = Vec16s(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15);
@@ -947,7 +947,7 @@ public:
             Vec16s(z0).store(p);
             Vec16s(z1).store_partial(n-16, (int16_t*)p + 16);
         }
-    } 
+    }
     // cut off vector to n elements. The last 32-n elements are set to zero
     Vec32s & cutoff(int n) {
         if (uint32_t(n) < 16) {
@@ -1035,12 +1035,12 @@ public:
     }
     Vec16sb get_high() const {
         return z1;
-    } 
+    }
     // Member function to change a single element in vector
     Vec32sb & insert(int index, bool a) {
         Vec32s::insert(index, -(int16_t)a);
         return *this;
-    }    
+    }
     // Member function extract a single element from vector
     bool extract(int index) const {
         return Vec32s::extract(index) != 0;
@@ -1216,7 +1216,7 @@ static inline Vec32s & operator *= (Vec32s & a, Vec32s const b) {
 }
 
 // vector operator / : divide all elements by same integer
-// See bottom of file 
+// See bottom of file
 
 // vector operator << : shift left
 static inline Vec32s operator << (Vec32s const a, int32_t b) {
@@ -1377,7 +1377,7 @@ static inline Vec32s abs_saturated(Vec32s const a) {
 // Use negative count to rotate right
 static inline Vec32s rotate_left(Vec32s const a, int b) {
     return Vec32s(rotate_left(a.get_low(), b), rotate_left(a.get_high(), b));
-} 
+}
 
 
 /*****************************************************************************
@@ -1393,7 +1393,7 @@ public:
     }
     // Construct from Vec32s
     Vec32us(Vec32s const a) {
-        z0 = a.get_low();  z1 = a.get_high(); 
+        z0 = a.get_low();  z1 = a.get_high();
     }
     // Constructor to broadcast the same value into all elements:
     Vec32us(uint16_t i) {
@@ -1401,7 +1401,7 @@ public:
     }
     // Constructor to build from all elements:
     Vec32us(uint16_t i0, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4, uint16_t i5, uint16_t i6, uint16_t i7,
-        uint16_t i8, uint16_t i9, uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15,        
+        uint16_t i8, uint16_t i9, uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15,
         uint16_t i16, uint16_t i17, uint16_t i18, uint16_t i19, uint16_t i20, uint16_t i21, uint16_t i22, uint16_t i23,
         uint16_t i24, uint16_t i25, uint16_t i26, uint16_t i27, uint16_t i28, uint16_t i29, uint16_t i30, uint16_t i31) {
         Vec16us x0 = Vec16us(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15);
@@ -1497,7 +1497,7 @@ static inline Vec32us operator >> (Vec32us const a, int b) {
 static inline Vec32us & operator >>= (Vec32us & a, uint32_t b) {
     a = a >> b;
     return a;
-} 
+}
 
 // vector operator >>= : shift right logical (signed b)
 static inline Vec32us & operator >>= (Vec32us & a, int32_t b) {
@@ -1526,7 +1526,7 @@ static inline Vec32sb operator > (Vec32us const a, Vec32us const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec32sb operator >= (Vec32us const a, Vec32us const b) {
     return Vec32sb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec32sb operator <= (Vec32us const a, Vec32us const b) {
@@ -1604,13 +1604,13 @@ static inline Vec32us min(Vec32us const a, Vec32us const b) {
 *****************************************************************************/
 
 // Permute vector of 32 16-bit integers.
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
     int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15,
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
     int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32s permute32(Vec32s const a) {
     return Vec32s(
-        blend16<i0, i1, i2 ,i3 ,i4 ,i5 ,i6 ,i7, i8, i9, i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()), 
+        blend16<i0, i1, i2 ,i3 ,i4 ,i5 ,i6 ,i7, i8, i9, i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()),
         blend16<i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31> (a.get_low(), a.get_high()));
 }
 
@@ -1633,7 +1633,7 @@ template <
     return Vec64c(
         blend32 <
         i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
-        i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31        
+        i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31
         > (a.get_low(), a.get_high()),
         blend32 <
         i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
@@ -1644,20 +1644,20 @@ template <
 template <int... i0 >
 static inline Vec64uc permute64(Vec64uc const a) {
     return Vec64uc (permute64<i0...> (Vec64c(a)));
-} 
+}
 
 // Blend vector of 32 16-bit integers
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15,
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
-    int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 > 
+    int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32s blend32(Vec32s const& a, Vec32s const& b) {
     Vec16s x0 = blend_half<Vec32s, i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     Vec16s x1 = blend_half<Vec32s, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31>(a, b);
     return Vec32s(x0, x1);
 }
 
-template <int ... i0 > 
+template <int ... i0 >
 static inline Vec32us blend32(Vec32us const a, Vec32us const b) {
     return Vec32us(blend32<i0 ...> (Vec32s(a),Vec32s(b)));
 }
@@ -1673,10 +1673,10 @@ template <
     int i48, int i49, int i50, int i51, int i52, int i53, int i54, int i55,
     int i56, int i57, int i58, int i59, int i60, int i61, int i62, int i63 >
     static inline Vec64c blend64(Vec64c const a, Vec64c const b) {
-    Vec32c x0 = blend_half < Vec64c, 
+    Vec32c x0 = blend_half < Vec64c,
         i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
         i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31 > (a, b);
-    Vec32c x1 = blend_half < Vec64c, 
+    Vec32c x1 = blend_half < Vec64c,
         i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
         i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63 > (a, b);
     return Vec64c(x0, x1);
@@ -1778,7 +1778,7 @@ static inline Vec64c shift_bytes_down(Vec64c const a) {
         return Vec64c().load(dat+b);
     }
     else return 0;
-} 
+}
 
 
 /*****************************************************************************
@@ -1947,7 +1947,7 @@ static inline Vec64uc & operator /= (Vec64uc & a, Divisor_us const d) {
 *****************************************************************************/
 
 
-// Divide Vec32s by compile-time constant 
+// Divide Vec32s by compile-time constant
 template <int d>
 static inline Vec32s divide_by_i(Vec32s const a) {
     return Vec32s(divide_by_i<d>(a.get_low()), divide_by_i<d>(a.get_high()));

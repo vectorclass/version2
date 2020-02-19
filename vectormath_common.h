@@ -106,7 +106,7 @@ Using Estrin's scheme to make shorter dependency chains and use FMA, starting
 longest dependency chains first.
 ******************************************************************************/
 
-// template <typedef VECTYPE, typedef CTYPE> 
+// template <typedef VECTYPE, typedef CTYPE>
 template <class VTYPE, class CTYPE>
 static inline VTYPE polynomial_2(VTYPE const x, CTYPE c0, CTYPE c1, CTYPE c2) {
     // calculates polynomial c2*x^2 + c1*x + c0

@@ -5,7 +5,7 @@
 * Version:       2.01.00
 * Project:       vector class library
 * Description:
-* Header file for conversion between different vector classes with different 
+* Header file for conversion between different vector classes with different
 * sizes. Also includes verious generic template functions.
 *
 * (c) Copyright 2012-2019 Agner Fog.
@@ -418,7 +418,7 @@ template <typename T> auto horizontal_min1(T const x) {
     }
     else if constexpr (sizeof(T) >= 32) {
         // split recursively into smaller vectors
-        return horizontal_min1(min(x.get_low(), x.get_high()));  
+        return horizontal_min1(min(x.get_low(), x.get_high()));
     }
     else if constexpr (T::size() == 2) {
         T a = permute2 <1, V_DC>(x);             // high half
@@ -472,7 +472,7 @@ template <typename T> auto horizontal_max1(T const x) {
     }
     else if constexpr (sizeof(T) >= 32) {
         // split recursively into smaller vectors
-        return horizontal_max1(max(x.get_low(), x.get_high()));  
+        return horizontal_max1(max(x.get_low(), x.get_high()));
     }
     else if constexpr (T::size() == 2) {
         T a = permute2 <1, V_DC>(x);             // high half
@@ -515,7 +515,7 @@ static inline int horizontal_find_first(V const x) {
     static_assert(V::elementtype() == 2 || V::elementtype() == 3, "Boolean vector expected");
     auto bits = to_bits(x);                      // convert to bits
     if (bits == 0) return -1;
-    if constexpr (V::size() < 32) {    
+    if constexpr (V::size() < 32) {
         return bit_scan_forward((uint32_t)bits);
     }
     else {
@@ -528,7 +528,7 @@ template <typename V>
 static inline int horizontal_count(V const x) {
     static_assert(V::elementtype() == 2 || V::elementtype() == 3, "Boolean vector expected");
     auto bits = to_bits(x);                      // convert to bits
-    if constexpr (V::size() < 32) {    
+    if constexpr (V::size() < 32) {
         return vml_popcnt((uint32_t)bits);
     }
     else {

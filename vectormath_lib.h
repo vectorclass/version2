@@ -11,11 +11,11 @@
 * Instructions to use SVML library:
 * Include this file and link with svml
 *
-* Alternatively, use the inline math functions by including 
+* Alternatively, use the inline math functions by including
 * vectormath_exp.h for power and exponential functions
 * vectormath_trig.h for trigonometric functions
 * vectormath_hyp.h for hyperbolic functions
-* 
+*
 * For detailed instructions, see vcl_manual.pdf
 *
 * (c) Copyright 2012-2019 Agner Fog.
@@ -125,7 +125,7 @@ static inline Vec4f cos(Vec4f const x) {    // cosine
 }
 static inline Vec2d cos(Vec2d const x) {    // cosine
     return _mm_cos_pd(x);
-} 
+}
 static inline Vec4f sincos(Vec4f * pcos, Vec4f const x) {  // sine and cosine. sin(x) returned, cos(x) in pcos
     __m128 r_sin, r_cos;
     r_sin = _mm_sincos_ps(&r_cos, x);
@@ -217,7 +217,7 @@ static inline Vec4f erf(Vec4f const x) {    // error function
 }
 static inline Vec2d erf(Vec2d const x) {    // error function
     return _mm_erf_pd(x);
-} 
+}
 static inline Vec4f erfc(Vec4f const x) {   // error function complement
     return _mm_erfc_ps(x);
 }
@@ -371,7 +371,7 @@ static inline Vec4f pow (Vec4f const a, Vec4f const b) {   // pow(a,b) = a to th
 
 static inline Vec4f pow (Vec4f const a, float const b) {   // pow(a,b) = a to the power of b
     return  __svml_powf4(a,Vec4f(b));
-} 
+}
 static inline Vec2d pow (Vec2d const a, Vec2d const b) {   // pow(a,b) = a to the power of b
     return  __svml_pow2(a,b);
 }
@@ -665,7 +665,7 @@ static inline Vec8f cos(Vec8f const x) {    // cosine
 }
 static inline Vec4d cos(Vec4d const x) {    // cosine
     return _mm256_cos_pd(x);
-} 
+}
 static inline Vec8f sincos(Vec8f * pcos, Vec8f const x) {   // sine and cosine. sin(x) returned, cos(x) in pcos
     __m256 r_sin, r_cos;
     r_sin = _mm256_sincos_ps(&r_cos, x);
@@ -757,7 +757,7 @@ static inline Vec8f erf(Vec8f const x) {    // error function
 }
 static inline Vec4d erf(Vec4d const x) {    // error function
     return _mm256_erf_pd(x);
-} 
+}
 static inline Vec8f erfc(Vec8f const x) {   // error function complement
     return _mm256_erfc_ps(x);
 }
@@ -864,7 +864,7 @@ static inline Vec8f exp (Vec8f const x) {   // exponential function
 }
 static inline Vec4d exp (Vec4d const x) {   // exponential function
     return  __svml_exp4(x);
-} 
+}
 static inline Vec8f expm1 (Vec8f const x) { // exp(x)-1
     return  __svml_expm1f8(x);
 }
@@ -876,7 +876,7 @@ static inline Vec8f exp2 (Vec8f const x) {  // pow(2,x)
 }
 static inline Vec4d exp2 (Vec4d const x) {  // pow(2,x)
     return  __svml_exp24(x);
-} 
+}
 static inline Vec8f exp10 (Vec8f const x) { // pow(10,x)
     return  __svml_exp10f8(x);
 }
@@ -914,13 +914,13 @@ static inline Vec8f log1p (Vec8f const x) { // log(1+x). Avoids loss of precisio
 }
 static inline Vec4d log1p (Vec4d const x) { // log(1+x). Avoids loss of precision if 1+x is close to 1
     return  __svml_log1p4(x);
-} 
+}
 static inline Vec8f log2 (Vec8f const x) {  // logarithm base 2
     return  __svml_log2f8(x);
 }
 static inline Vec4d log2 (Vec4d const x) {  // logarithm base 2
     return  __svml_log24(x);
-} 
+}
 static inline Vec8f log10 (Vec8f const x) { // logarithm base 10
     return  __svml_log10f8(x);
 }
@@ -973,7 +973,7 @@ static inline Vec8f tan (Vec8f const x) {   // tangent
 }
 static inline Vec4d tan (Vec4d const x) {   // tangent
     return  __svml_tan4(x);
-} 
+}
 
 // inverse trigonometric functions
 static inline Vec8f asin (Vec8f const x) {  // inverse sine
@@ -993,7 +993,7 @@ static inline Vec8f atan (Vec8f const x) {  // inverse tangent
 }
 static inline Vec4d atan (Vec4d const x) {  // inverse tangent
     return  __svml_atan4(x);
-} 
+}
 static inline Vec8f atan2 (Vec8f const a, Vec8f const b) { // inverse tangent of a/b
     return  __svml_atan2f8(a,b);
 }
@@ -1007,13 +1007,13 @@ static inline Vec8f sinh (Vec8f const x) {  // hyperbolic sine
 }
 static inline Vec4d sinh (Vec4d const x) {  // hyperbolic sine
     return  __svml_sinh4(x);
-} 
+}
 static inline Vec8f cosh (Vec8f const x) {  // hyperbolic cosine
     return  __svml_coshf8(x);
 }
 static inline Vec4d cosh (Vec4d const x) {  // hyperbolic cosine
     return  __svml_cosh4(x);
-} 
+}
 static inline Vec8f tanh (Vec8f const x) {  // hyperbolic tangent
     return  __svml_tanhf8(x);
 }
@@ -1025,7 +1025,7 @@ static inline Vec8f asinh (Vec8f const x) { // inverse hyperbolic sine
 }
 static inline Vec4d asinh (Vec4d const x) { // inverse hyperbolic sine
     return  __svml_asinh4(x);
-} 
+}
 static inline Vec8f acosh (Vec8f const x) { // inverse hyperbolic cosine
     return  __svml_acoshf8(x);
 }
@@ -1052,20 +1052,20 @@ static inline Vec8f erfc (Vec8f const x) {  // error function complement
 }
 static inline Vec4d erfc (Vec4d const x) {  // error function complement
     return  __svml_erfc4(x);
-} 
+}
 static inline Vec8f erfinv (Vec8f const x) {     // inverse error function
     return  __svml_erfinvf8(x);
 }
 static inline Vec4d erfinv (Vec4d const x) {     // inverse error function
     return  __svml_erfinv4(x);
-} 
+}
 
 static inline Vec8f cdfnorm (Vec8f const x) {    // cumulative normal distribution function
     return  __svml_cdfnormf8(x);
 }
 static inline Vec4d cdfnorm (Vec4d const x) {    // cumulative normal distribution function
     return  __svml_cdfnorm4(x);
-} 
+}
 static inline Vec8f cdfnorminv (Vec8f const x) { // inverse cumulative normal distribution function
     return  __svml_cdfnorminvf8(x);
 }
@@ -1088,13 +1088,13 @@ static inline Vec8f exp (Vec8f const x) {        // exponential function
 }
 static inline Vec4d exp (Vec4d const x) {        // exponential function
     return Vec4d(exp(x.get_low()), exp(x.get_high()));
-} 
+}
 static inline Vec8f expm1 (Vec8f const x) {      // exp(x)-1. Avoids loss of precision if x is close to 1
     return Vec8f(expm1(x.get_low()), expm1(x.get_high()));
 }
 static inline Vec4d expm1 (Vec4d const x) {      // exp(x)-1. Avoids loss of precision if x is close to 1
     return Vec4d(expm1(x.get_low()), expm1(x.get_high()));
-} 
+}
 static inline Vec8f exp2 (Vec8f const x) {       // pow(2,x)
     return Vec8f(exp2(x.get_low()), exp2(x.get_high()));
 }
@@ -1103,7 +1103,7 @@ static inline Vec4d exp2 (Vec4d const x) {       // pow(2,x)
 }
 static inline Vec8f exp10 (Vec8f const x) {      // pow(10,x)
     return Vec8f(exp10(x.get_low()), exp10(x.get_high()));
-}                                                
+}
 static inline Vec4d exp10 (Vec4d const x) {      // pow(10,x)
     return Vec4d(exp10(x.get_low()), exp10(x.get_high()));
 }
@@ -1115,10 +1115,10 @@ static inline Vec8f pow (Vec8f const a, float const b) {   // pow(a,b) = a to th
 }
 static inline Vec4d pow (Vec4d const a, Vec4d const b) {   // pow(a,b) = a to the power of b
     return Vec4d(pow(a.get_low(),b.get_low()), pow(a.get_high(),b.get_high()));
-} 
+}
 static inline Vec4d pow (Vec4d const a, double const b) {  // pow(a,b) = a to the power of b
     return Vec4d(pow(a.get_low(),b), pow(a.get_high(),b));
-} 
+}
 static inline Vec8f cbrt (Vec8f const x) {   // pow(x,1/3)
     return Vec8f(cbrt(x.get_low()), cbrt(x.get_high()));
 }
@@ -1132,13 +1132,13 @@ static inline Vec8f log (Vec8f const x) {   // natural logarithm
 }
 static inline Vec4d log (Vec4d const x) {   // natural logarithm
     return Vec4d(log(x.get_low()), log(x.get_high()));
-} 
+}
 static inline Vec8f log1p (Vec8f const x) { // log(1+x). Avoids loss of precision if 1+x is close to 1
     return Vec8f(log1p(x.get_low()), log1p(x.get_high()));
 }
 static inline Vec4d log1p (Vec4d const x) { // log(1+x). Avoids loss of precision if 1+x is close to 1
     return Vec4d(log1p(x.get_low()), log1p(x.get_high()));
-} 
+}
 static inline Vec8f log2 (Vec8f const x) {  // logarithm base 2
     return Vec8f(log2(x.get_low()), log2(x.get_high()));
 }
@@ -1158,7 +1158,7 @@ static inline Vec8f sin (Vec8f const x) {   // sine
 }
 static inline Vec4d sin (Vec4d const x) {   // sine
     return Vec4d(sin(x.get_low()), sin(x.get_high()));
-} 
+}
 static inline Vec8f cos (Vec8f const x) {   // cosine
     return Vec8f(cos(x.get_low()), cos(x.get_high()));
 }
@@ -1170,17 +1170,17 @@ static inline Vec4d cos (Vec4d const x) {   // cosine
 // no inline assembly in 64 bit MS compiler
 static inline Vec8f sincos (Vec8f * pcos, Vec8f const x) { // sine and cosine. sin(x) returned, cos(x) in pcos
     Vec4f r_sin0, r_sin1, r_cos0, r_cos1;
-    r_sin0 = sincos(&r_cos0, x.get_low()); 
+    r_sin0 = sincos(&r_cos0, x.get_low());
     r_sin1 = sincos(&r_cos1, x.get_high());
     *pcos = Vec8f(r_cos0, r_cos1);
-    return Vec8f(r_sin0, r_sin1); 
+    return Vec8f(r_sin0, r_sin1);
 }
 static inline Vec4d sincos (Vec4d * pcos, Vec4d const x) { // sine and cosine. sin(x) returned, cos(x) in pcos
     Vec2d r_sin0, r_sin1, r_cos0, r_cos1;
-    r_sin0 = sincos(&r_cos0, x.get_low()); 
+    r_sin0 = sincos(&r_cos0, x.get_low());
     r_sin1 = sincos(&r_cos1, x.get_high());
     *pcos = Vec4d(r_cos0, r_cos1);
-    return Vec4d(r_sin0, r_sin1); 
+    return Vec4d(r_sin0, r_sin1);
 }
 #endif // inline assembly available
 
@@ -1189,7 +1189,7 @@ static inline Vec8f tan (Vec8f const x) {   // tangent
 }
 static inline Vec4d tan (Vec4d const x) {   // tangent
     return Vec4d(tan(x.get_low()), tan(x.get_high()));
-} 
+}
 
 // inverse trigonometric functions
 static inline Vec8f asin (Vec8f const x) {  // inverse sine
@@ -1203,13 +1203,13 @@ static inline Vec8f acos (Vec8f const x) {  // inverse cosine
 }
 static inline Vec4d acos (Vec4d const x) {  // inverse cosine
     return Vec4d(acos(x.get_low()), acos(x.get_high()));
-} 
+}
 static inline Vec8f atan (Vec8f const x) {  // inverse tangent
     return Vec8f(atan(x.get_low()), atan(x.get_high()));
 }
 static inline Vec4d atan (Vec4d const x) {  // inverse tangent
     return Vec4d(atan(x.get_low()), atan(x.get_high()));
-} 
+}
 static inline Vec8f atan2 (Vec8f const a, Vec8f const b) { // inverse tangent of a/b
     return Vec8f(atan2(a.get_low(),b.get_low()), atan2(a.get_high(),b.get_high()));
 }
@@ -1223,13 +1223,13 @@ static inline Vec8f sinh (Vec8f const x) {  // hyperbolic sine
 }
 static inline Vec4d sinh (Vec4d const x) {  // hyperbolic sine
     return Vec4d(sinh(x.get_low()), sinh(x.get_high()));
-} 
+}
 static inline Vec8f cosh (Vec8f const x) {  // hyperbolic cosine
     return Vec8f(cosh(x.get_low()), cosh(x.get_high()));
 }
 static inline Vec4d cosh (Vec4d const x) {  // hyperbolic cosine
     return Vec4d(cosh(x.get_low()), cosh(x.get_high()));
-} 
+}
 static inline Vec8f tanh (Vec8f const x) {  // hyperbolic tangent
     return Vec8f(tanh(x.get_low()), tanh(x.get_high()));
 }
@@ -1263,13 +1263,13 @@ static inline Vec8f erf (Vec8f const x) {   // error function
 }
 static inline Vec4d erf (Vec4d const x) {   // error function
     return Vec4d(erf(x.get_low()), erf(x.get_high()));
-} 
+}
 static inline Vec8f erfc (Vec8f const x) {  // error function complement
     return Vec8f(erfc(x.get_low()), erfc(x.get_high()));
 }
 static inline Vec4d erfc (Vec4d const x) {  // error function complement
     return Vec4d(erfc(x.get_low()), erfc(x.get_high()));
-} 
+}
 static inline Vec8f erfinv (Vec8f const x) {     // inverse error function
     return Vec8f(erfinv(x.get_low()), erfinv(x.get_high()));
 }
@@ -1282,7 +1282,7 @@ static inline Vec8f cdfnorm (Vec8f const x) {    // cumulative normal distributi
 }
 static inline Vec4d cdfnorm (Vec4d const x) {    // cumulative normal distribution function
     return Vec4d(cdfnorm(x.get_low()), cdfnorm(x.get_high()));
-} 
+}
 static inline Vec8f cdfnorminv (Vec8f const x) { // inverse cumulative normal distribution function
     return Vec8f(cdfnorminv(x.get_low()), cdfnorminv(x.get_high()));
 }
@@ -1386,7 +1386,7 @@ static inline Vec16f cos(Vec16f const x) {       // cosine
 }
 static inline Vec8d cos(Vec8d const x) {         // cosine
     return _mm512_cos_pd(x);
-} 
+}
 static inline Vec16f sincos(Vec16f * pcos, Vec16f const x) { // sine and cosine. sin(x) returned, cos(x) in pcos
     __m512 r_sin, r_cos;
     r_sin = _mm512_sincos_ps(&r_cos, x);
@@ -1478,7 +1478,7 @@ static inline Vec16f erf(Vec16f const x) {       // error function
 }
 static inline Vec8d erf(Vec8d const x) {         // error function
     return _mm512_erf_pd(x);
-} 
+}
 static inline Vec16f erfc(Vec16f const x) {      // error function complement
     return _mm512_erfc_ps(x);
 }
@@ -1511,7 +1511,7 @@ static inline Vec8d cdfnorminv(Vec8d const x) {  // inverse cumulative normal di
 *      512-bit vector functions using other compiler than Intel
 *
 *****************************************************************************/
-                             
+
 // External function prototypes, 512-bit vectors
 extern "C" {
     extern __m512  V_VECTORCALL __svml_expf16       (__m512);
@@ -1585,7 +1585,7 @@ static inline Vec16f exp (Vec16f const x) {      // exponential function
 }
 static inline Vec8d exp (Vec8d const x) {        // exponential function
     return  __svml_exp8(x);
-} 
+}
 static inline Vec16f expm1 (Vec16f const x) {    // exp(x)-1
     return  __svml_expm1f16(x);
 }
@@ -1597,7 +1597,7 @@ static inline Vec16f exp2 (Vec16f const x) {     // pow(2,x)
 }
 static inline Vec8d exp2 (Vec8d const x) {       // pow(2,x)
     return  __svml_exp28(x);
-} 
+}
 static inline Vec16f exp10 (Vec16f const x) {    // pow(10,x)
     return  __svml_exp10f16(x);
 }
@@ -1635,13 +1635,13 @@ static inline Vec16f log1p (Vec16f const x) {    // log(1+x). Avoids loss of pre
 }
 static inline Vec8d log1p (Vec8d const x) {      // log(1+x). Avoids loss of precision if 1+x is close to 1
     return  __svml_log1p8(x);
-} 
+}
 static inline Vec16f log2 (Vec16f const x) {     // logarithm base 2
     return  __svml_log2f16(x);
 }
 static inline Vec8d log2 (Vec8d const x) {       // logarithm base 2
     return  __svml_log28(x);
-} 
+}
 static inline Vec16f log10 (Vec16f const x) {    // logarithm base 10
     return  __svml_log10f16(x);
 }
@@ -1666,7 +1666,7 @@ static inline Vec8d cos (Vec8d const x) {        // cosine
 #if defined(__unix__) || defined(__INTEL_COMPILER) //|| !defined(__x86_64__) || !defined(_MSC_VER)
 // no inline assembly in 64 bit MS compiler
 // sine and cosine. sin(x) returned, cos(x) in pcos
-static inline Vec16f sincos (Vec16f * pcos, Vec16f const x) { 
+static inline Vec16f sincos (Vec16f * pcos, Vec16f const x) {
     __m512 r_sin, r_cos;
     r_sin = __svml_sincosf16(x);
 #if defined(__unix__) || defined(__GNUC__)
@@ -1678,7 +1678,7 @@ static inline Vec16f sincos (Vec16f * pcos, Vec16f const x) {
     return r_sin;
 }
 // sine and cosine. sin(x) returned, cos(x) in pcos
-static inline Vec8d sincos (Vec8d * pcos, Vec8d const x) {   
+static inline Vec8d sincos (Vec8d * pcos, Vec8d const x) {
     __m512d r_sin, r_cos;
     r_sin = __svml_sincos8(x);
 #if defined(__unix__) || defined(__GNUC__)
@@ -1696,7 +1696,7 @@ static inline Vec16f tan (Vec16f const x) {      // tangent
 }
 static inline Vec8d tan (Vec8d const x) {        // tangent
     return  __svml_tan8(x);
-} 
+}
 
 // inverse trigonometric functions
 static inline Vec16f asin (Vec16f const x) {     // inverse sine
@@ -1716,7 +1716,7 @@ static inline Vec16f atan (Vec16f const x) {     // inverse tangent
 }
 static inline Vec8d atan (Vec8d const x) {       // inverse tangent
     return  __svml_atan8(x);
-} 
+}
 static inline Vec16f atan2 (Vec16f const a, Vec16f const b) {// inverse tangent of a/b
     return  __svml_atan2f16(a,b);
 }
@@ -1730,13 +1730,13 @@ static inline Vec16f sinh (Vec16f const x) {     // hyperbolic sine
 }
 static inline Vec8d sinh (Vec8d const x) {       // hyperbolic sine
     return  __svml_sinh8(x);
-} 
+}
 static inline Vec16f cosh (Vec16f const x) {     // hyperbolic cosine
     return  __svml_coshf16(x);
 }
 static inline Vec8d cosh (Vec8d const x) {       // hyperbolic cosine
     return  __svml_cosh8(x);
-} 
+}
 static inline Vec16f tanh (Vec16f const x) {     // hyperbolic tangent
     return  __svml_tanhf16(x);
 }
@@ -1748,13 +1748,13 @@ static inline Vec16f asinh (Vec16f const x) {    // inverse hyperbolic sine
 }
 static inline Vec8d asinh (Vec8d const x) {      // inverse hyperbolic sine
     return  __svml_asinh8(x);
-} 
+}
 static inline Vec16f acosh (Vec16f const x) {    // inverse hyperbolic cosine
     return  __svml_acoshf16(x);
 }
 static inline Vec8d acosh (Vec8d const x) {      // inverse hyperbolic cosine
     return  __svml_acosh8(x);
-} 
+}
 static inline Vec16f atanh (Vec16f const x) {    // inverse hyperbolic tangent
     return  __svml_atanhf16(x);
 }
@@ -1774,20 +1774,20 @@ static inline Vec16f erfc (Vec16f const x) {     // error function complement
 }
 static inline Vec8d erfc (Vec8d const x) {       // error function complement
     return  __svml_erfc8(x);
-} 
+}
 static inline Vec16f erfinv (Vec16f const x) {   // inverse error function
     return  __svml_erfinvf16(x);
 }
 static inline Vec8d erfinv (Vec8d const x) {     // inverse error function
     return  __svml_erfinv8(x);
-} 
+}
 
 static inline Vec16f cdfnorm (Vec16f const x) {  // cumulative normal distribution function
     return  __svml_cdfnormf16(x);
 }
 static inline Vec8d cdfnorm (Vec8d const x) {    // cumulative normal distribution function
     return  __svml_cdfnorm8(x);
-} 
+}
 static inline Vec16f cdfnorminv (Vec16f const x) {  // inverse cumulative normal distribution function
     return  __svml_cdfnorminvf16(x);
 }
@@ -1810,13 +1810,13 @@ static inline Vec16f exp (Vec16f const x) {      // exponential function
 }
 static inline Vec8d exp (Vec8d const x) {        // exponential function
     return Vec8d(exp(x.get_low()), exp(x.get_high()));
-} 
+}
 static inline Vec16f expm1 (Vec16f const x) {    // exp(x)-1. Avoids loss of precision if x is close to 1
     return Vec16f(expm1(x.get_low()), expm1(x.get_high()));
 }
 static inline Vec8d expm1 (Vec8d const x) {      // exp(x)-1. Avoids loss of precision if x is close to 1
     return Vec8d(expm1(x.get_low()), expm1(x.get_high()));
-} 
+}
 static inline Vec16f exp2 (Vec16f const x) {     // pow(2,x)
     return Vec16f(exp2(x.get_low()), exp2(x.get_high()));
 }
@@ -1837,10 +1837,10 @@ static inline Vec16f pow (Vec16f const a, float const b) {   // pow(a,b) = a to 
 }
 static inline Vec8d pow (Vec8d const a, Vec8d const b) {     // pow(a,b) = a to the power of b
     return Vec8d(pow(a.get_low(),b.get_low()), pow(a.get_high(),b.get_high()));
-} 
+}
 static inline Vec8d pow (Vec8d const a, double const b) {    // pow(a,b) = a to the power of b
     return Vec8d(pow(a.get_low(),b), pow(a.get_high(),b));
-} 
+}
 static inline Vec16f cbrt (Vec16f const x) {     // pow(x,1/3)
     return Vec16f(cbrt(x.get_low()), cbrt(x.get_high()));
 }
@@ -1854,13 +1854,13 @@ static inline Vec16f log (Vec16f const x) {      // natural logarithm
 }
 static inline Vec8d log (Vec8d const x) {        // natural logarithm
     return Vec8d(log(x.get_low()), log(x.get_high()));
-} 
+}
 static inline Vec16f log1p (Vec16f const x) {    // log(1+x). Avoids loss of precision if 1+x is close to 1
     return Vec16f(log1p(x.get_low()), log1p(x.get_high()));
 }
 static inline Vec8d log1p (Vec8d const x) {      // log(1+x). Avoids loss of precision if 1+x is close to 1
     return Vec8d(log1p(x.get_low()), log1p(x.get_high()));
-} 
+}
 static inline Vec16f log2 (Vec16f const x) {     // logarithm base 2
     return Vec16f(log2(x.get_low()), log2(x.get_high()));
 }
@@ -1880,7 +1880,7 @@ static inline Vec16f sin (Vec16f const x) {      // sine
 }
 static inline Vec8d sin (Vec8d const x) {        // sine
     return Vec8d(sin(x.get_low()), sin(x.get_high()));
-} 
+}
 static inline Vec16f cos (Vec16f const x) {      // cosine
     return Vec16f(cos(x.get_low()), cos(x.get_high()));
 }
@@ -1892,17 +1892,17 @@ static inline Vec8d cos (Vec8d const x) {        // cosine
 // no inline assembly in 64 bit MS compiler
 static inline Vec16f sincos (Vec16f * pcos, Vec16f const x) {  // sine and cosine. sin(x) returned, cos(x) in pcos
     Vec8f r_sin0, r_sin1, r_cos0, r_cos1;
-    r_sin0 = sincos(&r_cos0, x.get_low()); 
+    r_sin0 = sincos(&r_cos0, x.get_low());
     r_sin1 = sincos(&r_cos1, x.get_high());
     *pcos = Vec16f(r_cos0, r_cos1);
-    return Vec16f(r_sin0, r_sin1); 
+    return Vec16f(r_sin0, r_sin1);
 }
 static inline Vec8d sincos (Vec8d * pcos, Vec8d const x) {     // sine and cosine. sin(x) returned, cos(x) in pcos
     Vec4d r_sin0, r_sin1, r_cos0, r_cos1;
-    r_sin0 = sincos(&r_cos0, x.get_low()); 
+    r_sin0 = sincos(&r_cos0, x.get_low());
     r_sin1 = sincos(&r_cos1, x.get_high());
     *pcos = Vec8d(r_cos0, r_cos1);
-    return Vec8d(r_sin0, r_sin1); 
+    return Vec8d(r_sin0, r_sin1);
 }
 #endif // inline assembly available
 
@@ -1912,7 +1912,7 @@ static inline Vec16f tan (Vec16f const x) {      // tangent
 }
 static inline Vec8d tan (Vec8d const x) {        // tangent
     return Vec8d(tan(x.get_low()), tan(x.get_high()));
-} 
+}
 
 // inverse trigonometric functions
 static inline Vec16f asin (Vec16f const x) {     // inverse sine
@@ -1926,13 +1926,13 @@ static inline Vec16f acos (Vec16f const x) {     // inverse cosine
 }
 static inline Vec8d acos (Vec8d const x) {       // inverse cosine
     return Vec8d(acos(x.get_low()), acos(x.get_high()));
-} 
+}
 static inline Vec16f atan (Vec16f const x) {     // inverse tangent
     return Vec16f(atan(x.get_low()), atan(x.get_high()));
 }
 static inline Vec8d atan (Vec8d const x) {       // inverse tangent
     return Vec8d(atan(x.get_low()), atan(x.get_high()));
-} 
+}
 static inline Vec16f atan2 (Vec16f const a, Vec16f const b) {  // inverse tangent of a/b
     return Vec16f(atan2(a.get_low(),b.get_low()), atan2(a.get_high(),b.get_high()));
 }
@@ -1946,13 +1946,13 @@ static inline Vec16f sinh (Vec16f const x) {     // hyperbolic sine
 }
 static inline Vec8d sinh (Vec8d const x) {       // hyperbolic sine
     return Vec8d(sinh(x.get_low()), sinh(x.get_high()));
-} 
+}
 static inline Vec16f cosh (Vec16f const x) {     // hyperbolic cosine
     return Vec16f(cosh(x.get_low()), cosh(x.get_high()));
 }
 static inline Vec8d cosh (Vec8d const x) {       // hyperbolic cosine
     return Vec8d(cosh(x.get_low()), cosh(x.get_high()));
-} 
+}
 static inline Vec16f tanh (Vec16f const x) {     // hyperbolic tangent
     return Vec16f(tanh(x.get_low()), tanh(x.get_high()));
 }
@@ -1986,13 +1986,13 @@ static inline Vec16f erf (Vec16f const x) {      // error function
 }
 static inline Vec8d erf (Vec8d const x) {        // error function
     return Vec8d(erf(x.get_low()), erf(x.get_high()));
-} 
+}
 static inline Vec16f erfc (Vec16f const x) {     // error function complement
     return Vec16f(erfc(x.get_low()), erfc(x.get_high()));
 }
 static inline Vec8d erfc (Vec8d const x) {       // error function complement
     return Vec8d(erfc(x.get_low()), erfc(x.get_high()));
-} 
+}
 static inline Vec16f erfinv (Vec16f const x) {   // inverse error function
     return Vec16f(erfinv(x.get_low()), erfinv(x.get_high()));
 }
@@ -2005,7 +2005,7 @@ static inline Vec16f cdfnorm (Vec16f const x) {  // cumulative normal distributi
 }
 static inline Vec8d cdfnorm (Vec8d const x) {    // cumulative normal distribution function
     return Vec8d(cdfnorm(x.get_low()), cdfnorm(x.get_high()));
-} 
+}
 static inline Vec16f cdfnorminv (Vec16f const x) { // inverse cumulative normal distribution function
     return Vec16f(cdfnorminv(x.get_low()), cdfnorminv(x.get_high()));
 }

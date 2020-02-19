@@ -86,7 +86,7 @@ public:
     // Constructor to build from all elements:
     Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
 #if INSTRSET >= 8  // AVX2
-        ymm = _mm256_castsi256_ps(_mm256_setr_epi32(-(int)b0, -(int)b1, -(int)b2, -(int)b3, -(int)b4, -(int)b5, -(int)b6, -(int)b7)); 
+        ymm = _mm256_castsi256_ps(_mm256_setr_epi32(-(int)b0, -(int)b1, -(int)b2, -(int)b3, -(int)b4, -(int)b5, -(int)b6, -(int)b7));
 #else
         __m128 blo = _mm_castsi128_ps(_mm_setr_epi32(-(int)b0, -(int)b1, -(int)b2, -(int)b3));
         __m128 bhi = _mm_castsi128_ps(_mm_setr_epi32(-(int)b4, -(int)b5, -(int)b6, -(int)b7));
@@ -161,7 +161,7 @@ public:
     // AVX version. Use float instructions, treating integers as subnormal values
     Vec8fb & load_bits(uint8_t a) {
         __m256 b1 = _mm256_castsi256_ps(_mm256_set1_epi32((int32_t)a));  // broadcast a
-        __m256 m2 = constant8f<1,2,4,8,0x10,0x20,0x40,0x80>(); 
+        __m256 m2 = constant8f<1,2,4,8,0x10,0x20,0x40,0x80>();
         __m256 d1 = _mm256_and_ps(b1, m2); // isolate one bit in each dword
         ymm = _mm256_cmp_ps(d1, _mm256_setzero_ps(), 4);  // compare subnormal values with 0
         return *this;
@@ -275,7 +275,7 @@ static inline Vec8fb operator == (Vec8fb const a, Vec8fb const b) {
 // vector operator != : xor
 static inline Vec8fb operator != (Vec8fb const a, Vec8fb const b) {
     return _mm256_xor_ps(a, b);
-} 
+}
 
 // vector operator ^= : bitwise xor
 static inline Vec8fb & operator ^= (Vec8fb & a, Vec8fb const b) {
@@ -332,7 +332,7 @@ public:
     // Constructor to build from all elements:
     Vec4db(bool b0, bool b1, bool b2, bool b3) {
 #if INSTRSET >= 8  // AVX2
-        ymm = _mm256_castsi256_pd(_mm256_setr_epi64x(-(int64_t)b0, -(int64_t)b1, -(int64_t)b2, -(int64_t)b3)); 
+        ymm = _mm256_castsi256_pd(_mm256_setr_epi64x(-(int64_t)b0, -(int64_t)b1, -(int64_t)b2, -(int64_t)b3));
 #else
         __m128 blo = _mm_castsi128_ps(_mm_setr_epi32(-(int)b0, -(int)b0, -(int)b1, -(int)b1));
         __m128 bhi = _mm_castsi128_ps(_mm_setr_epi32(-(int)b2, -(int)b2, -(int)b3, -(int)b3));
@@ -411,7 +411,7 @@ public:
     // AVX version. Use float instructions, treating integers as subnormal values
     Vec4db & load_bits(uint8_t a) {
         __m256d b1 = _mm256_castsi256_pd(_mm256_set1_epi32((int32_t)a));  // broadcast a
-        __m256d m2 = _mm256_castps_pd(constant8f<1,0,2,0,4,0,8,0>()); 
+        __m256d m2 = _mm256_castps_pd(constant8f<1,0,2,0,4,0,8,0>());
         __m256d d1 = _mm256_and_pd(b1, m2); // isolate one bit in each dword
         ymm = _mm256_cmp_pd(d1, _mm256_setzero_pd(), 4);  // compare subnormal values with 0
         return *this;
@@ -520,7 +520,7 @@ static inline Vec4db operator == (Vec4db const a, Vec4db const b) {
 // vector operator != : xor
 static inline Vec4db operator != (Vec4db const a, Vec4db const b) {
     return _mm256_xor_pd(a, b);
-} 
+}
 
 // vector operator ^= : bitwise xor
 static inline Vec4db & operator ^= (Vec4db & a, Vec4db const b) {
@@ -586,7 +586,7 @@ public:
     }
     // Constructor to build from all elements:
     Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) {
-        ymm = _mm256_setr_ps(f0, f1, f2, f3, f4, f5, f6, f7); 
+        ymm = _mm256_setr_ps(f0, f1, f2, f3, f4, f5, f6, f7);
     }
     // Constructor to build from two Vec4f:
     Vec8f(Vec4f const a0, Vec4f const a1) {
@@ -630,7 +630,7 @@ public:
     Vec8f & load_partial(int n, float const * p) {
 #if INSTRSET >= 10  // AVX512VL
         ymm = _mm256_maskz_loadu_ps(__mmask8((1u << n) - 1), p);
-#else 
+#else
         if (n > 0 && n <= 4) {
             *this = Vec8f(Vec4f().load_partial(n, p), _mm_setzero_ps());
         }
@@ -647,7 +647,7 @@ public:
     void store_partial(int n, float * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm256_mask_storeu_ps(p, __mmask8((1u << n) - 1), ymm);
-#else 
+#else
         if (n <= 4) {
             get_low().store_partial(n, p);
         }
@@ -659,11 +659,11 @@ public:
     }
     // cut off vector to n elements. The last 8-n elements are set to zero
     Vec8f & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         ymm = _mm256_maskz_mov_ps(__mmask8((1u << n) - 1), ymm);
-#else  
+#else
         if (uint32_t(n) >= 8) return *this;
-        const union {        
+        const union {
             int32_t i[16];
             float   f[16];
         } mask = {{-1,-1,-1,-1,-1,-1,-1,-1,0,0,0,0,0,0,0,0}};
@@ -673,7 +673,7 @@ public:
     }
     // Member function to change a single element in vector
     Vec8f const insert(int index, float value) {
-#if INSTRSET >= 10   // AVX512VL         
+#if INSTRSET >= 10   // AVX512VL
         ymm = _mm256_mask_broadcastss_ps (ymm, __mmask8(1u << index), _mm_set_ss(value));
 #else
         __m256 v0 = _mm256_broadcast_ss(&value);
@@ -702,8 +702,8 @@ public:
     float extract(int index) const {
 #if INSTRSET >= 10
         __m256 x = _mm256_maskz_compress_ps(__mmask8(1u << index), ymm);
-        return _mm256_cvtss_f32(x);        
-#else 
+        return _mm256_cvtss_f32(x);
+#else
         float x[8];
         store(x);
         return x[index & 7];
@@ -1036,7 +1036,7 @@ static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) {
 
 // Categorization functions
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
 static inline Vec8fb is_finite(Vec8f const a) {
@@ -1075,7 +1075,7 @@ static inline Vec8fb is_nan(Vec8f const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_fpclass_ps_mask (a, 0x81);
 }
-//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 //__attribute__((optimize("-fno-unsafe-math-optimizations")))
 //static inline Vec8fb is_nan(Vec8f const a) {
 //    return a != a; // not safe with -ffinite-math-only compiler option
@@ -1153,7 +1153,7 @@ static inline Vec8f max(Vec8f const a, Vec8f const b) {
 // function min: a < b ? a : b
 static inline Vec8f min(Vec8f const a, Vec8f const b) {
     return _mm256_min_ps(a,b);
-} 
+}
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
@@ -1177,7 +1177,7 @@ static inline Vec8f square(Vec8f const a) {
 }
 
 // The purpose of this template is to prevent implicit conversion of a float
-// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included 
+// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included
 template <typename TT> static Vec8f pow(Vec8f const a, TT const n);
 
 // Raise floating point numbers to integer power n
@@ -1196,7 +1196,7 @@ inline Vec8f pow<uint32_t>(Vec8f const x0, uint32_t const n) {
 template <int n>
 static inline Vec8f pow(Vec8f const a, Const_int_t<n>) {
     return pow_n<Vec8f, n>(a);
-} 
+}
 
 // function round: round to nearest integer (even). (result as float vector)
 static inline Vec8f round(Vec8f const a) {
@@ -1285,7 +1285,7 @@ static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
     return _mm256_macc_ps(a, b, c);
 #else
     return a * b + c;
-#endif    
+#endif
 }
 
 // Multiply and subtract
@@ -1296,7 +1296,7 @@ static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) {
     return _mm256_msub_ps(a, b, c);
 #else
     return a * b - c;
-#endif    
+#endif
 }
 
 // Multiply and inverse subtract
@@ -1311,9 +1311,9 @@ static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
 }
 
 
-// Multiply and subtract with extra precision on the intermediate calculations, 
+// Multiply and subtract with extra precision on the intermediate calculations,
 // even if FMA instructions not supported, using Veltkamp-Dekker split
-// This is used in mathematical functions. Do not use it in general code 
+// This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
 static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) {
 #ifdef __FMA__
@@ -1387,7 +1387,7 @@ static inline Vec8i exponent(Vec8f const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f 
+// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
 static inline Vec8f fraction(Vec8f const a) {
 #if INSTRSET >= 10
     return _mm256_getmant_ps(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
@@ -1439,7 +1439,7 @@ public:
     }
     // Constructor to build from all elements:
     Vec4d(double d0, double d1, double d2, double d3) {
-        ymm = _mm256_setr_pd(d0, d1, d2, d3); 
+        ymm = _mm256_setr_pd(d0, d1, d2, d3);
     }
     // Constructor to build from two Vec2d:
     Vec4d(Vec2d const a0, Vec2d const a1) {
@@ -1485,7 +1485,7 @@ public:
     Vec4d & load_partial(int n, double const * p) {
 #if INSTRSET >= 10  // AVX512VL
         ymm = _mm256_maskz_loadu_pd(__mmask8((1u << n) - 1), p);
-#else 
+#else
         if (n > 0 && n <= 2) {
             *this = Vec4d(Vec2d().load_partial(n, p), _mm_setzero_pd());
         }
@@ -1502,7 +1502,7 @@ public:
     void store_partial(int n, double * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm256_mask_storeu_pd(p, __mmask8((1u << n) - 1), ymm);
-#else 
+#else
         if (n <= 2) {
             get_low().store_partial(n, p);
         }
@@ -1514,9 +1514,9 @@ public:
     }
     // cut off vector to n elements. The last 4-n elements are set to zero
     Vec4d & cutoff(int n) {
-#if INSTRSET >= 10 
+#if INSTRSET >= 10
         ymm = _mm256_maskz_mov_pd(__mmask8((1u << n) - 1), ymm);
-#else  
+#else
         ymm = _mm256_castps_pd(Vec8f(_mm256_castpd_ps(ymm)).cutoff(n*2));
 #endif
         return *this;
@@ -1524,7 +1524,7 @@ public:
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
     Vec4d const insert(int index, double value) {
-#if INSTRSET >= 10   // AVX512VL         
+#if INSTRSET >= 10   // AVX512VL
         ymm = _mm256_mask_broadcastsd_pd (ymm, __mmask8(1u << index), _mm_set_sd(value));
 #else
         __m256d v0 = _mm256_broadcast_sd(&value);
@@ -1545,8 +1545,8 @@ public:
     double extract(int index) const {
 #if INSTRSET >= 10
         __m256d x = _mm256_maskz_compress_pd(__mmask8(1u << index), ymm);
-        return _mm256_cvtsd_f64(x);        
-#else 
+        return _mm256_cvtsd_f64(x);
+#else
         double x[4];
         store(x);
         return x[index & 3];
@@ -1860,7 +1860,7 @@ static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) {
 #endif
 }
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 static inline Vec4db is_finite(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
@@ -1900,7 +1900,7 @@ static inline Vec4db is_nan(Vec4d const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_fpclass_pd_mask (a, 0x81);
 }
-//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 //__attribute__((optimize("-fno-unsafe-math-optimizations")))
 //static inline Vec4db is_nan(Vec4d const a) {
 //    return a != a; // not safe with -ffinite-math-only compiler option
@@ -1950,7 +1950,7 @@ static inline Vec4db is_zero_or_subnormal(Vec4d const a) {
 #else
     return Vec4db(is_zero_or_subnormal(a.get_low()),is_zero_or_subnormal(a.get_high()));
 #endif
-} 
+}
 
 // General arithmetic functions, etc.
 
@@ -1991,7 +1991,7 @@ static inline Vec4d square(Vec4d const a) {
 }
 
 // The purpose of this template is to prevent implicit conversion of a float
-// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included 
+// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included
 template <typename TT> static Vec4d pow(Vec4d const a, TT const n);
 
 // Raise floating point numbers to integer power n
@@ -2144,8 +2144,8 @@ static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
 #else
     return a * b + c;
 #endif
-    
-} 
+
+}
 
 // Multiply and subtract
 static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) {
@@ -2155,7 +2155,7 @@ static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) {
     return _mm256_msub_pd(a, b, c);
 #else
     return a * b - c;
-#endif   
+#endif
 }
 
 // Multiply and inverse subtract
@@ -2169,9 +2169,9 @@ static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
 #endif
 }
 
-// Multiply and subtract with extra precision on the intermediate calculations, 
+// Multiply and subtract with extra precision on the intermediate calculations,
 // even if FMA instructions not supported, using Veltkamp-Dekker split.
-// This is used in mathematical functions. Do not use it in general code 
+// This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
 static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) {
 #ifdef __FMA__
@@ -2213,7 +2213,7 @@ static inline Vec4q exponent(Vec4d const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0) = 1.0, fraction(5.0) = 1.25 
+// fraction(1.0) = 1.0, fraction(5.0) = 1.25
 static inline Vec4d fraction(Vec4d const a) {
 #if INSTRSET >= 10
     return _mm256_getmant_pd(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
@@ -2285,7 +2285,7 @@ inline Vec4d change_sign(Vec4d const a) {
 
 // ABI version 4 or later needed on Gcc for correct mangling of 256-bit intrinsic vectors.
 // If necessary, compile with -fabi-version=0 to get the latest abi version
-//#if !defined (GCC_VERSION) || (defined (__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 1004)  
+//#if !defined (GCC_VERSION) || (defined (__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 1004)
 static inline __m256i reinterpret_i (__m256i const x) {
     return x;
 }
@@ -2383,7 +2383,7 @@ static inline Vec4d infinite4d() {
 }
 
 // Function nan4d: returns a vector where all elements are +NAN (quiet)
-static inline Vec4d nan4d(int n = 0x10) {        
+static inline Vec4d nan4d(int n = 0x10) {
     return nan_vec<Vec4d>(n);
 }
 
@@ -2416,16 +2416,16 @@ static inline Vec4d permute4(Vec4d const a) {
         constexpr int j1 = L.a[1];
 #ifndef ZEXT_MISSING
         if constexpr (j0 == 0 && j1 == -1 && !(flags & perm_addz)) { // zero extend
-            return _mm256_zextpd128_pd256(_mm256_castpd256_pd128(y)); 
+            return _mm256_zextpd128_pd256(_mm256_castpd256_pd128(y));
         }
         if constexpr (j0 == 1 && j1 < 0 && !(flags & perm_addz)) {   // extract upper part, zero extend
-            return _mm256_zextpd128_pd256(_mm256_extractf128_pd(y, 1)); 
+            return _mm256_zextpd128_pd256(_mm256_extractf128_pd(y, 1));
         }
 #endif
         if constexpr ((flags & perm_perm) != 0  && !(flags & perm_zeroing)) {
             return _mm256_permute2f128_pd(y, y, (j0 & 1) | (j1 & 1) << 4);
         }
-    } 
+    }
     if constexpr ((flags & perm_perm) != 0) {              // permutation needed
         if constexpr ((flags & perm_same_pattern) != 0) {  // same pattern in both lanes
             if constexpr ((flags & perm_punpckh) != 0) {   // fits punpckhi
@@ -2439,13 +2439,13 @@ static inline Vec4d permute4(Vec4d const a) {
                 y = _mm256_permute_pd(a, mm0);             // select within same lane
             }
         }
-#if INSTRSET >= 8  // AVX2 
+#if INSTRSET >= 8  // AVX2
         else if constexpr ((flags & perm_broadcast) != 0 && (flags >> perm_rot_count) == 0) {
             y = _mm256_broadcastsd_pd(_mm256_castpd256_pd128(y)); // broadcast first element
         }
 #endif
         else {     // different patterns in two lanes
-#if INSTRSET >= 10 // AVX512VL 
+#if INSTRSET >= 10 // AVX512VL
             if constexpr ((flags & perm_rotate_big) != 0) { // fits big rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count); // rotation count
                 constexpr uint8_t zm = zero_mask<4>(indexs);
@@ -2457,7 +2457,7 @@ static inline Vec4d permute4(Vec4d const a) {
                 y = _mm256_permute_pd(a, mm0);             // select within same lane
             }
             else {
-#if INSTRSET >= 8  // AVX2 
+#if INSTRSET >= 8  // AVX2
                 // full permute
                 constexpr uint8_t mms = (i0 & 3) | (i1 & 3) << 2 | (i2 & 3) << 4 | (i3 & 3) << 6;
                 y = _mm256_permute4x64_pd(a, mms);
@@ -2504,7 +2504,7 @@ static inline Vec8f permute8(Vec8f const a) {
 
         if constexpr ((flags & perm_largeblock) != 0) {    // use larger permutation
             constexpr EList<int, 4> L = largeblock_perm<8>(indexs); // permutation pattern
-            y = _mm256_castpd_ps(permute4 <L.a[0], L.a[1], L.a[2], L.a[3]> 
+            y = _mm256_castpd_ps(permute4 <L.a[0], L.a[1], L.a[2], L.a[3]>
                 (Vec4d(_mm256_castps_pd(a))));
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
@@ -2533,12 +2533,12 @@ static inline Vec8f permute8(Vec8f const a) {
         }
 #endif
 #if INSTRSET >= 8  // avx2
-        else if constexpr ((flags & perm_zext) != 0) {  // zero extension      
+        else if constexpr ((flags & perm_zext) != 0) {  // zero extension
             y = _mm256_castsi256_ps(_mm256_cvtepu32_epi64(_mm256_castsi256_si128(_mm256_castps_si256(y))));  // zero extension
             if constexpr ((flags & perm_addz2) == 0) return y;
         }
 #endif
-#if INSTRSET >= 10  // AVX512VL 
+#if INSTRSET >= 10  // AVX512VL
         else if constexpr ((flags & perm_compress) != 0) {
             y = _mm256_maskz_compress_ps(__mmask8(compress_mask(indexs)), y); // compress
             if constexpr ((flags & perm_addz2) == 0) return y;
@@ -2549,14 +2549,14 @@ static inline Vec8f permute8(Vec8f const a) {
         }
 #endif
         else {  // different patterns in two lanes
-#if INSTRSET >= 10  // AVX512VL 
+#if INSTRSET >= 10  // AVX512VL
             if constexpr ((flags & perm_rotate_big) != 0) { // fits big rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count); // rotation count
                 y = _mm256_castsi256_ps(_mm256_alignr_epi32(_mm256_castps_si256(y), _mm256_castps_si256(y), rot));
             }
             else
 #endif
-            if constexpr ((flags & perm_cross_lane) == 0) {  // no lane crossing. Use vpermilps 
+            if constexpr ((flags & perm_cross_lane) == 0) {  // no lane crossing. Use vpermilps
                 __m256 m = constant8f<i0 & 3, i1 & 3, i2 & 3, i3 & 3, i4 & 3, i5 & 3, i6 & 3, i7 & 3>();
                 y = _mm256_permutevar_ps(a, _mm256_castps_si256(m));
             }
@@ -2566,7 +2566,7 @@ static inline Vec8f permute8(Vec8f const a) {
                     constant8f <i0 & 7, i1 & 7, i2 & 7, i3 & 7, i4 & 7, i5 & 7, i6 & 7, i7 & 7 >());
 #if INSTRSET >= 8  // AVX2
                 y = _mm256_permutevar8x32_ps(a, permmask);
-#else           
+#else
                 // permute lanes separately
                 __m256 sw = _mm256_permute2f128_ps(a, a, 1);  // swap the two 128-bit lanes
                 __m256 y1 = _mm256_permutevar_ps(a,  permmask);   // select from same lane
@@ -2607,14 +2607,14 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
         return permute4 <i0<0?i0:i0&3, i1<0?i1:i1&3, i2<0?i2:i2&3, i3<0?i3:i3&3> (b);
-    } 
+    }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint8_t mb = (uint8_t)make_bit_mask<4, 0x302>(indexs);  // blend mask
 #if INSTRSET >= 10 // AVX512VL
         y = _mm256_mask_mov_pd (a, mb, b);
 #else  // AVX
         y = _mm256_blend_pd(a, b, mb); // duplicate each bit
-#endif        
+#endif
     }
     else if constexpr ((flags & blend_largeblock) != 0) {  // blend and permute 128-bit blocks
         constexpr EList<int, 2> L = largeblock_perm<4>(indexs); // get 128-bit blend pattern
@@ -2622,22 +2622,22 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
         y = _mm256_permute2f128_pd(a, b, pp);
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm256_unpacklo_pd (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm256_unpacklo_pd (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm256_unpackhi_pd(a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm256_unpackhi_pd(b, a);
     }
-    else if constexpr ((flags & blend_shufab) != 0) { 
+    else if constexpr ((flags & blend_shufab) != 0) {
         y = _mm256_shuffle_pd(a, b, (flags >> blend_shufpattern) & 0xF);
     }
-    else if constexpr ((flags & blend_shufba) != 0) { 
+    else if constexpr ((flags & blend_shufba) != 0) {
         y = _mm256_shuffle_pd(b, a, (flags >> blend_shufpattern) & 0xF);
     }
     else { // No special cases
@@ -2649,7 +2649,7 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
         __m256d ya = permute4<L.a[0], L.a[1], L.a[2], L.a[3]>(a);
         __m256d yb = permute4<L.a[4], L.a[5], L.a[6], L.a[7]>(b);
         constexpr uint8_t mb = (uint8_t)make_bit_mask<4, 0x302>(indexs);  // blend mask
-        y = _mm256_blend_pd(ya, yb, mb); 
+        y = _mm256_blend_pd(ya, yb, mb);
 #endif
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
@@ -2678,36 +2678,36 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
 
     if constexpr ((flags & blend_largeblock) != 0) {       // blend and permute 32-bit blocks
         constexpr EList<int, 4> L = largeblock_perm<8>(indexs); // get 32-bit blend pattern
-        y = _mm256_castpd_ps(blend4 <L.a[0], L.a[1], L.a[2], L.a[3]> 
+        y = _mm256_castpd_ps(blend4 <L.a[0], L.a[1], L.a[2], L.a[3]>
             (Vec4d(_mm256_castps_pd(a)), Vec4d(_mm256_castps_pd(b))));
-        if (!(flags & blend_addz)) return y;               // no remaining zeroing        
-    } 
+        if (!(flags & blend_addz)) return y;               // no remaining zeroing
+    }
     else if constexpr ((flags & blend_b) == 0) {           // nothing from b. just permute a
         return permute8 <i0, i1, i2, i3, i4, i5, i6, i7> (a);
     }
     else if constexpr ((flags & blend_a) == 0) {           // nothing from a. just permute b
         constexpr EList<int, 16> L = blend_perm_indexes<8, 2>(indexs); // get permutation indexes
         return permute8 < L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] > (b);
-    } 
+    }
     else if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
 #if INSTRSET >= 10 // AVX512VL
         y = _mm256_mask_mov_ps(a, mb, b);
 #else  // AVX2
-        y = _mm256_blend_ps(a, b, mb); 
-#endif        
+        y = _mm256_blend_ps(a, b, mb);
+#endif
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm256_unpacklo_ps(a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm256_unpacklo_ps(b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm256_unpackhi_ps(a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm256_unpackhi_ps(b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0) {      // use floating point instruction shufpd
@@ -2725,7 +2725,7 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
         __m256 ya = permute8<L.a[0], L.a[1], L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7] >(a);
         __m256 yb = permute8<L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15]>(b);
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
-        y = _mm256_blend_ps(ya, yb, mb); 
+        y = _mm256_blend_ps(ya, yb, mb);
 #endif
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
@@ -2777,8 +2777,8 @@ template <int n>
 static inline Vec8f lookup(Vec8i const index, float const * table) {
     if (n <= 0) return 0;
     if (n <= 4) {
-        Vec4f table1 = Vec4f().load(table);        
-        return Vec8f(       
+        Vec4f table1 = Vec4f().load(table);
+        return Vec8f(
             lookup4 (index.get_low(),  table1),
             lookup4 (index.get_high(), table1));
     }
@@ -2841,8 +2841,8 @@ template <int n>
 static inline Vec4d lookup(Vec4q const index, double const * table) {
     if (n <= 0) return 0;
     if (n <= 2) {
-        Vec2d table1 = Vec2d().load(table);        
-        return Vec4d(       
+        Vec2d table1 = Vec2d().load(table);
+        return Vec4d(
             lookup2 (index.get_low(),  table1),
             lookup2 (index.get_high(), table1));
     }
@@ -2894,24 +2894,24 @@ static inline Vec4d gather4d(void const * a) {
 ******************************************************************************
 *
 * These functions write the elements of a vector to arbitrary positions in an
-* array in memory. Each vector element is written to an array position 
+* array in memory. Each vector element is written to an array position
 * determined by an index. An element is not written if the corresponding
 * index is out of range.
 * The indexes can be specified as constant template parameters or as an
 * integer vector.
-* 
+*
 *****************************************************************************/
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline void scatter(Vec8f const data, float * array) {
 #if INSTRSET >= 10 //  __AVX512VL__
     __m256i indx = constant8ui<i0,i1,i2,i3,i4,i5,i6,i7>();
-    __mmask8 mask = uint16_t((i0>=0) | ((i1>=0)<<1) | ((i2>=0)<<2) | ((i3>=0)<<3) | 
+    __mmask8 mask = uint16_t((i0>=0) | ((i1>=0)<<1) | ((i2>=0)<<2) | ((i3>=0)<<3) |
         ((i4>=0)<<4) | ((i5>=0)<<5) | ((i6>=0)<<6) | ((i7>=0)<<7));
     _mm256_mask_i32scatter_ps(array, mask, indx, data, 4);
 #elif INSTRSET >= 9  //  __AVX512F__
     __m512i indx = _mm512_castsi256_si512(constant8ui<i0,i1,i2,i3,i4,i5,i6,i7>());
-    __mmask16 mask = uint16_t((i0>=0) | ((i1>=0)<<1) | ((i2>=0)<<2) | ((i3>=0)<<3) | 
+    __mmask16 mask = uint16_t((i0>=0) | ((i1>=0)<<1) | ((i2>=0)<<2) | ((i3>=0)<<3) |
         ((i4>=0)<<4) | ((i5>=0)<<5) | ((i6>=0)<<6) | ((i7>=0)<<7));
     _mm512_mask_i32scatter_ps(array, mask, indx, _mm512_castps256_ps512(data), 4);
 #else
@@ -2973,7 +2973,7 @@ static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, 
         if (uint64_t(index[i]) < uint64_t(limit)) destination[index[i]] = data[i];
     }
 #endif
-} 
+}
 
 static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, double * destination) {
 #if INSTRSET >= 10   //  __AVX512VL__
@@ -2987,7 +2987,7 @@ static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, 
         if (uint32_t(index[i]) < limit) destination[index[i]] = data[i];
     }
 #endif
-} 
+}
 
 
 #ifdef VCL_NAMESPACE

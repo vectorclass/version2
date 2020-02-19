@@ -5,7 +5,7 @@
 * Version:       2.00.01
 * Project:       vector class library
 * Description:
-* Header file containing inline version of trigonometric functions 
+* Header file containing inline version of trigonometric functions
 * and inverse trigonometric functions
 * sin, cos, sincos, tan
 * asin, acos, atan, atan2
@@ -212,7 +212,7 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
     // Reduce by extended precision modular arithmetic
     // x = ((xa - y * DP1F) - y * DP2F) - y * DP3F;
     x = nmul_add(y, DP3F, nmul_add(y, DP2F, nmul_add(y, DP1F, xa)));
-    
+
     // A two-step reduction saves time at the cost of precision for very big x:
     //x = (xa - y * DP1F) - y * (DP2F+DP3F);
 
@@ -330,7 +330,7 @@ static inline VTYPE tan_d(VTYPE const x) {
     const double Q1tan = 2.50083801823357915839E7;
     const double Q0tan = -5.38695755929454629881E7;
 
-    typedef decltype(x > x) BVTYPE;         // boolean vector type 
+    typedef decltype(x > x) BVTYPE;         // boolean vector type
     VTYPE  xa, y, z, zz, px, qx, tn, recip; // data vectors
     BVTYPE doinvert, xzero, overflow;       // boolean vectors
 
@@ -346,7 +346,7 @@ static inline VTYPE tan_d(VTYPE const x) {
     // 5*pi/4 - 7*pi/4 => 3
     // 7*pi/4 - 8*pi/4 => 4
 
-    // Reduce by extended precision modular arithmetic    
+    // Reduce by extended precision modular arithmetic
     // z = ((xa - y * DP1) - y * DP2) - y * DP3;
     z = nmul_add(y, DP3, nmul_add(y, DP2, nmul_add(y, DP1, xa)));
 
@@ -362,7 +362,7 @@ static inline VTYPE tan_d(VTYPE const x) {
     doinvert = BVTYPE((q & 1) != 0);
     xzero = (xa == 0.);
     // avoid division by 0. We will not be using recip anyway if xa == 0.
-    // tn never becomes exactly 0 when x = pi/2 so we only have to make 
+    // tn never becomes exactly 0 when x = pi/2 so we only have to make
     // a special case for x == 0.
     recip = (-1.) / select(xzero, VTYPE(-1.), tn);
     tn = select(doinvert, recip, tn);
@@ -501,7 +501,7 @@ static inline VTYPE asin_d(VTYPE const x) {
         z1 = mul_add(xb, y1, xb);                // yb = xb * y1; z1 = xb + yb;
     }
 
-    // results for small        
+    // results for small
     z2 = mul_add(xa, y1, xa);                    // z2 = xa * y1 + xa;
 
     // correct for sign
@@ -576,7 +576,7 @@ static inline VTYPE asin_f(VTYPE const x) {
     x2 = xa * xa;
     x3 = select(big, x1, x2);
 
-    //if (horizontal_or(big)) 
+    //if (horizontal_or(big))
     {
         xb = sqrt(x1);
     }

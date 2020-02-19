@@ -104,7 +104,7 @@ public:
     // Constructor to build from all elements:
     Vec16f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7,
     float f8, float f9, float f10, float f11, float f12, float f13, float f14, float f15) {
-        zmm = _mm512_setr_ps(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15); 
+        zmm = _mm512_setr_ps(f0, f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12, f13, f14, f15);
     }
     // Constructor to build from two Vec8f:
     Vec16f(Vec8f const a0, Vec8f const a1) {
@@ -165,7 +165,7 @@ public:
     // Member function extract a single element from vector
     float extract(int index) const {
         __m512 x = _mm512_maskz_compress_ps(__mmask16(1u << index), zmm);
-        return _mm512_cvtss_f32(x);        
+        return _mm512_cvtss_f32(x);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
@@ -440,7 +440,7 @@ static inline Vec16f sign_combine(Vec16f const a, Vec16f const b) {
 
 // Categorization functions
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
 static inline Vec16fb is_finite(Vec16f const a) {
@@ -466,7 +466,7 @@ static inline Vec16fb is_inf(Vec16f const a) {
     Vec16i t2 = t1 << 1;                // shift out sign bit
     return Vec16fb(t2 == 0xFF000000);   // exponent is all 1s, fraction is 0
 #endif
-} 
+}
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
@@ -476,7 +476,7 @@ static inline Vec16fb is_nan(Vec16f const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm512_fpclass_ps_mask(a, 0x81);
 }
-//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 //__attribute__((optimize("-fno-unsafe-math-optimizations")))
 //static inline Vec16fb is_nan(Vec16f const a) {
 //    return a != a; // not safe with -ffinite-math-only compiler option
@@ -594,7 +594,7 @@ template <int n>
 static inline Vec16f pow(Vec16f const a, Const_int_t<n>) {
     return pow_n<Vec16f, n>(a);
 }
- 
+
 // function round: round to nearest integer (even). (result as float vector)
 static inline Vec16f round(Vec16f const a) {
     return _mm512_roundscale_ps(a, 0+8);
@@ -677,7 +677,7 @@ static inline Vec16f nmul_add(Vec16f const a, Vec16f const b, Vec16f const c) {
     return _mm512_fnmadd_ps(a, b, c);
 }
 
-// Multiply and subtract with extra precision on the intermediate calculations, 
+// Multiply and subtract with extra precision on the intermediate calculations,
 // Do not use mul_sub_x in general code because it is inaccurate in certain cases when FMA is not supported
 static inline Vec16f mul_sub_x(Vec16f const a, Vec16f const b, Vec16f const c) {
     return _mm512_fmsub_ps(a, b, c);
@@ -700,7 +700,7 @@ static inline Vec16i exponent(Vec16f const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f 
+// fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
 static inline Vec16f fraction(Vec16f const a) {
     return _mm512_getmant_ps(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 }
@@ -739,7 +739,7 @@ public:
     }
     // Constructor to build from all elements:
     Vec8d(double d0, double d1, double d2, double d3, double d4, double d5, double d6, double d7) {
-        zmm = _mm512_setr_pd(d0, d1, d2, d3, d4, d5, d6, d7); 
+        zmm = _mm512_setr_pd(d0, d1, d2, d3, d4, d5, d6, d7);
     }
     // Constructor to build from two Vec4d:
     Vec8d(Vec4d const a0, Vec4d const a1) {
@@ -803,11 +803,11 @@ public:
     double extract(int index) const {
 #if INSTRSET >= 10
         __m512d x = _mm512_maskz_compress_pd(__mmask8(1u << index), zmm);
-        return _mm512_cvtsd_f64(x);        
-#else 
+        return _mm512_cvtsd_f64(x);
+#else
         double a[8];
         store(a);
-        return a[index & 7];        
+        return a[index & 7];
 #endif
     }
     // Extract a single element. Use store function if extracting more than one element.
@@ -1077,7 +1077,7 @@ static inline Vec8d sign_combine(Vec8d const a, Vec8d const b) {
 
 // Categorization functions
 
-// Function is_finite: gives true for elements that are normal, denormal or zero, 
+// Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 static inline Vec8db is_finite(Vec8d const a) {
 #if INSTRSET >= 10 // __AVX512DQ__
@@ -1112,7 +1112,7 @@ static inline Vec8db is_nan(Vec8d const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm512_fpclass_pd_mask(a, 0x81);
 }
-//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__) 
+//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 //__attribute__((optimize("-fno-unsafe-math-optimizations")))
 //static inline Vec8db is_nan(Vec8d const a) {
 //    return a != a; // not safe with -ffinite-math-only compiler option
@@ -1217,7 +1217,7 @@ static inline Vec8d square(Vec8d const a) {
 }
 
 // The purpose of this template is to prevent implicit conversion of a float
-// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included 
+// exponent to int when calling pow(vector, float) and vectormath_exp.h is not included
 template <typename TT> static Vec8d pow(Vec8d const a, TT const n); // = delete;
 
 // pow(Vec8d, int):
@@ -1299,7 +1299,7 @@ static inline Vec8q roundi(Vec8d const a) {
 
 // function to_double: convert integer vector elements to double vector
 static inline Vec8d to_double(Vec8q const a) {
-#if INSTRSET >= 10 // __AVX512DQ__ 
+#if INSTRSET >= 10 // __AVX512DQ__
     return _mm512_cvtepi64_pd(a);
 #else
     int64_t aa[8];           // inefficient
@@ -1309,7 +1309,7 @@ static inline Vec8d to_double(Vec8q const a) {
 }
 
 static inline Vec8d to_double(Vec8uq const a) {
-#if INSTRSET >= 10 // __AVX512DQ__ 
+#if INSTRSET >= 10 // __AVX512DQ__
     return _mm512_cvtepu64_pd(a);
 #else
     uint64_t aa[8];          // inefficient
@@ -1379,7 +1379,7 @@ static inline Vec8q exponent(Vec8d const a) {
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
-// fraction(1.0) = 1.0, fraction(5.0) = 1.25 
+// fraction(1.0) = 1.0, fraction(5.0) = 1.25
 static inline Vec8d fraction(Vec8d const a) {
     return _mm512_getmant_pd(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 }
@@ -1511,7 +1511,7 @@ static inline Vec8d permute8(Vec8d const a) {
             if constexpr ((flags & perm_rotate_big) != 0) { // fits big rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count); // rotation count
                 y = _mm512_castsi512_pd(_mm512_alignr_epi64 (_mm512_castpd_si512(y), _mm512_castpd_si512(y), rot));
-            } 
+            }
             else if constexpr ((flags & perm_broadcast) != 0) {  // broadcast one element
                 constexpr int e = flags >> perm_rot_count;
                 if constexpr(e != 0) {
@@ -1536,7 +1536,7 @@ static inline Vec8d permute8(Vec8d const a) {
                     const EList <int8_t, 64> bm = pshufb_mask<Vec8q>(indexs);
                     return _mm512_castsi512_pd(_mm512_shuffle_epi8(_mm512_castpd_si512(y), Vec8q().load(bm.a)));
                 }
-            } 
+            }
             else {
                 // full permute needed
                 const __m512i pmask = constant16ui <
@@ -1556,7 +1556,7 @@ static inline Vec8d permute8(Vec8d const a) {
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16f permute16(Vec16f const a) {
     int constexpr indexs[16] = {  // indexes as array
-        i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };    
+        i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
     __m512 y = a;  // result
     // get flags for possibilities that fit the permutation pattern
     constexpr uint64_t flags = perm_flags<Vec16f>(indexs);
@@ -1569,8 +1569,8 @@ static inline Vec16f permute16(Vec16f const a) {
 
         if constexpr ((flags & perm_largeblock) != 0) {    // use larger permutation
             constexpr EList<int, 8> L = largeblock_perm<16>(indexs); // permutation pattern
-            y = _mm512_castpd_ps( 
-                permute8 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7]> 
+            y = _mm512_castpd_ps(
+                permute8 <L.a[0], L.a[1], L.a[2], L.a[3], L.a[4], L.a[5], L.a[6], L.a[7]>
                 (Vec8d(_mm512_castps_pd(a))));
             if (!(flags & perm_addz)) return y;            // no remaining zeroing
         }
@@ -1641,8 +1641,8 @@ static inline Vec16f permute16(Vec16f const a) {
 *
 *****************************************************************************/
 
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
-static inline Vec8d blend8(Vec8d const a, Vec8d const b) { 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
+static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
     int constexpr indexs[8] = { i0, i1, i2, i3, i4, i5, i6, i7 }; // indexes as array
     __m512d y = a;                                         // result
     constexpr uint64_t flags = blend_flags<Vec8d>(indexs); // get flags for possibilities that fit the index pattern
@@ -1657,7 +1657,7 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
         constexpr EList<int, 16> L = blend_perm_indexes<8, 2>(indexs); // get permutation indexes
         return permute8 < L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] > (b);
-    } 
+    }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
         y = _mm512_mask_mov_pd (a, mb, b);
@@ -1672,21 +1672,21 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
             y = _mm512_shuffle_f64x2(b, a, shuf);
         }
         else {
-            const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);  
+            const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
             y = _mm512_permutex2var_pd(a, Vec8q().load(bm.a), b);
         }
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm512_unpacklo_pd (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm512_unpacklo_pd (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm512_unpackhi_pd (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm512_unpackhi_pd (b, a);
     }
     else if constexpr ((flags & blend_shufab) != 0) {      // use floating point instruction shufpd
@@ -1696,7 +1696,7 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
         y = _mm512_shuffle_pd(b, a, uint8_t(flags >> blend_shufpattern));
     }
     else { // No special cases
-        const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);  
+        const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
         y = _mm512_permutex2var_pd(a, Vec8q().load(bm.a), b);
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
@@ -1706,8 +1706,8 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
 }
 
 
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15}; // indexes as array
     __m512 y = a;                                          // result
@@ -1722,10 +1722,10 @@ static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
         constexpr EList<int, 32> L = blend_perm_indexes<16, 2>(indexs); // get permutation indexes
-        return permute16 < 
+        return permute16 <
             L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
             L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31] > (b);
-    } 
+    }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint16_t mb = (uint16_t)make_bit_mask<16, 0x304>(indexs);  // blend mask
         y = _mm512_mask_mov_ps(a, mb, b);
@@ -1737,7 +1737,7 @@ static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
             (Vec8d(_mm512_castps_pd(a)), Vec8d(_mm512_castps_pd(b))));
         if (!(flags & blend_addz)) return y;               // no remaining zeroing
     }
-    else if constexpr ((flags & blend_same_pattern) != 0) { 
+    else if constexpr ((flags & blend_same_pattern) != 0) {
         // same pattern in all 128-bit lanes. check if pattern fits special cases
         if constexpr ((flags & blend_punpcklab) != 0) {
             y = _mm512_unpacklo_ps(a, b);
@@ -1758,11 +1758,11 @@ static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
             y = _mm512_shuffle_ps(b, a, uint8_t(flags >> blend_shufpattern));
         }
         else {
-            // Use vshufps twice. This generates two instructions in the dependency chain, 
-            // but we are avoiding the slower lane-crossing instruction, and saving 64 
+            // Use vshufps twice. This generates two instructions in the dependency chain,
+            // but we are avoiding the slower lane-crossing instruction, and saving 64
             // bytes of data cache.
             auto shuf = [](int const (&a)[16]) constexpr { // get pattern for vpshufd
-                int pat[4] = {-1,-1,-1,-1}; 
+                int pat[4] = {-1,-1,-1,-1};
                 for (int i = 0; i < 16; i++) {
                     int ix = a[i];
                     if (ix >= 0 && pat[i&3] < 0) {
@@ -1780,7 +1780,7 @@ static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
         }
     }
     else { // No special cases
-        const EList <int32_t, 16> bm = perm_mask_broad<Vec16i>(indexs);  
+        const EList <int32_t, 16> bm = perm_mask_broad<Vec16i>(indexs);
         y = _mm512_permutex2var_ps(a, Vec16i().load(bm.a), b);
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
@@ -1867,7 +1867,7 @@ static inline Vec8d lookup(Vec8q const index, double const * table) {
 *
 *****************************************************************************/
 // Load elements from array a with indices i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16f gather16f(void const * a) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
@@ -1890,7 +1890,7 @@ static inline Vec16f gather16f(void const * a) {
         }
     }
     if constexpr ((i0<imin+16  || i0>imax-16)  && (i1<imin+16  || i1>imax-16)  && (i2<imin+16  || i2>imax-16)  && (i3<imin+16  || i3>imax-16)
-    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)    
+    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)
     &&  (i8<imin+16  || i8>imax-16)  && (i9<imin+16  || i9>imax-16)  && (i10<imin+16 || i10>imax-16) && (i11<imin+16 || i11>imax-16)
     &&  (i12<imin+16 || i12>imax-16) && (i13<imin+16 || i13>imax-16) && (i14<imin+16 || i14>imax-16) && (i15<imin+16 || i15>imax-16) ) {
         // load two contiguous blocks and blend
@@ -1964,12 +1964,12 @@ static inline Vec8d gather8d(void const * a) {
 ******************************************************************************
 *
 * These functions write the elements of a vector to arbitrary positions in an
-* array in memory. Each vector element is written to an array position 
+* array in memory. Each vector element is written to an array position
 * determined by an index. An element is not written if the corresponding
 * index is out of range.
 * The indexes can be specified as constant template parameters or as an
 * integer vector.
-* 
+*
 *****************************************************************************/
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,

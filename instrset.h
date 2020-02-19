@@ -53,7 +53,7 @@
 // Find instruction set from compiler macros if INSTRSET is not defined.
 // Note: Most of these macros are not defined in Microsoft compilers
 #ifndef INSTRSET
-#if defined ( __AVX512VL__ ) && defined ( __AVX512BW__ ) && defined ( __AVX512DQ__ ) 
+#if defined ( __AVX512VL__ ) && defined ( __AVX512BW__ ) && defined ( __AVX512DQ__ )
 #define INSTRSET 10
 #elif defined ( __AVX512F__ ) || defined ( __AVX512__ )
 #define INSTRSET 9
@@ -75,7 +75,7 @@
 #define INSTRSET 1
 #elif defined ( _M_IX86_FP )           // Defined in MS compiler. 1: SSE, 2: SSE2
 #define INSTRSET _M_IX86_FP
-#else 
+#else
 #define INSTRSET 0
 #endif // instruction set defines
 #endif // INSTRSET
@@ -83,7 +83,7 @@
 // Include the appropriate header file for intrinsic functions
 #if INSTRSET > 7                       // AVX2 and later
 #if defined (__GNUC__) && ! defined (__INTEL_COMPILER)
-#include <x86intrin.h>                 // x86intrin.h includes header files for whatever instruction 
+#include <x86intrin.h>                 // x86intrin.h includes header files for whatever instruction
                                        // sets are specified on the compiler command line, such as:
                                        // xopintrin.h, fma4intrin.h
 #else
@@ -107,7 +107,7 @@
 
 #if INSTRSET >= 8 && !defined(__FMA__)
 // Assume that all processors that have AVX2 also have FMA3
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER) 
+#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)
 // Prevent error message in g++ and Clang when using FMA intrinsics with avx2:
 #pragma message "It is recommended to specify also option -mfma when using -mavx2 or higher"
 #elif ! defined (__clang__)
@@ -124,12 +124,12 @@
 #endif //  __GNUC__
 #elif defined (__SSE4A__)              // AMD SSE4A
 #include <ammintrin.h>
-#endif // __XOP__ 
+#endif // __XOP__
 
 // FMA3 instruction set
 #if defined (__FMA__) && (defined(__GNUC__) || defined(__clang__))  && ! defined (__INTEL_COMPILER)
-#include <fmaintrin.h> 
-#endif // __FMA__ 
+#include <fmaintrin.h>
+#endif // __FMA__
 
 // FMA4 instruction set
 #if defined (__FMA4__) && (defined(__GNUC__) || defined(__clang__))
@@ -199,14 +199,14 @@ a problem with constexpr function returns not being constant enough.
 /* Clang problem:
 The Clang compiler treats the intrinsic vector types __m128, __m128i, and __m128d as identical.
 See the bug report at https://bugs.llvm.org/show_bug.cgi?id=17164
-Additional problem: The version number is not consistent across platforms. The Apple build has 
+Additional problem: The version number is not consistent across platforms. The Apple build has
 different version numbers. We have to rely on __apple_build_version__ on the Mac platform:
 http://llvm.org/bugs/show_bug.cgi?id=12643
 We have to make switches here when - hopefully - the error some day has been fixed.
 We need different version checks with and whithout __apple_build_version__
 */
-#if (defined (__clang__) || defined(__apple_build_version__)) && !defined(__INTEL_COMPILER) 
-#define FIX_CLANG_VECTOR_ALIAS_AMBIGUITY  
+#if (defined (__clang__) || defined(__apple_build_version__)) && !defined(__INTEL_COMPILER)
+#define FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
 #endif
 
 #if defined (GCC_VERSION) && GCC_VERSION < 99999 && !defined(__clang__)
@@ -429,7 +429,7 @@ static inline VTYPE nan_vec(uint32_t payload = 0x100) {
 
 // Test if a parameter is a compile-time constant
 /* Unfortunately, this works only for macro parameters, not for inline function parameters.
-   I hope that some solution will appear in the future, but for now it appears to be 
+   I hope that some solution will appear in the future, but for now it appears to be
    impossible to check if a function parameter is a compile-time constant.
    This would be useful in operator / and in function pow:
    #if defined(__GNUC__) || defined (__clang__)
@@ -451,7 +451,7 @@ Rules for constexpr functions:
 
 > Do not put variable declarations inside a for-clause, e.g. avoid: for (int i=0; ..
   Instead, you have to declare the loop counter before the for-loop.
-  
+
 > Do not make constexpr functions that return vector types. This requires type
   punning with a union, which is not allowed in constexpr functions under C++17.
   It may be possible under C++20
@@ -465,7 +465,7 @@ struct EList {
 };
 
 
-// get_inttype: get an integer of a size that matches the element size 
+// get_inttype: get an integer of a size that matches the element size
 // of vector class V with the value -1
 template <typename V>
 constexpr auto get_inttype() {
@@ -512,7 +512,7 @@ constexpr auto zero_mask_broad(int const (&A)[V::size()]) {
     EList <Etype, N> u = {{0}};                  // list for return
     int i = 0;
     for (i = 0; i < N; i++) {
-        u.a[i] = A[i] >= 0 ? get_inttype<V>() : 0;    
+        u.a[i] = A[i] >= 0 ? get_inttype<V>() : 0;
     }
     return u;                                    // return encapsulated array
 }
@@ -564,7 +564,7 @@ constexpr auto make_broad_mask(uint64_t const m) {
     EList <Etype, N> u = {{0}};                  // list for returning
     int i = 0;
     for (i = 0; i < N; i++) {
-        u.a[i] = ((m >> i) & 1) != 0 ? get_inttype<V>() : 0;    
+        u.a[i] = ((m >> i) & 1) != 0 ? get_inttype<V>() : 0;
     }
     return u;                                    // return encapsulated array
 }
@@ -626,10 +626,10 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
     int32_t  broadc = 999;                                 // index to broadcasted element
     uint32_t patfail = 0;                                  // remember certain patterns that do not fit
     uint32_t addz2 = 0;                                    // remember certain patterns need extra zeroing
-    int32_t  compresslasti = -1;                           // last index in perm_compress fit 
-    int32_t  compresslastp = -1;                           // last position in perm_compress fit 
-    int32_t  expandlasti = -1;                             // last index in perm_expand fit 
-    int32_t  expandlastp = -1;                             // last position in perm_expand fit 
+    int32_t  compresslasti = -1;                           // last index in perm_compress fit
+    int32_t  compresslastp = -1;                           // last position in perm_compress fit
+    int32_t  expandlasti = -1;                             // last index in perm_expand fit
+    int32_t  expandlastp = -1;                             // last position in perm_expand fit
 
     int lanepattern[lanesize] = {0};                       // pattern in each lane
 
@@ -651,13 +651,13 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         // check if pattern fits a larger block size:
         // even indexes must be even, odd indexes must fit the preceding even index + 1
         if ((i & 1) == 0) {                                // even index
-            if (ix >= 0 && (ix & 1)) r &= ~perm_largeblock;// not even. does not fit larger block size 
+            if (ix >= 0 && (ix & 1)) r &= ~perm_largeblock;// not even. does not fit larger block size
             int iy = a[i + 1];                             // next odd index
-            if (iy >= 0 && (iy & 1) == 0) r &= ~ perm_largeblock; // not odd. does not fit larger block size 
+            if (iy >= 0 && (iy & 1) == 0) r &= ~ perm_largeblock; // not odd. does not fit larger block size
             if (ix >= 0 && iy >= 0 && iy != ix+1) r &= ~ perm_largeblock; // does not fit preceding index + 1
             if (ix == -1 && iy >= 0) r |= perm_addz;       // needs additional zeroing at current block size
             if (iy == -1 && ix >= 0) r |= perm_addz;       // needs additional zeroing at current block size
-        } 
+        }
         lane = i / lanesize;                               // current lane
         if (lane == 0) {                                   // first lane, or no pattern yet
             lanepattern[i] = ix;                           // save pattern
@@ -686,7 +686,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             }
             // check if pattern fits compress (perm_compress)
             if (ix > compresslasti && ix - compresslasti >= (int)i - compresslastp) {
-                if ((int)i - compresslastp > 1) addz2 |= 2;// perm_compress may need additional zeroing 
+                if ((int)i - compresslastp > 1) addz2 |= 2;// perm_compress may need additional zeroing
                 compresslasti = ix;  compresslastp = i;
             }
             else {
@@ -694,7 +694,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             }
             // check if pattern fits expand (perm_expand)
             if (ix > expandlasti && ix - expandlasti <= (int)i - expandlastp) {
-                if (ix - expandlasti > 1) addz2 |= 4;      // perm_expand may need additional zeroing 
+                if (ix - expandlasti > 1) addz2 |= 4;      // perm_expand may need additional zeroing
                 expandlasti = ix;  expandlastp = i;
             }
             else {
@@ -718,7 +718,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         if ((addz2 & 2) != 0) {                            // check if additional zeroing needed
             for (j = 0; j < compresslastp; j++) {
                 if (a[j] == -1) r |= perm_addz2;
-            }            
+            }
         }
     }
     else if ((patfail & 4) == 0) {
@@ -726,7 +726,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         if ((addz2 & 4) != 0) {                            // check if additional zeroing needed
             for (j = 0; j < expandlastp; j++) {
                 if (a[j] == -1) r |= perm_addz2;
-            }            
+            }
         }
     }
 
@@ -743,7 +743,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
                 else { // check if fit
                     if (rot != rot1) fit = false;
                 }
-            } 
+            }
         }
         rot &= lanesize-1;  // prevent out of range values
         if (fit) {   // fits rotate, and possibly shift
@@ -755,7 +755,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             // fit shift left
             fit = true;
             for (i = 0; i < lanesize-rot; i++) {           // check if first rot elements are zero or don't care
-                if (lanepattern[i] >= 0) fit = false;                
+                if (lanepattern[i] >= 0) fit = false;
             }
             if (fit) {
                 r |= perm_shleft;
@@ -772,7 +772,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
                     if (lanepattern[i] == -1) r |= perm_addz; // additional zeroing needed
                 }
             }
-        }    
+        }
         // fit punpckhi
         fit = true;
         uint32_t j = lanesize / 2;
@@ -824,7 +824,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
     }
 #endif
-    if (broadc < 999 && (r & (perm_rotate|perm_shright|perm_shleft|perm_rotate_big)) == 0) { 
+    if (broadc < 999 && (r & (perm_rotate|perm_shright|perm_shleft|perm_rotate_big)) == 0) {
         r |= perm_broadcast | (uint64_t)broadc << perm_rot_count; // fits broadcast
     }
     return r;
@@ -907,7 +907,7 @@ constexpr uint64_t perm16_flags(int const (&a)[V::size()]) {
             int jx = ix - lane * lanesize;                 // pattern within lane
             if (lanepattern[j] < 0) {
                 lanepattern[j] = jx;                       // pattern not known from previous lane
-            } 
+            }
         }
     }
     // four patterns: low2low, high2high, high2low, low2high
@@ -987,8 +987,8 @@ constexpr auto pshufb_mask(int const (&A)[V::size()]) {
 }
 
 
-// largeblock_perm: return indexes for replacing a permute or blend with 
-// a certain block size by a permute or blend with the double block size. 
+// largeblock_perm: return indexes for replacing a permute or blend with
+// a certain block size by a permute or blend with the double block size.
 // Note: it is presupposed that perm_flags() indicates perm_largeblock
 // It is required that additional zeroing is added if perm_flags() indicates perm_addz
 template <int N>
@@ -1098,13 +1098,13 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         // check if pattern fits a larger block size:
         // even indexes must be even, odd indexes must fit the preceding even index + 1
         if ((ii & 1) == 0) {                               // even index
-            if (ix >= 0 && (ix&1)) r &= ~blend_largeblock; // not even. does not fit larger block size 
+            if (ix >= 0 && (ix&1)) r &= ~blend_largeblock; // not even. does not fit larger block size
             int iy = a[ii+1];                              // next odd index
-            if (iy >= 0 && (iy & 1) == 0) r &= ~ blend_largeblock; // not odd. does not fit larger block size 
+            if (iy >= 0 && (iy & 1) == 0) r &= ~ blend_largeblock; // not odd. does not fit larger block size
             if (ix >= 0 && iy >= 0 && iy != ix+1) r &= ~ blend_largeblock; // does not fit preceding index + 1
             if (ix == -1 && iy >= 0) r |= blend_addz;      // needs additional zeroing at current block size
             if (iy == -1 && ix >= 0) r |= blend_addz;      // needs additional zeroing at current block size
-        } 
+        }
         lane = (uint32_t)ii / lanesize;                    // current lane
         if (lane == 0) {                                   // first lane, or no pattern yet
             lanepattern[ii] = ix;                          // save pattern
@@ -1113,7 +1113,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         if (ix >= 0) {
             uint32_t lanei = uint32_t(ix & ~N) / lanesize; // source lane
             if (lanei != lane) {
-                r |= blend_cross_lane;                     // crossing lane                 
+                r |= blend_cross_lane;                     // crossing lane
             }
             if (lanesize == 2) {   // check if it fits pshufd
                 if (lanei != lane) r &= ~(blend_shufab | blend_shufba);
@@ -1151,7 +1151,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
                 if ((uint32_t)ix != (iu + lanesize) / 2 + ((iu & 1) ^ 1) * N) r &= ~ blend_punpckhba;
             }
         }
-#if INSTRSET >= 4  // SSSE3. check if it fits palignr 
+#if INSTRSET >= 4  // SSSE3. check if it fits palignr
         for (iu = 0; iu < lanesize; iu++) {
             ix = lanepattern[iu];
             if (ix >= 0) {
@@ -1230,7 +1230,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
 }
 
 // blend_perm_indexes: return an Indexlist for implementing a blend function as
-// two permutations. N = vector size. 
+// two permutations. N = vector size.
 // dozero = 0: let unused elements be don't care. The two permutation results must be blended
 // dozero = 1: zero unused elements in each permuation. The two permutation results can be OR'ed
 // dozero = 2: indexes that are -1 or V_DC are preserved
@@ -1256,21 +1256,21 @@ constexpr EList<int, 2*N> blend_perm_indexes(int const (&a)[N]) {
             }
         }
         else if (ix < N) {             // value from a
-            list.a[j]   = ix;  
+            list.a[j]   = ix;
             list.a[j+N] = u;
         }
         else {
-            list.a[j]   = u;           // value from b  
+            list.a[j]   = u;           // value from b
             list.a[j+N] = ix - N;
         }
     }
     return list;
 }
 
-// largeblock_indexes: return indexes for replacing a permute or blend with a  
-// certain block size by a permute or blend with the double block size. 
+// largeblock_indexes: return indexes for replacing a permute or blend with a
+// certain block size by a permute or blend with the double block size.
 // Note: it is presupposed that perm_flags or blend_flags indicates _largeblock
-// It is required that additional zeroing is added if perm_flags or blend_flags 
+// It is required that additional zeroing is added if perm_flags or blend_flags
 // indicates _addz
 template <int N>
 constexpr EList<int, N/2> largeblock_indexes(int const (&a)[N]) {
@@ -1286,7 +1286,7 @@ constexpr EList<int, N/2> largeblock_indexes(int const (&a)[N]) {
     for (i = 0; i < N; i += 2) {
         ix = a[i];                               // even index
         iy = a[i+1];                             // odd index
-        if (ix >= 0) {             
+        if (ix >= 0) {
             iz = ix / 2;                         // half index
         }
         else if (iy >= 0) {
@@ -1313,7 +1313,7 @@ constexpr EList<int, N/2> largeblock_indexes(int const (&a)[N]) {
 *
 *          Vector blend helper function templates
 *
-* These templates are for emulating a blend with a vector size that is not supported by 
+* These templates are for emulating a blend with a vector size that is not supported by
 * the instruction set, using multiple blends or permutations of half the vector size
 *
 ****************************************************************************************/
@@ -1323,7 +1323,7 @@ template <typename dummy> void blend2(){}
 template <typename dummy> void blend4(){}
 template <typename dummy> void blend8(){}
 template <typename dummy> void blend16(){}
-template <typename dummy> void blend32(){} 
+template <typename dummy> void blend32(){}
 
 // blend_half_indexes: return an Indexlist for emulating a blend function as
 // blends or permutations from multiple sources
@@ -1340,7 +1340,7 @@ constexpr EList<int, N> blend_half_indexes(int const (&a)[N]) {
 
     for (j = 0; j < N; j++) {          // loop through indexes
         int ix = a[j];                 // current index
-        if (ix < 0) {                  // zero or don't care                
+        if (ix < 0) {                  // zero or don't care
             list.a[j] = (dozero == 2) ? ix : u;
         }
         else {
@@ -1458,7 +1458,7 @@ auto blend_half(W const& a, W const& b) {
                 M.a[8], M.a[9],  M.a[10],  M.a[11], M.a[12], M.a[13], M.a[14], M.a[15],
                 M.a[16], M.a[17], M.a[18], M.a[19], M.a[20], M.a[21], M.a[22], M.a[23],
                 M.a[24], M.a[25], M.a[26], M.a[27], M.a[28], M.a[29], M.a[30], M.a[31] > (src2, src3);
-        }   
+        }
         x0 |= x1;      // combine result of two blends. Unused elements are zero
     }
     return x0;
@@ -1467,7 +1467,7 @@ auto blend_half(W const& a, W const& b) {
 
 #ifdef VCL_NAMESPACE
 }
-#endif 
+#endif
 
 
 #endif // INSTRSET_H
