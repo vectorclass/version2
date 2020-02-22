@@ -92,7 +92,7 @@ public:
     }
     Vec256b get_high() const {           // get high half
         return z1;
-    } 
+    }
     static constexpr int size() {
         return 512;
     }
@@ -150,7 +150,7 @@ static inline Vec512b & operator ^= (Vec512b & a, Vec512b const b) {
 static inline Vec512b andnot (Vec512b const a, Vec512b const b) {
     return Vec512b(andnot(a.get_low(), b.get_low()), andnot(a.get_high(), b.get_high()));
 }
- 
+
 
 /*****************************************************************************
 *
@@ -164,7 +164,7 @@ public:
     Vec16b () {
     }
     // Constructor to build from all elements:
-    Vec16b(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, 
+    Vec16b(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7,
     bool b8, bool b9, bool b10, bool b11, bool b12, bool b13, bool b14, bool b15) {
         *this = Vec512b(Vec8i(-(int)b0, -(int)b1, -(int)b2, -(int)b3, -(int)b4, -(int)b5, -(int)b6, -(int)b7), Vec8i(-(int)b8, -(int)b9, -(int)b10, -(int)b11, -(int)b12, -(int)b13, -(int)b14, -(int)b15));
     }
@@ -177,12 +177,12 @@ public:
     Vec16b (Vec8ib const x0, Vec8ib const x1) {
         z0 = x0;
         z1 = x1;
-    }        
+    }
     // Constructor to make from two halves
     Vec16b (Vec8i const x0, Vec8i const x1) {
         z0 = x0;
         z1 = x1;
-    }        
+    }
     // Constructor to broadcast single value:
     Vec16b(bool b) {
         z0 = z1 = Vec8i(-int32_t(b));
@@ -330,7 +330,7 @@ public:
     Vec16ib (Vec16b const & x) {
         z0 = x.get_low();
         z1 = x.get_high();
-    } */   
+    } */
     // Constructor to build from all elements:
     Vec16ib(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7,
         bool x8, bool x9, bool x10, bool x11, bool x12, bool x13, bool x14, bool x15) {
@@ -366,7 +366,7 @@ public:
         z0 = Vec8ib().load_bits(uint8_t(a));
         z1 = Vec8ib().load_bits(uint8_t(a>>8));
         return *this;
-    } 
+    }
     // Prevent constructing from int, etc.
     Vec16ib(int b) = delete;
     Vec16ib & operator = (int x) = delete;
@@ -606,7 +606,7 @@ static inline Vec8qb operator == (Vec8qb const a, Vec8qb const b) {
 // vector operator != : xor
 static inline Vec8qb operator != (Vec8qb const a, Vec8qb const b) {
     return Vec8qb(a ^ b);
-} 
+}
 
 // vector operator ~ : bitwise not
 static inline Vec8qb operator ~ (Vec8qb const a) {
@@ -671,7 +671,7 @@ public:
     Vec16i(Vec512b const & x) {
         z0 = x.get_low();
         z1 = x.get_high();
-    } 
+    }
     // Assignment operator to convert from type Vec512b
     Vec16i & operator = (Vec512b const x) {
         z0 = x.get_low();
@@ -827,7 +827,7 @@ static inline Vec16i & operator *= (Vec16i & a, Vec16i const b) {
     return a;
 }
 
-// vector operator / : divide all elements by same integer. See bottom of file 
+// vector operator / : divide all elements by same integer. See bottom of file
 
 // vector operator << : shift left
 static inline Vec16i operator << (Vec16i const a, int32_t b) {
@@ -860,7 +860,7 @@ static inline Vec16ib operator == (Vec16i const a, Vec16i const b) {
 static inline Vec16ib operator != (Vec16i const a, Vec16i const b) {
     return Vec16ib(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
-  
+
 // vector operator > : returns true for elements for which a > b
 static inline Vec16ib operator > (Vec16i const a, Vec16i const b) {
     return Vec16ib(a.get_low() > b.get_low(), a.get_high() > b.get_high());
@@ -1095,7 +1095,7 @@ static inline Vec16ui & operator >>= (Vec16ui & a, uint32_t b) {
 static inline Vec16ui & operator >>= (Vec16ui & a, int32_t b) {
     a = a >> uint32_t(b);
     return a;
-} 
+}
 
 // vector operator << : shift left all elements
 static inline Vec16ui operator << (Vec16ui const a, uint32_t b) {
@@ -1120,7 +1120,7 @@ static inline Vec16ib operator > (Vec16ui const a, Vec16ui const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec16ib operator >= (Vec16ui const a, Vec16ui const b) {
     return Vec16ib(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec16ib operator <= (Vec16ui const a, Vec16ui const b) {
@@ -1415,7 +1415,7 @@ static inline Vec8qb operator == (Vec8q const a, Vec8q const b) {
 static inline Vec8qb operator != (Vec8q const a, Vec8q const b) {
     return Vec8qb(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
-  
+
 // vector operator < : returns true for elements for which a < b
 static inline Vec8qb operator < (Vec8q const a, Vec8q const b) {
     return Vec8qb(a.get_low() < b.get_low(), a.get_high() < b.get_high());
@@ -1660,7 +1660,7 @@ static inline Vec8uq & operator >>= (Vec8uq & a, uint32_t b) {
 static inline Vec8uq & operator >>= (Vec8uq & a, int32_t b) {
     a = a >> uint32_t(b);
     return a;
-} 
+}
 
 // vector operator << : shift left all elements
 static inline Vec8uq operator << (Vec8uq const a, uint32_t b) {
@@ -1791,28 +1791,28 @@ static inline Vec16ui permute16(Vec16ui const a) {
 *****************************************************************************/
 
 // blend vectors Vec8q
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8q blend8(Vec8q const a, Vec8q const b) {
     Vec4q x0 = blend_half<Vec8q, i0, i1, i2, i3>(a, b);
     Vec4q x1 = blend_half<Vec8q, i4, i5, i6, i7>(a, b);
     return Vec8q(x0, x1);
 }
 
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8uq blend8(Vec8uq const a, Vec8uq const b) {
     return Vec8uq( blend8<i0,i1,i2,i3,i4,i5,i6,i7> (Vec8q(a),Vec8q(b)));
 }
 
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
     Vec8i x0 = blend_half<Vec16i, i0, i1, i2, i3, i4, i5, i6, i7>(a, b);
     Vec8i x1 = blend_half<Vec16i, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     return Vec16i(x0, x1);
 }
 
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16ui blend16(Vec16ui const a, Vec16ui const b) {
     return Vec16ui( blend16<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15> (Vec16i(a),Vec16i(b)));
 }
@@ -1834,7 +1834,7 @@ static inline Vec16i lookup16(Vec16i const i1, Vec16i const table) {
     table.store(t);
     return Vec16i(t[i1[0]], t[i1[1]], t[i1[2]], t[i1[3]], t[i1[4]], t[i1[5]], t[i1[6]], t[i1[7]],
         t[i1[8]], t[i1[9]], t[i1[10]], t[i1[11]], t[i1[12]], t[i1[13]], t[i1[14]], t[i1[15]]);
-} 
+}
 
 template <int n>
 static inline Vec16i lookup(Vec16i const index, void const * table) {
@@ -1890,8 +1890,8 @@ template <int n>
 static inline Vec8q lookup(Vec8q const index, void const * table) {
     if (n <= 0) return 0;
     if (n <= 4) {
-        Vec4q table1 = Vec4q().load(table);        
-        return Vec8q(       
+        Vec4q table1 = Vec4q().load(table);
+        return Vec8q(
             lookup4 (index.get_low(),  table1),
             lookup4 (index.get_high(), table1));
     }
@@ -2001,7 +2001,7 @@ static inline void scatter4i(Vec4i index, uint32_t limit, Vec4i data, void * des
 *
 *****************************************************************************/
 
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16i gather16i(void const * a) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
@@ -2024,7 +2024,7 @@ static inline Vec16i gather16i(void const * a) {
         }
     }
     if constexpr ((i0<imin+16  || i0>imax-16)  && (i1<imin+16  || i1>imax-16)  && (i2<imin+16  || i2>imax-16)  && (i3<imin+16  || i3>imax-16)
-    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)    
+    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)
     &&  (i8<imin+16  || i8>imax-16)  && (i9<imin+16  || i9>imax-16)  && (i10<imin+16 || i10>imax-16) && (i11<imin+16 || i11>imax-16)
     &&  (i12<imin+16 || i12>imax-16) && (i13<imin+16 || i13>imax-16) && (i14<imin+16 || i14>imax-16) && (i15<imin+16 || i15>imax-16) ) {
         // load two contiguous blocks and blend

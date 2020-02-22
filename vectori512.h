@@ -49,7 +49,7 @@ namespace VCL_NAMESPACE {
 
 // Generate a constant vector of 16 integers stored in memory.
 // Can be converted to any integer vector type
-template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7, 
+template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7,
 uint32_t i8, uint32_t i9, uint32_t i10, uint32_t i11, uint32_t i12, uint32_t i13, uint32_t i14, uint32_t i15>
 static inline __m512i constant16ui() {
     /*
@@ -263,7 +263,7 @@ public:
     // Member function extract a single element from vector
     int32_t extract(int index) const {
         __m512i x = _mm512_maskz_compress_epi32(__mmask16(1u << index), zmm);
-        return _mm_cvtsi128_si32(_mm512_castsi512_si128(x));        
+        return _mm_cvtsi128_si32(_mm512_castsi512_si128(x));
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
@@ -377,7 +377,7 @@ static inline Vec16ib operator == (Vec16i const a, Vec16i const b) {
 static inline Vec16ib operator != (Vec16i const a, Vec16i const b) {
     return _mm512_cmpneq_epi32_mask(a, b);
 }
-  
+
 // vector operator > : returns true for elements for which a > b
 static inline Vec16ib operator > (Vec16i const a, Vec16i const b) {
     return  _mm512_cmp_epi32_mask(a, b, 6);
@@ -540,9 +540,9 @@ public:
         zmm = _mm512_set1_epi32((int32_t)i);
     }
     // Constructor to build from all elements:
-    Vec16ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7, 
+    Vec16ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7,
         uint32_t i8, uint32_t i9, uint32_t i10, uint32_t i11, uint32_t i12, uint32_t i13, uint32_t i14, uint32_t i15) {
-        zmm = _mm512_setr_epi32((int32_t)i0, (int32_t)i1, (int32_t)i2, (int32_t)i3, (int32_t)i4, (int32_t)i5, (int32_t)i6, (int32_t)i7, 
+        zmm = _mm512_setr_epi32((int32_t)i0, (int32_t)i1, (int32_t)i2, (int32_t)i3, (int32_t)i4, (int32_t)i5, (int32_t)i6, (int32_t)i7,
             (int32_t)i8, (int32_t)i9, (int32_t)i10, (int32_t)i11, (int32_t)i12, (int32_t)i13, (int32_t)i14, (int32_t)i15);
     }
     // Constructor to build from two Vec8ui:
@@ -616,7 +616,7 @@ static inline Vec16ui operator * (Vec16ui const a, Vec16ui const b) {
 
 // vector operator >> : shift right logical all elements
 static inline Vec16ui operator >> (Vec16ui const a, uint32_t b) {
-    return _mm512_srl_epi32(a, _mm_cvtsi32_si128((int32_t)b)); 
+    return _mm512_srl_epi32(a, _mm_cvtsi32_si128((int32_t)b));
 }
 static inline Vec16ui operator >> (Vec16ui const a, int32_t b) {
     return a >> (uint32_t)b;
@@ -626,7 +626,7 @@ static inline Vec16ui operator >> (Vec16ui const a, int32_t b) {
 static inline Vec16ui & operator >>= (Vec16ui & a, uint32_t b) {
     a = a >> b;
     return a;
-} 
+}
 
 // vector operator >>= : shift right logical
 static inline Vec16ui & operator >>= (Vec16ui & a, int32_t b) {
@@ -657,7 +657,7 @@ static inline Vec16ib operator > (Vec16ui const a, Vec16ui const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec16ib operator >= (Vec16ui const a, Vec16ui const b) {
     return _mm512_cmp_epu32_mask(a, b, 5);
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec16ib operator <= (Vec16ui const a, Vec16ui const b) {
@@ -811,7 +811,7 @@ public:
     // Member function extract a single element from vector
     int64_t extract(int index) const {
         __m512i x = _mm512_maskz_compress_epi64(__mmask8(1u << index), zmm);
-        return _emulate_movq(_mm512_castsi512_si128(x));        
+        return _emulate_movq(_mm512_castsi512_si128(x));
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
@@ -940,7 +940,7 @@ static inline Vec8qb operator == (Vec8q const a, Vec8q const b) {
 static inline Vec8qb operator != (Vec8q const a, Vec8q const b) {
     return Vec8qb(_mm512_cmpneq_epi64_mask(a, b));
 }
-  
+
 // vector operator < : returns true for elements for which a < b
 static inline Vec8qb operator < (Vec8q const a, Vec8q const b) {
     return _mm512_cmp_epi64_mask(a, b, 1);
@@ -1173,7 +1173,7 @@ static inline Vec8uq operator * (Vec8uq const a, Vec8uq const b) {
 
 // vector operator >> : shift right logical all elements
 static inline Vec8uq operator >> (Vec8uq const a, uint32_t b) {
-    return _mm512_srl_epi64(a,_mm_cvtsi32_si128((int32_t)b)); 
+    return _mm512_srl_epi64(a,_mm_cvtsi32_si128((int32_t)b));
 }
 static inline Vec8uq operator >> (Vec8uq const a, int32_t b) {
     return a >> (uint32_t)b;
@@ -1322,7 +1322,7 @@ static inline Vec8q permute8(Vec8q const a) {
             if constexpr ((flags & perm_rotate_big) != 0) {// fits big rotate
                 constexpr uint8_t rot = uint8_t(flags >> perm_rot_count); // rotation count
                 y = _mm512_alignr_epi64 (y, y, rot);
-            } 
+            }
             else if constexpr ((flags & perm_broadcast) != 0) { // broadcast one element
                 constexpr int e = flags >> perm_rot_count;
                 if constexpr(e != 0) {
@@ -1341,7 +1341,7 @@ static inline Vec8q permute8(Vec8q const a) {
             else if constexpr ((flags & perm_cross_lane) == 0) {  // no lane crossing. Use pshufb
                 const EList <int8_t, 64> bm = pshufb_mask<Vec8q>(indexs);
                 return _mm512_shuffle_epi8(y, Vec8q().load(bm.a));
-            } 
+            }
             else {
                 // full permute needed
                 const __m512i pmask = constant16ui <
@@ -1367,7 +1367,7 @@ static inline Vec8uq permute8(Vec8uq const a) {
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16i permute16(Vec16i const a) {
     int constexpr indexs[16] = {  // indexes as array
-        i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };    
+        i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
     __m512i y = a;  // result
     // get flags for possibilities that fit the permutation pattern
     constexpr uint64_t flags = perm_flags<Vec16i>(indexs);
@@ -1406,7 +1406,7 @@ static inline Vec16i permute16(Vec16i const a) {
                 }
                 y = _mm512_broadcastd_epi32(_mm512_castsi512_si128(y));
             }
-            else if constexpr ((flags & perm_zext) != 0) {        
+            else if constexpr ((flags & perm_zext) != 0) {
                 y = _mm512_cvtepu32_epi64(_mm512_castsi512_si256(y)); // zero extension
                 if constexpr ((flags & perm_addz2) == 0) return y;
             }
@@ -1450,8 +1450,8 @@ static inline Vec16ui permute16(Vec16ui const a) {
 *****************************************************************************/
 
 // permute and blend Vec8q
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
-static inline Vec8q blend8(Vec8q const a, Vec8q const b) { 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
+static inline Vec8q blend8(Vec8q const a, Vec8q const b) {
     int constexpr indexs[8] = { i0, i1, i2, i3, i4, i5, i6, i7 }; // indexes as array
     __m512i y = a;                                         // result
     constexpr uint64_t flags = blend_flags<Vec8q>(indexs); // get flags for possibilities that fit the index pattern
@@ -1466,7 +1466,7 @@ static inline Vec8q blend8(Vec8q const a, Vec8q const b) {
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
         constexpr EList<int, 16> L = blend_perm_indexes<8, 2>(indexs); // get permutation indexes
         return permute8 < L.a[8], L.a[9], L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15] > (b);
-    } 
+    }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint8_t mb = (uint8_t)make_bit_mask<8, 0x303>(indexs);  // blend mask
         y = _mm512_mask_mov_epi64 (a, mb, b);
@@ -1495,16 +1495,16 @@ static inline Vec8q blend8(Vec8q const a, Vec8q const b) {
         }
     }
     // check if pattern fits special cases
-    else if constexpr ((flags & blend_punpcklab) != 0) { 
+    else if constexpr ((flags & blend_punpcklab) != 0) {
         y = _mm512_unpacklo_epi64 (a, b);
     }
-    else if constexpr ((flags & blend_punpcklba) != 0) { 
+    else if constexpr ((flags & blend_punpcklba) != 0) {
         y = _mm512_unpacklo_epi64 (b, a);
     }
-    else if constexpr ((flags & blend_punpckhab) != 0) { 
+    else if constexpr ((flags & blend_punpckhab) != 0) {
         y = _mm512_unpackhi_epi64 (a, b);
     }
-    else if constexpr ((flags & blend_punpckhba) != 0) { 
+    else if constexpr ((flags & blend_punpckhba) != 0) {
         y = _mm512_unpackhi_epi64 (b, a);
     }
 #if ALLOW_FP_PERMUTE  // allow floating point permute instructions on integer vectors
@@ -1527,16 +1527,16 @@ static inline Vec8q blend8(Vec8q const a, Vec8q const b) {
     return y;
 }
 
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7> 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8uq blend8(Vec8uq const a, Vec8uq const b) {
     return Vec8uq( blend8<i0,i1,i2,i3,i4,i5,i6,i7> (Vec8q(a),Vec8q(b)));
 }
 
 
 // permute and blend Vec16i
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
-static inline Vec16i blend16(Vec16i const a, Vec16i const b) {  
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
+static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15}; // indexes as array
     __m512i y = a;                                         // result
     constexpr uint64_t flags = blend_flags<Vec16i>(indexs);// get flags for possibilities that fit the index pattern
@@ -1550,10 +1550,10 @@ static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
     }
     if constexpr ((flags & blend_a) == 0) {                // nothing from a. just permute b
         constexpr EList<int, 32> L = blend_perm_indexes<16, 2>(indexs); // get permutation indexes
-        return permute16 < 
+        return permute16 <
             L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
             L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31] > (b);
-    } 
+    }
     if constexpr ((flags & (blend_perma | blend_permb)) == 0) { // no permutation, only blending
         constexpr uint16_t mb = (uint16_t)make_bit_mask<16, 0x304>(indexs);  // blend mask
         y = _mm512_mask_mov_epi32 (a, mb, b);
@@ -1564,7 +1564,7 @@ static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
             (Vec8q(a), Vec8q(b));
         if (!(flags & blend_addz)) return y;               // no remaining zeroing
     }
-    else if constexpr ((flags & blend_same_pattern) != 0) { 
+    else if constexpr ((flags & blend_same_pattern) != 0) {
         // same pattern in all 128-bit lanes. check if pattern fits special cases
         if constexpr ((flags & blend_punpcklab) != 0) {
             y = _mm512_unpacklo_epi32(a, b);
@@ -1587,11 +1587,11 @@ static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
         }
 #endif
         else {
-            // Use vpshufd twice. This generates two instructions in the dependency chain, 
-            // but we are avoiding the slower lane-crossing instruction, and saving 64 
+            // Use vpshufd twice. This generates two instructions in the dependency chain,
+            // but we are avoiding the slower lane-crossing instruction, and saving 64
             // bytes of data cache.
             auto shuf = [](int const (&a)[16]) constexpr { // get pattern for vpshufd
-                int pat[4] = {-1,-1,-1,-1}; 
+                int pat[4] = {-1,-1,-1,-1};
                 for (int i = 0; i < 16; i++) {
                     int ix = a[i];
                     if (ix >= 0 && pat[i&3] < 0) {
@@ -1628,8 +1628,8 @@ static inline Vec16i blend16(Vec16i const a, Vec16i const b) {
     return y;
 }
 
-template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7, 
-          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 > 
+template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
+          int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16ui blend16(Vec16ui const a, Vec16ui const b) {
     return Vec16ui( blend16<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15> (Vec16i(a),Vec16i(b)));
 }
@@ -1723,7 +1723,7 @@ static inline Vec8q lookup(Vec8q const index, void const * table) {
 *
 *****************************************************************************/
 // Load elements from array a with indices i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15
-template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
+template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16i gather16i(void const * a) {
     int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
@@ -1746,7 +1746,7 @@ static inline Vec16i gather16i(void const * a) {
         }
     }
     if constexpr ((i0<imin+16  || i0>imax-16)  && (i1<imin+16  || i1>imax-16)  && (i2<imin+16  || i2>imax-16)  && (i3<imin+16  || i3>imax-16)
-    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)    
+    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)
     &&  (i8<imin+16  || i8>imax-16)  && (i9<imin+16  || i9>imax-16)  && (i10<imin+16 || i10>imax-16) && (i11<imin+16 || i11>imax-16)
     &&  (i12<imin+16 || i12>imax-16) && (i13<imin+16 || i13>imax-16) && (i14<imin+16 || i14>imax-16) && (i15<imin+16 || i15>imax-16) ) {
         // load two contiguous blocks and blend
@@ -1820,12 +1820,12 @@ static inline Vec8q gather8q(void const * a) {
 ******************************************************************************
 *
 * These functions write the elements of a vector to arbitrary positions in an
-* array in memory. Each vector element is written to an array position 
+* array in memory. Each vector element is written to an array position
 * determined by an index. An element is not written if the corresponding
 * index is out of range.
 * The indexes can be specified as constant template parameters or as an
 * integer vector.
-* 
+*
 *****************************************************************************/
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
@@ -1967,7 +1967,7 @@ static inline Vec16ui operator / (Vec16ui const a, Divisor_ui const d) {
     __m512i t8  = _mm512_sub_epi32(a,t7);                  // subtract
     __m512i t9  = _mm512_srl_epi32(t8,d.gets1());          // shift right logical
     __m512i t10 = _mm512_add_epi32(t7,t9);                 // add
-    return        _mm512_srl_epi32(t10,d.gets2());         // shift right logical 
+    return        _mm512_srl_epi32(t10,d.gets2());         // shift right logical
 }
 
 // vector operator /= : divide

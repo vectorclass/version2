@@ -40,7 +40,7 @@
 // check combination of header files
 #ifdef VECTORI512SE_H
 #error Two different versions of vectorf256.h included
-#endif 
+#endif
 
 
 #ifdef VCL_NAMESPACE
@@ -62,24 +62,24 @@ public:
     // Constructor to broadcast the same value into all elements:
     Vec64c(int8_t i) {
         zmm = _mm512_set1_epi8(i);
-    } 
+    }
     // Constructor to build from all elements:
     Vec64c(int8_t i0, int8_t i1, int8_t i2, int8_t i3, int8_t i4, int8_t i5, int8_t i6, int8_t i7,
-        int8_t i8,  int8_t i9,  int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15,        
+        int8_t i8,  int8_t i9,  int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15,
         int8_t i16, int8_t i17, int8_t i18, int8_t i19, int8_t i20, int8_t i21, int8_t i22, int8_t i23,
         int8_t i24, int8_t i25, int8_t i26, int8_t i27, int8_t i28, int8_t i29, int8_t i30, int8_t i31,
-        int8_t i32, int8_t i33, int8_t i34, int8_t i35, int8_t i36, int8_t i37, int8_t i38, int8_t i39,        
-        int8_t i40, int8_t i41, int8_t i42, int8_t i43, int8_t i44, int8_t i45, int8_t i46, int8_t i47,        
-        int8_t i48, int8_t i49, int8_t i50, int8_t i51, int8_t i52, int8_t i53, int8_t i54, int8_t i55,        
+        int8_t i32, int8_t i33, int8_t i34, int8_t i35, int8_t i36, int8_t i37, int8_t i38, int8_t i39,
+        int8_t i40, int8_t i41, int8_t i42, int8_t i43, int8_t i44, int8_t i45, int8_t i46, int8_t i47,
+        int8_t i48, int8_t i49, int8_t i50, int8_t i51, int8_t i52, int8_t i53, int8_t i54, int8_t i55,
         int8_t i56, int8_t i57, int8_t i58, int8_t i59, int8_t i60, int8_t i61, int8_t i62, int8_t i63) {
         // _mm512_set_epi8 and _mm512_set_epi16 missing in GCC 7.4.0
         int8_t aa[64] = {
-            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,        
+            i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,
             i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31,
-            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,        
+            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
             i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63 };
         load(aa);
-    } 
+    }
     // Constructor to build from two Vec32c:
     Vec64c(Vec32c const a0, Vec32c const a1) {
         zmm = _mm512_inserti64x4(_mm512_castsi256_si512(a0), a1, 1);
@@ -112,7 +112,7 @@ public:
         if (n >= 64) {
             zmm = _mm512_loadu_si512(p);
         }
-        else {        
+        else {
             zmm = _mm512_maskz_loadu_epi8(__mmask64(((uint64_t)1 << n) - 1), p);
         }
         return *this;
@@ -123,10 +123,10 @@ public:
             // _mm512_storeu_epi8(p, zmm);
             _mm512_storeu_si512(p, zmm);
         }
-        else {        
+        else {
             _mm512_mask_storeu_epi8(p, __mmask64(((uint64_t)1 << n) - 1), zmm);
         }
-    } 
+    }
     // cut off vector to n elements. The last 64-n elements are set to zero
     Vec64c & cutoff(int n) {
         if (n < 64) {
@@ -143,8 +143,8 @@ public:
     int8_t extract(int index) const {
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m512i x = _mm512_maskz_compress_epi8(__mmask64((uint64_t)1 << index), zmm);
-        return (int8_t)_mm_cvtsi128_si32(_mm512_castsi512_si128(x));        
-#else 
+        return (int8_t)_mm_cvtsi128_si32(_mm512_castsi512_si128(x));
+#else
         int8_t a[64];
         store(a);
         return a[index & 63];
@@ -187,7 +187,7 @@ public:
     // Constructor to build from all elements:
     /*
     Vec64b(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7,
-        bool b8,  bool b9,  bool b10, bool b11, bool b12, bool b13, bool b14, bool b15, 
+        bool b8,  bool b9,  bool b10, bool b11, bool b12, bool b13, bool b14, bool b15,
         bool b16, bool b17, bool b18, bool b19, bool b20, bool b21, bool b22, bool b23,
         bool b24, bool b25, bool b26, bool b27, bool b28, bool b29, bool b30, bool b31,
         bool b32, bool b33, bool b34, bool b35, bool b36, bool b37, bool b38, bool b39,
@@ -198,11 +198,11 @@ public:
             (uint64_t)b0        | (uint64_t)b1  << 1  | (uint64_t)b2  << 2  | (uint64_t)b3  << 3  |
             (uint64_t)b4  << 4  | (uint64_t)b5  << 5  | (uint64_t)b6  << 6  | (uint64_t)b7  << 7  |
             (uint64_t)b8  << 8  | (uint64_t)b9  << 9  | (uint64_t)b10 << 10 | (uint64_t)b11 << 11 |
-            (uint64_t)b12 << 12 | (uint64_t)b13 << 13 | (uint64_t)b14 << 14 | (uint64_t)b15 << 15 |        
+            (uint64_t)b12 << 12 | (uint64_t)b13 << 13 | (uint64_t)b14 << 14 | (uint64_t)b15 << 15 |
             (uint64_t)b16 << 16 | (uint64_t)b17 << 17 | (uint64_t)b18 << 18 | (uint64_t)b19 << 19 |
             (uint64_t)b20 << 20 | (uint64_t)b21 << 21 | (uint64_t)b22 << 22 | (uint64_t)b23 << 23 |
             (uint64_t)b24 << 24 | (uint64_t)b25 << 25 | (uint64_t)b26 << 26 | (uint64_t)b27 << 27 |
-            (uint64_t)b28 << 28 | (uint64_t)b29 << 29 | (uint64_t)b30 << 30 | (uint64_t)b31 << 31 |        
+            (uint64_t)b28 << 28 | (uint64_t)b29 << 29 | (uint64_t)b30 << 30 | (uint64_t)b31 << 31 |
             (uint64_t)b32 << 32 | (uint64_t)b33 << 33 | (uint64_t)b34 << 34 | (uint64_t)b35 << 35 |
             (uint64_t)b36 << 36 | (uint64_t)b37 << 37 | (uint64_t)b38 << 38 | (uint64_t)b39 << 39 |
             (uint64_t)b40 << 40 | (uint64_t)b41 << 41 | (uint64_t)b42 << 42 | (uint64_t)b43 << 43 |
@@ -218,7 +218,7 @@ public:
     }
     // Constructor to broadcast single value:
     Vec64b(bool b) {
-        mm = __mmask64(-int64_t(b));    
+        mm = __mmask64(-int64_t(b));
     }
     // Constructor to make from two halves
     Vec64b(Vec32b const x0, Vec32b const x1) {
@@ -246,9 +246,9 @@ public:
         uint64_t mask = uint64_t(1) << index;
         mm = (mm & ~mask) | uint64_t(a) << index;
         return *this;
-    }    
+    }
     // Member function extract a single element from vector
-    bool extract(int index) const { 
+    bool extract(int index) const {
         return ((mm >> index) & 1) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
@@ -478,7 +478,7 @@ static inline Vec64cb operator == (Vec64c const a, Vec64c const b) {
 static inline Vec64cb operator != (Vec64c const a, Vec64c const b) {
     return _mm512_cmpneq_epi8_mask(a, b);
 }
-  
+
 // vector operator > : returns true for elements for which a > b
 static inline Vec64cb operator > (Vec64c const a, Vec64c const b) {
     return _mm512_cmp_epi8_mask(a, b, 6);
@@ -636,16 +636,16 @@ public:
     }
     // Constructor to build from all elements:
     Vec64uc(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7,
-        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15,        
+        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15,
         uint8_t i16, uint8_t i17, uint8_t i18, uint8_t i19, uint8_t i20, uint8_t i21, uint8_t i22, uint8_t i23,
         uint8_t i24, uint8_t i25, uint8_t i26, uint8_t i27, uint8_t i28, uint8_t i29, uint8_t i30, uint8_t i31,
-        uint8_t i32, uint8_t i33, uint8_t i34, uint8_t i35, uint8_t i36, uint8_t i37, uint8_t i38, uint8_t i39,        
-        uint8_t i40, uint8_t i41, uint8_t i42, uint8_t i43, uint8_t i44, uint8_t i45, uint8_t i46, uint8_t i47,        
-        uint8_t i48, uint8_t i49, uint8_t i50, uint8_t i51, uint8_t i52, uint8_t i53, uint8_t i54, uint8_t i55,        
-        uint8_t i56, uint8_t i57, uint8_t i58, uint8_t i59, uint8_t i60, uint8_t i61, uint8_t i62, uint8_t i63) 
-        : Vec64c(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,        
+        uint8_t i32, uint8_t i33, uint8_t i34, uint8_t i35, uint8_t i36, uint8_t i37, uint8_t i38, uint8_t i39,
+        uint8_t i40, uint8_t i41, uint8_t i42, uint8_t i43, uint8_t i44, uint8_t i45, uint8_t i46, uint8_t i47,
+        uint8_t i48, uint8_t i49, uint8_t i50, uint8_t i51, uint8_t i52, uint8_t i53, uint8_t i54, uint8_t i55,
+        uint8_t i56, uint8_t i57, uint8_t i58, uint8_t i59, uint8_t i60, uint8_t i61, uint8_t i62, uint8_t i63)
+        : Vec64c(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
             i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31,
-            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,        
+            i32, i33, i34, i35, i36, i37, i38, i39, i40, i41, i42, i43, i44, i45, i46, i47,
             i48, i49, i50, i51, i52, i53, i54, i55, i56, i57, i58, i59, i60, i61, i62, i63) {}
 
     // Constructor to build from two Vec32uc:
@@ -731,7 +731,7 @@ static inline Vec64uc operator >> (Vec64uc const a, int b) {
 static inline Vec64uc & operator >>= (Vec64uc & a, uint32_t b) {
     a = a >> b;
     return a;
-} 
+}
 
 // vector operator >>= : shift right logical (signed b)
 static inline Vec64uc & operator >>= (Vec64uc & a, int32_t b) {
@@ -760,7 +760,7 @@ static inline Vec64cb operator > (Vec64uc const a, Vec64uc const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec64cb operator >= (Vec64uc const a, Vec64uc const b) {
     return _mm512_cmp_epu8_mask(a, b, 5);
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec64cb operator <= (Vec64uc const a, Vec64uc const b) {
@@ -810,7 +810,7 @@ static inline Vec64uc if_sub (Vec64cb const f, Vec64uc const a, Vec64uc const b)
 static inline Vec64uc if_mul (Vec64cb const f, Vec64uc const a, Vec64uc const b) {
     Vec64uc m = a * b;
     return select(f, m, a);
-} 
+}
 
 // function add_saturated: add element by element, unsigned with saturation
 static inline Vec64uc add_saturated(Vec64uc const a, Vec64uc const b) {
@@ -850,13 +850,13 @@ public:
     }
     // Constructor to build from all elements:
     Vec32s(int16_t i0, int16_t i1, int16_t i2, int16_t i3, int16_t i4, int16_t i5, int16_t i6, int16_t i7,
-        int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15,        
+        int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15,
         int16_t i16, int16_t i17, int16_t i18, int16_t i19, int16_t i20, int16_t i21, int16_t i22, int16_t i23,
         int16_t i24, int16_t i25, int16_t i26, int16_t i27, int16_t i28, int16_t i29, int16_t i30, int16_t i31) {
 #if true
         // _mm512_set_epi16 missing in GCC 7.4.0. This may be more efficient after all:
         int16_t aa[32] = {
-            i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,        
+            i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
             i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31 };
         load(aa);
 #else
@@ -900,7 +900,7 @@ public:
     // Partial store. Store n elements
     void store_partial(int n, void * p) const {
         _mm512_mask_storeu_epi16(p, __mmask32(((uint64_t)1 << n) - 1), zmm);
-    } 
+    }
     // cut off vector to n elements. The last 32-n elements are set to zero
     Vec32s & cutoff(int n) {
         zmm = _mm512_maskz_mov_epi16(__mmask32(((uint64_t)1 << n) - 1), zmm);
@@ -915,8 +915,8 @@ public:
     int16_t extract(int index) const {
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m512i x = _mm512_maskz_compress_epi16(__mmask32(1u << index), zmm);
-        return (int16_t)_mm_cvtsi128_si32(_mm512_castsi512_si128(x));        
-#else 
+        return (int16_t)_mm_cvtsi128_si32(_mm512_castsi512_si128(x));
+#else
         int16_t a[32];
         store(a);
         return a[index & 31];
@@ -1127,7 +1127,7 @@ static inline Vec32s if_sub (Vec32sb const f, Vec32s const a, Vec32s const b) {
 
 // Conditional multiply
 static inline Vec32s if_mul (Vec32sb const f, Vec32s const a, Vec32s const b) {
-    return _mm512_mask_mullo_epi16(a, f, a, b);    
+    return _mm512_mask_mullo_epi16(a, f, a, b);
 }
 
 // Horizontal add: Calculates the sum of all vector elements.
@@ -1176,11 +1176,11 @@ static inline Vec32s abs_saturated(Vec32s const a) {
 // function rotate_left all elements
 // Use negative count to rotate right
 static inline Vec32s rotate_left(Vec32s const a, int b) {
-    __m512i left  = _mm512_sll_epi16(a,_mm_cvtsi32_si128(b & 0xF));      // a << b 
+    __m512i left  = _mm512_sll_epi16(a,_mm_cvtsi32_si128(b & 0xF));      // a << b
     __m512i right = _mm512_srl_epi16(a,_mm_cvtsi32_si128((16-b) & 0xF)); // a >> (32 - b)
     __m512i rot   = _mm512_or_si512(left,right);                         // or
     return  rot;
-} 
+}
 
 
 /*****************************************************************************
@@ -1200,10 +1200,10 @@ public:
     }
     // Constructor to build from all elements. Inherit from Vec32s
     Vec32us(uint16_t i0, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4, uint16_t i5, uint16_t i6, uint16_t i7,
-        uint16_t i8,  uint16_t i9,  uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15,        
+        uint16_t i8,  uint16_t i9,  uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15,
         uint16_t i16, uint16_t i17, uint16_t i18, uint16_t i19, uint16_t i20, uint16_t i21, uint16_t i22, uint16_t i23,
-        uint16_t i24, uint16_t i25, uint16_t i26, uint16_t i27, uint16_t i28, uint16_t i29, uint16_t i30, uint16_t i31) 
-    : Vec32s(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,        
+        uint16_t i24, uint16_t i25, uint16_t i26, uint16_t i27, uint16_t i28, uint16_t i29, uint16_t i30, uint16_t i31)
+    : Vec32s(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
          i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31) {}
 
     // Constructor to build from two Vec16us:
@@ -1287,7 +1287,7 @@ static inline Vec32us operator >> (Vec32us const a, int b) {
 static inline Vec32us & operator >>= (Vec32us & a, uint32_t b) {
     a = a >> b;
     return a;
-} 
+}
 
 // vector operator >>= : shift right logical (signed b)
 static inline Vec32us & operator >>= (Vec32us & a, int32_t b) {
@@ -1316,7 +1316,7 @@ static inline Vec32sb operator > (Vec32us const a, Vec32us const b) {
 // vector operator >= : returns true for elements for which a >= b (unsigned)
 static inline Vec32sb operator >= (Vec32us const a, Vec32us const b) {
     return _mm512_cmp_epu16_mask(a, b, 5);
-}            
+}
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
 static inline Vec32sb operator <= (Vec32us const a, Vec32us const b) {
@@ -1363,7 +1363,7 @@ static inline Vec32us if_sub (Vec32sb const f, Vec32us const a, Vec32us const b)
 
 // Conditional multiply
 static inline Vec32us if_mul (Vec32sb const f, Vec32us const a, Vec32us const b) {
-    return _mm512_mask_mullo_epi16(a, f, a, b);    
+    return _mm512_mask_mullo_epi16(a, f, a, b);
 }
 
 // function add_saturated: add element by element, unsigned with saturation
@@ -1402,7 +1402,7 @@ static inline Vec32us min(Vec32us const a, Vec32us const b) {
 // Index -1 gives 0, index V_DC means don't care.
 template <int... i0 >
     static inline Vec32s permute32(Vec32s const a) {
-    int constexpr indexs[32] = { i0... };    
+    int constexpr indexs[32] = { i0... };
     __m512i y = a;  // result
     // get flags for possibilities that fit the permutation pattern
     constexpr uint64_t flags = perm_flags<Vec32s>(indexs);
@@ -1428,7 +1428,7 @@ template <int... i0 >
                 const EList <int8_t, 64> bm = pshufb_mask<Vec32s>(indexs);
                 return _mm512_shuffle_epi8(a, Vec32s().load(bm.a));
             }
-        } 
+        }
         else {  // different patterns in all lanes
             if constexpr ((flags & perm_cross_lane) == 0) {     // no lane crossing. Use pshufb
                 const EList <int8_t, 64> bm = pshufb_mask<Vec32s>(indexs);
@@ -1499,9 +1499,9 @@ static inline Vec64c permute64(Vec64c const a) {
             constexpr EList<int, 32> L = largeblock_perm<64>(indexs);      // permutation pattern
             y = permute32 <
                 L.a[0],  L.a[1],  L.a[2],  L.a[3],  L.a[4],  L.a[5],  L.a[6],  L.a[7],
-                L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15], 
-                L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23], 
-                L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31]> 
+                L.a[8],  L.a[9],  L.a[10], L.a[11], L.a[12], L.a[13], L.a[14], L.a[15],
+                L.a[16], L.a[17], L.a[18], L.a[19], L.a[20], L.a[21], L.a[22], L.a[23],
+                L.a[24], L.a[25], L.a[26], L.a[27], L.a[28], L.a[29], L.a[30], L.a[31]>
                 (Vec32s(a));
             if (!(flags & perm_addz)) return y;                           // no remaining zeroing
         }
@@ -1548,7 +1548,7 @@ static inline Vec64c permute64(Vec64c const a) {
                     for (int i = 0; i < 64; i += 2) {    // loop through even indexes
                         uint16_t ix = indexs[i] & 63;
                         // source bytes with odd position are in opposite 16-bit word becase of 32-bit rotation
-                        u.a[i>>1] = ((ix >> 1) ^ (ix & 1)) | (((ix & 1) ^ 1) << 5); 
+                        u.a[i>>1] = ((ix >> 1) ^ (ix & 1)) | (((ix & 1) ^ 1) << 5);
                     }
                     return u;
                 };
@@ -1571,7 +1571,7 @@ static inline Vec64c permute64(Vec64c const a) {
                 __m512i yodd  = _mm512_permutex2var_epi16(ro, Vec32s().load(oddmask.a),  a);  // destination bytes with odd  position
                 __mmask64 maske = 0x5555555555555555;                        // mask for even position
                 y = _mm512_mask_mov_epi8(yodd, maske, yeven);                // interleave even and odd position bytes
-#endif         
+#endif
             }
         }
     }
@@ -1637,7 +1637,7 @@ static inline Vec32s blend32(Vec32s const a, Vec32s const b) {
     return y;
 }
 
-template <int ... i0 > 
+template <int ... i0 >
     static inline Vec32us blend32(Vec32us const a, Vec32us const b) {
     return Vec32us(blend32<i0 ...> (Vec32s(a),Vec32s(b)));
 }
@@ -1741,7 +1741,7 @@ static inline Vec64uc blend64(Vec64uc const a, Vec64uc const b) {
 static inline Vec64c lookup64(Vec64c const index, Vec64c const table) {
 #ifdef  __AVX512VBMI__   // AVX512VBMI instruction set not supported yet (April 2019)
     return _mm512_permutexvar_epi8(index, table);
-#else 
+#else
     // broadcast each 128-bit lane, because int8_t shuffle is only within 128-bit lanes
     __m512i lane0 = _mm512_broadcast_i32x4(_mm512_castsi512_si128(table));
     __m512i lane1 = _mm512_shuffle_i64x2(table, table, 0x55);
@@ -1826,20 +1826,20 @@ static inline Vec64c shift_bytes_up(Vec64c const a) {
     if constexpr (b == 0) return a;
     else if constexpr ((b & 3) == 0) {  // b is divisible by 4
         return _mm512_alignr_epi32(a, _mm512_setzero_si512(), (16 - (b >> 2)) & 15);
-    }     
-    else if constexpr (b < 16) {    
+    }
+    else if constexpr (b < 16) {
         alo = a;
         ahi = _mm512_maskz_shuffle_i64x2(0xFC, a, a, 0x90);  // shift a 16 bytes up, zero lower part
     }
-    else if constexpr (b < 32) {    
+    else if constexpr (b < 32) {
         alo = _mm512_maskz_shuffle_i64x2(0xFC, a, a, 0x90);  // shift a 16 bytes up, zero lower part
         ahi = _mm512_maskz_shuffle_i64x2(0xF0, a, a, 0x40);  // shift a 32 bytes up, zero lower part
     }
-    else if constexpr (b < 48) { 
+    else if constexpr (b < 48) {
         alo = _mm512_maskz_shuffle_i64x2(0xF0, a, a, 0x40);  // shift a 32 bytes up, zero lower part
         ahi = _mm512_maskz_shuffle_i64x2(0xC0, a, a, 0x00);  // shift a 48 bytes up, zero lower part
     }
-    else if constexpr (b < 64) { 
+    else if constexpr (b < 64) {
         alo = _mm512_maskz_shuffle_i64x2(0xC0, a, a, 0x00);  // shift a 48 bytes up, zero lower part
         ahi = _mm512_setzero_si512();                        // zero
     }
@@ -1847,14 +1847,14 @@ static inline Vec64c shift_bytes_up(Vec64c const a) {
         return _mm512_setzero_si512();                       // zero
     }
     return _mm512_alignr_epi8(alo, ahi, 16-(b & 0xF));       // shift within 16-bytes lane
-} 
+}
 
 // Function shift_bytes_down: shift whole vector right by b bytes
 template <unsigned int b>
 static inline Vec64c shift_bytes_down(Vec64c const a) {
     if constexpr ((b & 3) == 0) {  // b is divisible by 4
         return _mm512_alignr_epi32(_mm512_setzero_si512(), a, ((b >> 2) & 15));
-    }     
+    }
     __m512i ahi, alo;
     if constexpr (b < 16) {
         alo =  _mm512_maskz_shuffle_i64x2(0x3F, a, a, 0x39);  // shift a 16 bytes down, zero upper part
@@ -1864,12 +1864,12 @@ static inline Vec64c shift_bytes_down(Vec64c const a) {
         alo = _mm512_maskz_shuffle_i64x2(0x0F, a, a, 0x0E);  // shift a 32 bytes down, zero upper part
         ahi = _mm512_maskz_shuffle_i64x2(0x3F, a, a, 0x39);  // shift a 16 bytes down, zero upper part
     }
-    else if constexpr (b < 48) { 
-        alo = _mm512_maskz_shuffle_i64x2(0x03, a, a, 0x03);  // shift a 48 bytes down, zero upper part            
+    else if constexpr (b < 48) {
+        alo = _mm512_maskz_shuffle_i64x2(0x03, a, a, 0x03);  // shift a 48 bytes down, zero upper part
         ahi = _mm512_maskz_shuffle_i64x2(0x0F, a, a, 0x0E);  // shift a 32 bytes down, zero upper part
     }
-    else if constexpr (b < 64) { 
-        alo = _mm512_setzero_si512();            
+    else if constexpr (b < 64) {
+        alo = _mm512_setzero_si512();
         ahi = _mm512_maskz_shuffle_i64x2(0x03, a, a, 0x03);  // shift a 48 bytes down, zero upper part
     }
     else {
@@ -2053,7 +2053,7 @@ static inline Vec32us operator / (Vec32us const a, Divisor_us const d) {
     __m512i t2  = _mm512_sub_epi16(a,t1);                  // subtract
     __m512i t3  = _mm512_srl_epi16(t2,d.gets1());          // shift right logical
     __m512i t4  = _mm512_add_epi16(t1,t3);                 // add
-    return        _mm512_srl_epi16(t4,d.gets2());          // shift right logical 
+    return        _mm512_srl_epi16(t4,d.gets2());          // shift right logical
 }
 
 // vector of 32 8-bit signed integers
@@ -2111,7 +2111,7 @@ static inline Vec64uc & operator /= (Vec64uc & a, Divisor_us const d) {
 *
 *****************************************************************************/
 
-// Divide Vec32s by compile-time constant 
+// Divide Vec32s by compile-time constant
 template <int d>
 static inline Vec32s divide_by_i(Vec32s const x) {
     constexpr int16_t d0 = int16_t(d);                               // truncate d to 16 bits
@@ -2119,7 +2119,7 @@ static inline Vec32s divide_by_i(Vec32s const x) {
     if constexpr (d0 ==  1) return  x;                               // divide by  1
     if constexpr (d0 == -1) return -x;                               // divide by -1
     if constexpr (uint16_t(d0) == 0x8000u) {
-        return _mm512_maskz_set1_epi16(x == Vec32s((int16_t)0x8000u), 1); // avoid overflow of abs(d). return (x == 0x80000000) ? 1 : 0;        
+        return _mm512_maskz_set1_epi16(x == Vec32s((int16_t)0x8000u), 1); // avoid overflow of abs(d). return (x == 0x80000000) ? 1 : 0;
     }
     constexpr uint16_t d1 = d0 > 0 ? d0 : -d0;                       // compile-time abs(d0)
     if constexpr ((d1 & (d1-1)) == 0) {
