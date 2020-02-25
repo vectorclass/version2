@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-11-17
-* Version:       2.01.00
+* Last modified: 2020-02-23
+* Version:       2.01.01
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -19,7 +19,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2014-2019 Agner Fog.
+* (c) Copyright 2014-2020 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -370,6 +370,14 @@ public:
     void store_a(float * p) const {
         Vec8f(z0).store_a(p);
         Vec8f(z1).store_a(p+8);
+    }
+    // Member function storing to aligned uncached memory (non-temporal store).
+    // This may be more efficient than store_a when storing large blocks of memory if it 
+    // is unlikely that the data will stay in the cache until it is read again.
+    // Note: Will generate runtime error if p is not aligned by 64
+    void store_nt(float * p) const {
+        Vec8f(z0).store_nt(p);
+        Vec8f(z1).store_nt(p+8);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec16f & load_partial(int n, float const * p) {
@@ -991,6 +999,14 @@ public:
     void store_a(double * p) const {
         z0.store_a(p);
         z1.store_a(p+4);
+    }
+    // Member function storing to aligned uncached memory (non-temporal store).
+    // This may be more efficient than store_a when storing large blocks of memory if it 
+    // is unlikely that the data will stay in the cache until it is read again.
+    // Note: Will generate runtime error if p is not aligned by 64
+    void store_nt(double * p) const {
+        z0.store_nt(p);
+        z1.store_nt(p+4);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec8d & load_partial(int n, double const * p) {

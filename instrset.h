@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-11-18
-* Version:       2.01.00
+* Last modified: 2020-02-23
+* Version:       2.01.01
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -16,12 +16,12 @@
 *
 * For instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2020 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20100
+#define INSTRSET_H 20101
 
 
 // Allow the use of floating point permute instructions on integer vectors.
@@ -530,7 +530,7 @@ constexpr auto zero_mask_broad(int const (&A)[V::size()]) {
 template <int N, int B>
 constexpr uint64_t make_bit_mask(int const (&a)[N]) {
     uint64_t r = 0;                              // return value
-    uint8_t  j = uint8_t(B);                     // index to selected bit
+    uint8_t  j = uint8_t(B & 0xFF);              // index to selected bit
     uint64_t s = 0;                              // bit number i in r
     uint64_t f = 0;                              // 1 if bit not flipped
     int i = 0;
@@ -669,14 +669,14 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         // check if same pattern in all lanes
         if (lane != 0 && ix >= 0) {                        // not first lane
-            int j  = i - int(lane * lanesize);             // index into lanepattern
+            int j1  = i - int(lane * lanesize);            // index into lanepattern
             int jx = ix - int(lane * lanesize);            // pattern within lane
             if (jx < 0 || jx >= (int)lanesize) r &= ~perm_same_pattern; // source is in another lane
-            if (lanepattern[j] < 0) {
-                lanepattern[j] = jx;                       // pattern not known from previous lane
+            if (lanepattern[j1] < 0) {
+                lanepattern[j1] = jx;                      // pattern not known from previous lane
             }
             else {
-                if (lanepattern[j] != jx) r &= ~perm_same_pattern; // not same pattern
+                if (lanepattern[j1] != jx) r &= ~perm_same_pattern; // not same pattern
             }
         }
         if (ix >= 0) {
@@ -775,18 +775,18 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         // fit punpckhi
         fit = true;
-        uint32_t j = lanesize / 2;
+        uint32_t j2 = lanesize / 2;
         for (i = 0; i < lanesize; i++) {
-            if (lanepattern[i] >= 0 && lanepattern[i] != (int)j) fit = false;
-            if ((i & 1) != 0) j++;
+            if (lanepattern[i] >= 0 && lanepattern[i] != (int)j2) fit = false;
+            if ((i & 1) != 0) j2++;
         }
         if (fit) r |= perm_punpckh;
         // fit punpcklo
         fit = true;
-        j = 0;
+        j2 = 0;
         for (i = 0; i < lanesize; i++) {
-            if (lanepattern[i] >= 0 && lanepattern[i] != (int)j) fit = false;
-            if ((i & 1) != 0) j++;
+            if (lanepattern[i] >= 0 && lanepattern[i] != (int)j2) fit = false;
+            if ((i & 1) != 0) j2++;
         }
         if (fit) r |= perm_punpckl;
         // fit pshufd

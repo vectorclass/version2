@@ -1,15 +1,15 @@
 /***************************  vectormath_common.h   ****************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2020-02-23
+* Version:       2.01.01
 * Project:       vector classes
 * Description:
 * Header file containing common code for inline version of mathematical functions.
 *
 * For detailed instructions, see VectorClass.pdf
 *
-* (c) Copyright 2014-2019 Agner Fog.
+* (c) Copyright 2014-2020 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -20,12 +20,16 @@
 #error conflicting header files. More than one implementation of mathematical functions included
 #endif
 
+#include <cmath>
+
+#ifndef VECTORCLASS_H
+#include "vectorclass.h"
+#endif
+
 #if VECTORCLASS_H < 20000
 #error Incompatible versions of vector class library mixed
 #endif
 
-#include <cmath>
-#include "vectorclass.h"
 
 /******************************************************************************
                     Define NAN payload values

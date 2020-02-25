@@ -1,8 +1,8 @@
 /****************************  vectorf256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-11-17
-* Version:       2.01.00
+* Last modified: 2020-02-23
+* Version:       2.01.01
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -19,7 +19,7 @@
 * Each vector object is represented internally in the CPU as two 128-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2020 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -536,11 +536,17 @@ public:
         _mm_storeu_ps(p,   y0);
         _mm_storeu_ps(p+4, y1);
     }
-    // Member function to store into array, aligned by 32
+    // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address divisible by 32.
     void store_a(float * p) const {
         _mm_store_ps(p,   y0);
         _mm_store_ps(p+4, y1);
+    }
+    // Member function storing to aligned uncached memory (non-temporal store).
+    // Note: Will generate runtime error if p is not aligned by 32
+    void store_nt(float * p) const {
+        _mm_stream_ps(p,   y0);
+        _mm_stream_ps(p+4, y1);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec8f & load_partial(int n, float const * p) {
@@ -1127,12 +1133,18 @@ public:
         _mm_storeu_pd(p,   y0);
         _mm_storeu_pd(p+2, y1);
     }
-    // Member function to store into array, aligned by 32
+    // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 32
     void store_a(double * p) const {
         _mm_store_pd(p,   y0);
         _mm_store_pd(p+2, y1);
+    }
+    // Member function storing to aligned uncached memory (non-temporal store).
+    // Note: Will generate runtime error if p is not aligned by 32
+    void store_nt(double * p) const {
+        _mm_stream_pd(p,   y0);
+        _mm_stream_pd(p+2, y1);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec4d & load_partial(int n, double const * p) {

@@ -1,8 +1,8 @@
 /****************************  vectori512se.h   *******************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2019-11-17
-* Version:       2.01.00
+* Last modified: 2020-02-23
+* Version:       2.01.01
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 8 and 16 bit integers.
@@ -22,7 +22,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2020 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -156,6 +156,12 @@ public:
     void store_a(void * p) const {
         Vec16i x = Vec16i(Vec8i(z0),Vec8i(z1));
         x.store_a(p);
+    } 
+    // Member function storing to aligned uncached memory (non-temporal store).
+    // Note: Will generate runtime error if p is not aligned by 64
+    void store_nt(void * p) const {
+        Vec16i x = Vec16i(Vec8i(z0),Vec8i(z1));
+        x.store_nt(p);
     }
     // Partial store. Store n elements
     void store_partial(int n, void * p) const {
