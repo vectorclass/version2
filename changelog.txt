@@ -1,6 +1,10 @@
 Change log for Vector class library
 -----------------------------------
 
+2020-02-25 version 2.01.01
+  * added function store_nt
+  * New dispatch_example1.cpp dispatch_example2.cpp
+
 2019-11-23 version 2.01.00
   * problem with performance of permute and blend functions fixed by avoiding
     unions in constexpr functions
