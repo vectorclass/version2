@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-05
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -1187,8 +1187,11 @@ static inline Vec4f pow(Vec4f const a, Const_int_t<n>) {
 }
 
 // implement the same as macro pow_const(vector, int)
-//#define pow_const(x,n) pow_n<n>(x)
+#ifdef VCL_NAMESPACE
+#define pow_const(x,n) pow(x, VCL_NAMESPACE::Const_int_t<n>())
+#else
 #define pow_const(x,n) pow(x,Const_int_t<n>())
+#endif
 
 static inline Vec4f round(Vec4f const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
