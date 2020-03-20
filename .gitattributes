@@ -1,0 +1,6 @@
+.gitattributes  text
+*.cpp           text
+*.h             text
+*.txt           text
+*.md            text
+LICENSE         text
