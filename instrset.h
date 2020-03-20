@@ -618,9 +618,9 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
     uint32_t i = 0;                                        // loop counter
     int      j = 0;                                        // loop counter
     int ix = 0;                                            // index number i
-    const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
-    const uint32_t lanesize = N / nlanes;                  // elements per lane
-    const uint32_t elementsize = sizeof(V) / N;            // size of each vector element
+    constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128-bit lanes
+    constexpr uint32_t lanesize = N / nlanes;              // elements per lane
+    constexpr uint32_t elementsize = sizeof(V) / N;        // size of each vector element
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int32_t  broadc = 999;                                 // index to broadcasted element
@@ -790,10 +790,10 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         if (fit) r |= perm_punpckl;
         // fit pshufd
-        if (elementsize >= 4) {
+        if constexpr (elementsize >= 4) {
             uint64_t p = 0;
             for (i = 0; i < lanesize; i++) {
-                if (lanesize == 4) {
+                if constexpr (lanesize == 4) {
                     p |= (lanepattern[i] & 3) << 2 * i;
                 }
                 else {  // lanesize = 2
@@ -892,7 +892,7 @@ constexpr uint64_t perm16_flags(int const (&a)[V::size()]) {
     uint32_t pat[4] = {0,0,0,0};                           // permute patterns
     uint32_t i = 0;                                        // loop counter
     int ix = 0;                                            // index number i
-    const uint32_t lanesize = 8;                           // elements per lane
+    constexpr uint32_t lanesize = 8;                       // elements per lane
     uint32_t lane = 0;                                     // current lane
     int lanepattern[lanesize] = {0};                       // pattern in each lane
 
@@ -1064,12 +1064,12 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     uint32_t iu = 0;                                       // loop counter
     int32_t ii = 0;                                        // loop counter
     int ix = 0;                                            // index number i
-    const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
-    const uint32_t lanesize = N / nlanes;                  // elements per lane
+    constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128-bit lanes
+    constexpr uint32_t lanesize = N / nlanes;              // elements per lane
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int lanepattern[lanesize] = {0};                       // pattern in each lane
-    if (lanesize == 2 && N <= 8) {
+    if constexpr (lanesize == 2 && N <= 8) {
         r |= blend_shufab | blend_shufba;                  // check if it fits shufpd
     }
 
@@ -1115,7 +1115,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             if (lanei != lane) {
                 r |= blend_cross_lane;                     // crossing lane
             }
-            if (lanesize == 2) {   // check if it fits pshufd
+            if constexpr (lanesize == 2) {   // check if it fits pshufd
                 if (lanei != lane) r &= ~(blend_shufab | blend_shufba);
                 if ((((ix & N) != 0) ^ ii) & 1) r &= ~blend_shufab;
                 else r &= ~blend_shufba;
@@ -1177,7 +1177,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             r |= uint64_t((rot & (lanesize - 1)) * elementsize) << blend_rotpattern;
         }
 #endif
-        if (lanesize == 4) {
+        if constexpr (lanesize == 4) {
             // check if it fits shufps
             r |= blend_shufab | blend_shufba;
             for (ii = 0; ii < 2; ii++) {
@@ -1203,7 +1203,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             }
         }
     }
-    else if  (nlanes > 1) {  // not same pattern in all lanes
+    else if constexpr (nlanes > 1) {  // not same pattern in all lanes
         rot = 999;                                         // check if it fits big rotate
         for (ii = 0; ii < N; ii++) {
             ix = a[ii];
