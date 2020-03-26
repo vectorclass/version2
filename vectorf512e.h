@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-26
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -1713,11 +1713,11 @@ static inline Vec16f lookup16(Vec16i const index, Vec16f const table) {
 
 template <int n>
 static inline Vec16f lookup(Vec16i const index, float const * table) {
-    if (n <=  0) return 0;
-    if (n <= 16) return lookup16(index, Vec16f().load(table));
+    if constexpr (n <=  0) return 0;
+    if constexpr (n <= 16) return lookup16(index, Vec16f().load(table));
     // n > 16. Limit index
     Vec16ui i1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         i1 = Vec16ui(index) & (n-1);
     }
@@ -1740,13 +1740,13 @@ static inline Vec8d lookup8(Vec8q const index, Vec8d const table) {
 
 template <int n>
 static inline Vec8d lookup(Vec8q const index, double const * table) {
-    if (n <= 0) return 0;
-    if (n <= 8) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 8) {
         return lookup8(index, Vec8d().load(table));
     }
     // n > 8. Limit index
     Vec8uq i1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         i1 = Vec8uq(index) & (n-1);
     }

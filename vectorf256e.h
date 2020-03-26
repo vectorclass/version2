@@ -1,8 +1,8 @@
 /****************************  vectorf256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-26
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -1804,19 +1804,19 @@ static inline Vec8f lookup8(Vec8i const index, Vec8f const table) {
 
 template <int n>
 static inline Vec8f lookup(Vec8i const index, float const * table) {
-    if (n <= 0) return 0;
-    if (n <= 4) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 4) {
         Vec4f table1 = Vec4f().load(table);
         return Vec8f(
             lookup4 (index.get_low(),  table1),
             lookup4 (index.get_high(), table1));
     }
-    if (n <= 8) {
+    if constexpr (n <= 8) {
         return lookup8(index, Vec8f().load(table));
     }
     // Limit index
     Vec8ui index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8ui(index) & (n-1);
     }
@@ -1836,8 +1836,8 @@ static inline Vec4d lookup4(Vec4q const index, Vec4d const table) {
 
 template <int n>
 static inline Vec4d lookup(Vec4q const index, double const * table) {
-    if (n <= 0) return 0;
-    if (n <= 2) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 2) {
         Vec2d table1 = Vec2d().load(table);
         return Vec4d(
             lookup2 (index.get_low(),  table1),
@@ -1845,7 +1845,7 @@ static inline Vec4d lookup(Vec4q const index, double const * table) {
     }
     // Limit index
     Vec8ui index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8ui(index) & Vec8ui(n-1, 0, n-1, 0, n-1, 0, n-1, 0);
     }

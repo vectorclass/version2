@@ -1,8 +1,8 @@
 /****************************  vectori512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-26
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 32 and 64 bit integers.
@@ -1669,19 +1669,19 @@ static inline Vec16i lookup64(Vec16i const index, Vec16i const table1, Vec16i co
 
 template <int n>
 static inline Vec16i lookup(Vec16i const index, void const * table) {
-    if (n <= 0) return 0;
-    if (n <= 16) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 16) {
         Vec16i table1 = Vec16i().load(table);
         return lookup16(index, table1);
     }
-    if (n <= 32) {
+    if constexpr (n <= 32) {
         Vec16i table1 = Vec16i().load(table);
         Vec16i table2 = Vec16i().load((int8_t*)table + 64);
         return _mm512_permutex2var_epi32(table1, index, table2);
     }
     // n > 32. Limit index
     Vec16ui index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec16ui(index) & (n-1);
     }
@@ -1700,19 +1700,19 @@ static inline Vec8q lookup8(Vec8q const index, Vec8q const table) {
 
 template <int n>
 static inline Vec8q lookup(Vec8q const index, void const * table) {
-    if (n <= 0) return 0;
-    if (n <= 8) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 8) {
         Vec8q table1 = Vec8q().load(table);
         return lookup8(index, table1);
     }
-    if (n <= 16) {
+    if constexpr (n <= 16) {
         Vec8q table1 = Vec8q().load(table);
         Vec8q table2 = Vec8q().load((int8_t*)table + 64);
         return _mm512_permutex2var_epi64(table1, index, table2);
     }
     // n > 16. Limit index
     Vec8uq index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8uq(index) & (n-1);
     }

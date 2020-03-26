@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-26
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -1821,19 +1821,19 @@ static inline Vec16f lookup16(Vec16i const index, Vec16f const table) {
 
 template <int n>
 static inline Vec16f lookup(Vec16i const index, float const * table) {
-    if (n <= 0) return 0;
-    if (n <= 16) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 16) {
         Vec16f table1 = Vec16f().load((float*)table);
         return lookup16(index, table1);
     }
-    if (n <= 32) {
+    if constexpr (n <= 32) {
         Vec16f table1 = Vec16f().load((float*)table);
         Vec16f table2 = Vec16f().load((float*)table + 16);
         return _mm512_permutex2var_ps(table1, index, table2);
     }
     // n > 32. Limit index
     Vec16ui index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec16ui(index) & (n-1);
     }
@@ -1851,19 +1851,19 @@ static inline Vec8d lookup8(Vec8q const index, Vec8d const table) {
 
 template <int n>
 static inline Vec8d lookup(Vec8q const index, double const * table) {
-    if (n <= 0) return 0;
-    if (n <= 8) {
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 8) {
         Vec8d table1 = Vec8d().load((double*)table);
         return lookup8(index, table1);
     }
-    if (n <= 16) {
+    if constexpr (n <= 16) {
         Vec8d table1 = Vec8d().load((double*)table);
         Vec8d table2 = Vec8d().load((double*)table + 8);
         return _mm512_permutex2var_pd(table1, index, table2);
     }
     // n > 16. Limit index
     Vec8uq index1;
-    if ((n & (n-1)) == 0) {
+    if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8uq(index) & (n-1);
     }

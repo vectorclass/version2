@@ -1,7 +1,7 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-05
+* Last modified: 2020-03-26
 * Version:       2.01.02
 * Project:       vector class library
 * Description:
@@ -2795,9 +2795,9 @@ static inline Vec4f lookup8(Vec4i const index, Vec4f const table0, Vec4f const t
 
 template <int n>
 static inline Vec4f lookup(Vec4i const index, float const * table) {
-    if (n <= 0) return 0.0f;
-    if (n <= 4) return lookup4(index, Vec4f().load(table));
-    if (n <= 8) {
+    if constexpr (n <= 0) return 0.0f;
+    if constexpr (n <= 4) return lookup4(index, Vec4f().load(table));
+    if constexpr (n <= 8) {
 #if INSTRSET >= 8  // AVX2
         __m256 tt = _mm256_loadu_ps(table);
         __m128 r  = _mm256_castps256_ps128(_mm256_permutevar8x32_ps(tt, _mm256_castsi128_si256(index)));
@@ -2808,7 +2808,7 @@ static inline Vec4f lookup(Vec4i const index, float const * table) {
     }
     // n > 8. Limit index
     Vec4ui index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec4ui(index) & (n - 1);
     }
@@ -2853,14 +2853,14 @@ static inline Vec2d lookup4(Vec2q const index, Vec2d const table0, Vec2d const t
 
 template <int n>
 static inline Vec2d lookup(Vec2q const index, double const * table) {
-    if (n <= 0) return 0.0;
-    if (n <= 2) return lookup2(index, Vec2d().load(table));
+    if constexpr (n <= 0) return 0.0;
+    if constexpr (n <= 2) return lookup2(index, Vec2d().load(table));
 #if INSTRSET < 8  // not AVX2
-    if (n <= 4) return lookup4(index, Vec2d().load(table), Vec2d().load(table + 2));
+    if constexpr (n <= 4) return lookup4(index, Vec2d().load(table), Vec2d().load(table + 2));
 #endif
     // Limit index
     Vec2uq index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec2uq(index) & (n - 1);
     }

@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-03-26
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -5605,12 +5605,12 @@ static inline Vec16c lookup32(Vec16c const index, Vec16c const table0, Vec16c co
 
 template <int n>
 static inline Vec16c lookup(Vec16c const index, void const * table) {
-    if (n <= 0) return 0;
-    if (n <= 16) return lookup16(index, Vec16c().load(table));
-    if (n <= 32) return lookup32(index, Vec16c().load(table), Vec16c().load((int8_t*)table + 16));
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 16) return lookup16(index, Vec16c().load(table));
+    if constexpr (n <= 32) return lookup32(index, Vec16c().load(table), Vec16c().load((int8_t*)table + 16));
     // n > 32. Limit index
     Vec16uc index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec16uc(index) & uint8_t(n - 1);
     }
@@ -5654,12 +5654,12 @@ static inline Vec8s lookup16(Vec8s const index, Vec8s const table0, Vec8s const 
 
 template <int n>
 static inline Vec8s lookup(Vec8s const index, void const * table) {
-    if (n <= 0) return 0;
-    if (n <= 8) return lookup8(index, Vec8s().load(table));
-    if (n <= 16) return lookup16(index, Vec8s().load(table), Vec8s().load((int16_t*)table + 8));
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 8) return lookup8(index, Vec8s().load(table));
+    if constexpr (n <= 16) return lookup16(index, Vec8s().load(table), Vec8s().load((int16_t*)table + 8));
     // n > 16. Limit index
     Vec8us index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8us(index) & (n - 1);
     }
@@ -5740,12 +5740,12 @@ static inline Vec4i lookup16(Vec4i const index, Vec4i const table0, Vec4i const 
 
 template <int n>
 static inline Vec4i lookup(Vec4i const index, void const * table) {
-    if (n <= 0) return 0;
-    if (n <= 4) return lookup4(index, Vec4i().load(table));
-    if (n <= 8) return lookup8(index, Vec4i().load(table), Vec4i().load((int32_t*)table + 4));
+    if constexpr (n <= 0) return 0;
+    if constexpr (n <= 4) return lookup4(index, Vec4i().load(table));
+    if constexpr (n <= 8) return lookup8(index, Vec4i().load(table), Vec4i().load((int32_t*)table + 4));
     // n > 8. Limit index
     Vec4ui index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec4ui(index) & (n - 1);
     }
@@ -5774,10 +5774,10 @@ static inline Vec2q lookup2(Vec2q const index, Vec2q const table) {
 
 template <int n>
 static inline Vec2q lookup(Vec2q const index, void const * table) {
-    if (n <= 0) return 0;
+    if constexpr (n <= 0) return 0;
     // n > 0. Limit index
     Vec2uq index1;
-    if ((n & (n - 1)) == 0) {
+    if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec2uq(index) & (n - 1);
     }
