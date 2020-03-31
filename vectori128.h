@@ -507,7 +507,7 @@ static inline Vec8b operator || (Vec8b a, Vec8b b) {
 // vector operator ^ : xor
 static inline Vec8b operator ^ (Vec8b a, Vec8b b) {
 #if INSTRSET >= 10  // 8-bit mask operations require AVX512DQ
-    return __mmask8(__mmask8(a) | __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
+    return __mmask8(__mmask8(a) ^ __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
 #else
     return _mm512_kxor(__mmask16(a), __mmask16(b));
 #endif
@@ -602,7 +602,7 @@ static inline Vec4b operator || (Vec4b a, Vec4b b) {
 
 // vector operator ^ : xor
 static inline Vec4b operator ^ (Vec4b a, Vec4b b) {
-    return __mmask8(__mmask8(a) | __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
+    return __mmask8(__mmask8(a) ^ __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
 }
 
 // vector operator ~ : not
@@ -683,7 +683,7 @@ static inline Vec2b operator || (Vec2b a, Vec2b b) {
 
 // vector operator ^ : xor
 static inline Vec2b operator ^ (Vec2b a, Vec2b b) {
-    return __mmask8(__mmask8(a) | __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
+    return __mmask8(__mmask8(a) ^ __mmask8(b)); // _kxor_mask8(__mmask8(a), __mmask8(b));
 }
 
 // vector operator ~ : not
