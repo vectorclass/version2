@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-04-01
+* Version:       2.01.02
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -109,7 +109,9 @@
 // Assume that all processors that have AVX2 also have FMA3
 #if defined (__GNUC__) && ! defined (__INTEL_COMPILER)
 // Prevent error message in g++ and Clang when using FMA intrinsics with avx2:
+#if !defined(DISABLE_WARNING_AVX2_WITHOUT_FMA)
 #pragma message "It is recommended to specify also option -mfma when using -mavx2 or higher"
+#endif
 #elif ! defined (__clang__)
 #define __FMA__  1
 #endif
