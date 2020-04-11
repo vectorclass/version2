@@ -1,6 +1,9 @@
 Change log for Vector class library
 -----------------------------------
 
+2020-04-11 version 2.01.02
+  * only minor fixes
+
 2020-02-25 version 2.01.01
   * added function store_nt
   * New dispatch_example1.cpp dispatch_example2.cpp
