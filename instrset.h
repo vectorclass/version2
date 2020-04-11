@@ -21,7 +21,7 @@
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20101
+#define INSTRSET_H 20102
 
 
 // Allow the use of floating point permute instructions on integer vectors.
