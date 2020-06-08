@@ -1,8 +1,8 @@
 /****************************  vectormath_exp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2019-08-30
-* Version:       2.00.01
+* Last modified: 2020-06-08
+* Version:       2.00.03
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of logarithms, exponential
@@ -29,7 +29,7 @@
 *
 * For detailed instructions see vcl_manual.pdf
 *
-* (c) Copyright 2014-2019 Agner Fog.
+* (c) Copyright 2014-2020 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -2165,58 +2165,6 @@ V power_rational (V const x) {
     }
 }
 
-
-
-/******************************************************************************
-*                 Detect NAN codes
-*
-* These functions return the code hidden in a NAN. The sign bit is ignored
-******************************************************************************/
-
-static inline Vec4ui nan_code(Vec4f const x) {
-    Vec4ui a = Vec4ui(reinterpret_i(x));
-    Vec4ui const n = 0x007FFFFF;
-    return select(Vec4ib(is_nan(x)), a & n, 0);
-}
-
-// This function returns the code hidden in a NAN. The sign bit is ignored
-static inline Vec2uq nan_code(Vec2d const x) {
-    Vec2uq a = Vec2uq(reinterpret_i(x));
-    return select(Vec2qb(is_nan(x)), a << 12 >> (12+29), 0);
-}
-
-#if MAX_VECTOR_SIZE >= 256
-
-// This function returns the code hidden in a NAN. The sign bit is ignored
-static inline Vec8ui nan_code(Vec8f const x) {
-    Vec8ui a = Vec8ui(reinterpret_i(x));
-    Vec8ui const n = 0x007FFFFF;
-    return select(Vec8ib(is_nan(x)), a & n, 0);
-}
-
-// This function returns the code hidden in a NAN. The sign bit is ignored
-static inline Vec4uq nan_code(Vec4d const x) {
-    Vec4uq a = Vec4uq(reinterpret_i(x));
-    return select(Vec4qb(is_nan(x)), a << 12 >> (12+29), 0);
-}
-
-#endif // MAX_VECTOR_SIZE >= 256
-#if MAX_VECTOR_SIZE >= 512
-
-// This function returns the code hidden in a NAN. The sign bit is ignored
-static inline Vec16ui nan_code(Vec16f const x) {
-    Vec16ui a = Vec16ui(reinterpret_i(x));
-    Vec16ui const n = 0x007FFFFF;
-    return select(Vec16ib(is_nan(x)), a & n, 0);
-}
-
-// This function returns the code hidden in a NAN. The sign bit is ignored
-static inline Vec8uq nan_code(Vec8d const x) {
-    Vec8uq a = Vec8uq(reinterpret_i(x));
-    return select(Vec8qb(is_nan(x)), a << 12 >> (12+29), 0);
-}
-
-#endif // MAX_VECTOR_SIZE >= 512
 
 #ifdef VCL_NAMESPACE
 }

@@ -1,8 +1,8 @@
 /****************************  vectormath_trig.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2019-08-30
-* Version:       2.00.01
+* Last modified: 2020-06-08
+* Version:       2.00.03
 * Project:       vector class library
 * Description:
 * Header file containing inline version of trigonometric functions
@@ -20,7 +20,7 @@
 *
 * For detailed instructions, see vectormath_common.h and vcl_manual.pdf
 *
-* (c) Copyright 2014-2019 Agner Fog.
+* (c) Copyright 2014-2020 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -70,10 +70,12 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
     const double DP3sc = 2.69515142907905952645E-15;
     */
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
+    typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
 
     VTYPE  xa, x, y, x2, s, c, sin1, cos1;       // data vectors
     ITYPE  q, qq, signsin, signcos;              // integer vectors, 64 bit
+
     BVTYPE swap, overflow;                       // boolean vectors
 
     xa = abs(xx);
@@ -102,7 +104,7 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
     swap = BVTYPE((q & 1) != 0);
 
     // check for overflow
-    overflow = BVTYPE(q > 0x80000000000000);  // q big if overflow
+    overflow = BVTYPE(UITYPE(q) > 0x80000000000000);  // q big if overflow
     overflow &= is_finite(xa);
     s = select(overflow, 0.0, s);
     c = select(overflow, 1.0, c);
@@ -192,6 +194,7 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
     const float P2cosf = 2.443315711809948E-5f;
 
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
+    typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
 
     VTYPE  xa, x, y, x2, s, c, sin1, cos1;       // data vectors
@@ -225,7 +228,7 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
     swap = BVTYPE((q & 1) != 0);
 
     // check for overflow
-    overflow = BVTYPE(q > 0x2000000);  // q big if overflow
+    overflow = BVTYPE(UITYPE(q) > 0x2000000);  // q big if overflow
     overflow &= is_finite(xa);
     s = select(overflow, 0.0f, s);
     c = select(overflow, 1.0f, c);
@@ -333,6 +336,8 @@ static inline VTYPE tan_d(VTYPE const x) {
     typedef decltype(x > x) BVTYPE;         // boolean vector type
     VTYPE  xa, y, z, zz, px, qx, tn, recip; // data vectors
     BVTYPE doinvert, xzero, overflow;       // boolean vectors
+    typedef decltype(nan_code(x)) UITYPE;   // unsigned integer vector type
+
 
     xa = abs(x);
 
@@ -368,7 +373,7 @@ static inline VTYPE tan_d(VTYPE const x) {
     tn = select(doinvert, recip, tn);
     tn = sign_combine(tn, x);       // get original sign
 
-    overflow = BVTYPE(q > 0x80000000000000) & is_finite(xa);
+    overflow = BVTYPE(UITYPE(q) > 0x80000000000000) & is_finite(xa);
     tn = select(overflow, 0., tn);
 
     return tn;

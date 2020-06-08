@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-04-01
-* Version:       2.01.02
+* Last modified: 2020-06-08
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -188,7 +188,17 @@ int physicalProcessors(int * logical_processors = 0);
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
+
+// warning for poor support for AVX512F in MS compiler
+#ifndef __INTEL_COMPILER
+#if INSTRSET == 9
+#pragma message("Warning: MS compiler cannot generate code for AVX512F without AVX512DQ")
 #endif
+#if _MSC_VER < 1920 && INSTRSET > 8
+#pragma message("Warning: Your compiler has poor support for AVX512. Code may be erroneous.\nPlease use a newer compiler version or a different compiler!")
+#endif
+#endif // __INTEL_COMPILER
+#endif // _MSC_VER
 
 /* Intel compiler problem:
 The Intel compiler currently cannot compile version 2.00 of VCL. It seems to have

@@ -1,8 +1,8 @@
 /***************************  vectormath_common.h   ****************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2020-06-08
+* Version:       2.01.03
 * Project:       vector classes
 * Description:
 * Header file containing common code for inline version of mathematical functions.
@@ -99,6 +99,59 @@ inline Vec8d infinite_vec<Vec8d>() {
 template <>
 inline Vec16f infinite_vec<Vec16f>() {
     return infinite16f();
+}
+
+#endif // MAX_VECTOR_SIZE >= 512
+
+
+
+/******************************************************************************
+*                 Detect NAN codes
+*
+* These functions return the code hidden in a NAN. The sign bit is ignored
+******************************************************************************/
+
+static inline Vec4ui nan_code(Vec4f const x) {
+    Vec4ui a = Vec4ui(reinterpret_i(x));
+    Vec4ui const n = 0x007FFFFF;
+    return select(Vec4ib(is_nan(x)), a & n, 0);
+}
+
+// This function returns the code hidden in a NAN. The sign bit is ignored
+static inline Vec2uq nan_code(Vec2d const x) {
+    Vec2uq a = Vec2uq(reinterpret_i(x));
+    return select(Vec2qb(is_nan(x)), a << 12 >> (12+29), 0);
+}
+
+#if MAX_VECTOR_SIZE >= 256
+
+// This function returns the code hidden in a NAN. The sign bit is ignored
+static inline Vec8ui nan_code(Vec8f const x) {
+    Vec8ui a = Vec8ui(reinterpret_i(x));
+    Vec8ui const n = 0x007FFFFF;
+    return select(Vec8ib(is_nan(x)), a & n, 0);
+}
+
+// This function returns the code hidden in a NAN. The sign bit is ignored
+static inline Vec4uq nan_code(Vec4d const x) {
+    Vec4uq a = Vec4uq(reinterpret_i(x));
+    return select(Vec4qb(is_nan(x)), a << 12 >> (12+29), 0);
+}
+
+#endif // MAX_VECTOR_SIZE >= 256
+#if MAX_VECTOR_SIZE >= 512
+
+// This function returns the code hidden in a NAN. The sign bit is ignored
+static inline Vec16ui nan_code(Vec16f const x) {
+    Vec16ui a = Vec16ui(reinterpret_i(x));
+    Vec16ui const n = 0x007FFFFF;
+    return select(Vec16ib(is_nan(x)), a & n, 0);
+}
+
+// This function returns the code hidden in a NAN. The sign bit is ignored
+static inline Vec8uq nan_code(Vec8d const x) {
+    Vec8uq a = Vec8uq(reinterpret_i(x));
+    return select(Vec8qb(is_nan(x)), a << 12 >> (12+29), 0);
 }
 
 #endif // MAX_VECTOR_SIZE >= 512
