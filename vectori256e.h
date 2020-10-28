@@ -1,7 +1,7 @@
 /****************************  vectori256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-26
+* Last modified: 2020-10-28
 * Version:       2.01.02
 * Project:       vector class library
 * Description:
@@ -3156,7 +3156,7 @@ static inline Vec8i permute8(Vec8i const a) {
 }
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7 >
-static inline Vec8ui permute4(Vec8ui const a) {
+static inline Vec8ui permute8(Vec8ui const a) {
     return Vec8ui (permute8<i0,i1,i2,i3,i4,i5,i6,i7> (Vec8i(a)));
 }
 
