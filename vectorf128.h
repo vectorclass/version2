@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2020-11-04
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -980,30 +980,33 @@ static inline Vec4fb is_inf(Vec4f const a) {
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-#if INSTRSET >= 10
 static inline Vec4fb is_nan(Vec4f const a) {
+#if INSTRSET >= 10
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return Vec4fb(_mm_fpclass_ps_mask(a, 0x81));
-}
+
 //#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
 //__attribute__((optimize("-fno-unsafe-math-optimizations")))
 //static inline Vec4fb is_nan(Vec4f const a) {
 //    return a != a; // not safe with -ffinite-math-only compiler option
 //}
-#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
-static inline Vec4fb is_nan(Vec4f const a) {
+
+#elif INSTRSET >= 7
+
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+    // use assembly to avoid optimizing away with -ffinite-math-only and similar options
     __m128 aa = a;
     __m128i unordered;
     __asm volatile("vcmpps $3,  %1, %1, %0" : "=x" (unordered) :  "x" (aa) );
     return Vec4fb(unordered);
-}
 #else
-static inline Vec4fb is_nan(Vec4f const a) {
-    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm_cmp_ps(a, a, 3); // compare unordered
-    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
-}
 #endif
+#else
+return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+#endif
+}
+
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF
@@ -1964,30 +1967,32 @@ static inline Vec2db is_inf(Vec2d const a) {
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-#if INSTRSET >= 10
 static inline Vec2db is_nan(Vec2d const a) {
+#if INSTRSET >= 10
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return Vec2db(_mm_fpclass_pd_mask(a, 0x81));
-}
-//#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
-//__attribute__((optimize("-fno-unsafe-math-optimizations")))
-//static inline Vec2db is_nan(Vec2d const a) {
-//    return a != a; // not safe with -ffinite-math-only compiler option
-//}
-#elif (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
-static inline Vec2db is_nan(Vec2d const a) {
+
+    //#elif defined(__GNUC__) && !defined(__INTEL_COMPILER) && !defined(__clang__)
+    //__attribute__((optimize("-fno-unsafe-math-optimizations")))
+    //static inline Vec4fb is_nan(Vec4f const a) {
+    //    return a != a; // not safe with -ffinite-math-only compiler option
+    //}
+
+#elif INSTRSET >= 7
+
+#if (defined(__GNUC__) || defined(__clang__)) && !defined(__INTEL_COMPILER)
+    // use assembly to avoid optimizing away with -ffinite-math-only and similar options
     __m128d aa = a;
     __m128i unordered;
     __asm volatile("vcmppd $3,  %1, %1, %0" : "=x" (unordered) :  "x" (aa) );
     return Vec2db(unordered);
-}
 #else
-static inline Vec2db is_nan(Vec2d const a) {
-    // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm_cmp_pd(a, a, 3); // compare unordered
-    // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
-}
 #endif
+#else
+    return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
+#endif
+}
 
 
 // Function is_subnormal: gives true for elements that are subnormal (denormal)

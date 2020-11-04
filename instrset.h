@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-06-08
+* Last modified: 2020-11-04
 * Version:       2.01.03
 * Project:       vector class library
 * Description:
@@ -21,7 +21,7 @@
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20102
+#define INSTRSET_H 20103
 
 
 // Allow the use of floating point permute instructions on integer vectors.
