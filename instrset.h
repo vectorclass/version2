@@ -130,6 +130,7 @@
 
 // FMA3 instruction set
 #if defined (__FMA__) && (defined(__GNUC__) || defined(__clang__))  && ! defined (__INTEL_COMPILER)
+#include <immintrin.h>
 #include <fmaintrin.h>
 #endif // __FMA__
 
