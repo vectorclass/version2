@@ -1,8 +1,8 @@
 /****************************  vectormath_exp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2020-06-08
-* Version:       2.00.03
+* Last modified: 2020-11-24
+* Version:       2.01.04
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of logarithms, exponential
@@ -675,7 +675,7 @@ union vm_udi {
 
 // extract exponent of a positive number x as a floating point number
 static inline Vec4f exponent_f(Vec4f const x) {
-#ifdef __AVX512VL__                              // AVX512VL
+#if INSTRSET >= 10                               // AVX512VL
     // prevent returning -inf for x=0
     return _mm_maskz_getexp_ps(_mm_cmp_ps_mask(x,Vec4f(0.f),4), x);
 #else
@@ -692,7 +692,7 @@ static inline Vec4f exponent_f(Vec4f const x) {
 }
 
 static inline Vec2d exponent_f(Vec2d const x) {
-#ifdef __AVX512VL__                              // AVX512VL
+#if INSTRSET >= 10                               // AVX512VL
     // prevent returning -inf for x=0
     //return _mm_maskz_getexp_pd(x != 0., x);
     return _mm_maskz_getexp_pd(_mm_cmp_pd_mask(x,Vec2d(0.),4), x);
@@ -714,7 +714,7 @@ static inline Vec2d exponent_f(Vec2d const x) {
 #if MAX_VECTOR_SIZE >= 256
 
 static inline Vec8f exponent_f(Vec8f const x) {
-#ifdef __AVX512VL__                              // AVX512VL
+#if INSTRSET >= 10
     // prevent returning -inf for x=0
     //return _mm256_maskz_getexp_ps(x != 0.f, x);
     return _mm256_maskz_getexp_ps(_mm256_cmp_ps_mask(x,Vec8f(0.f),4), x);
@@ -733,7 +733,7 @@ static inline Vec8f exponent_f(Vec8f const x) {
 
 // extract exponent of a positive number x as a floating point number
 static inline Vec4d exponent_f(Vec4d const x) {
-#ifdef __AVX512VL__                              // AVX512VL
+#if INSTRSET >= 10
     // prevent returning -inf for x=0
     //return _mm256_maskz_getexp_pd(x != 0., x);
     return _mm256_maskz_getexp_pd(_mm256_cmp_pd_mask(x,Vec4d(0.),4), x);
