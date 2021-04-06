@@ -94,6 +94,9 @@ MyFuncType  myfunc, myfunc_dispatch;
 #error Unsupported instruction set
 #endif
 
+#define _STR(x)  #x
+#define STR(x)   _STR(x)
+
 /******************************************************************************
                              Dispatched code
 
@@ -119,6 +122,7 @@ static float sum (float const f[]) {
 // The entry function cannot be member of a class.
 // The entry function must use arrays rather than vectors for input and output.
 float FUNCNAME (float const f[]) {
+    printf(STR(FUNCNAME) "\n");
     return sum(f);
 }
 
@@ -179,9 +183,8 @@ int main() {
     // array of 16 floats
     float const a[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
-    float sum = myfunc(a);                       // call function with dispatching
-
-    printf("\nsum = %8.2f \n", sum);             // print result (= 136.00)
+    float sum = myfunc(a);                     // call function with dispatching
+    printf("sum = %8.2f \n", sum);             // print result (= 136.00)
 
     return 0;
 }
