@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-11-24
+* Last modified: 2021-04-28
 * Version:       2.01.04
 * Project:       vector class library
 * Description:
@@ -16,7 +16,7 @@
 *
 * For instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2021 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -362,7 +362,7 @@ static inline uint32_t bit_scan_reverse(uint32_t a) {
 static inline uint32_t bit_scan_reverse(uint64_t a) {
     uint64_t r;
     __asm("bsrq %1, %0" : "=r"(r) : "r"(a) : );
-    return r;
+    return uint32_t(r);
 }
 #else   // 32 bit mode
 static inline uint32_t bit_scan_reverse(uint64_t a) {
