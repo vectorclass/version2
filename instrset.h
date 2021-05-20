@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-04-28
+* Last modified: 2021-05-20
 * Version:       2.01.04
 * Project:       vector class library
 * Description:
@@ -806,10 +806,10 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         if (fit) r |= perm_punpckl;
         // fit pshufd
-        if (elementsize >= 4) {
+        if constexpr (elementsize >= 4) {
             uint64_t p = 0;
             for (i = 0; i < lanesize; i++) {
-                if (lanesize == 4) {
+                if constexpr (lanesize == 4) {
                     p |= (lanepattern[i] & 3) << 2 * i;
                 }
                 else {  // lanesize = 2
