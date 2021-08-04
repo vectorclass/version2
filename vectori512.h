@@ -1157,7 +1157,7 @@ public:
         return Vec4uq(Vec8q::get_high());
     }
     static constexpr int elementtype() {
-        return 10;
+        return 11;
     }
 };
 
