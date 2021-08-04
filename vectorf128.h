@@ -2528,7 +2528,7 @@ static inline Vec4f permute4(Vec4f const a) {
 #if  INSTRSET >= 4 && INSTRSET < 10 // SSSE3, but no compact mask
         else if constexpr ((flags & perm_zeroing) != 0) {
             // Do both permutation and zeroing with PSHUFB instruction
-            const EList <int8_t, 16> bm = pshufb_mask<Vec4i>(indexs);
+            constexpr EList <int8_t, 16> bm = pshufb_mask<Vec4i>(indexs);
             return _mm_castsi128_ps(_mm_shuffle_epi8(_mm_castps_si128(a), Vec4i().load(bm.a)));
         }
 #endif
@@ -2566,7 +2566,7 @@ static inline Vec4f permute4(Vec4f const a) {
         // I don't want to clutter all the branches above with this
         y = _mm_maskz_mov_ps (zero_mask<4>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
+        constexpr EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
         y = _mm_and_ps(_mm_castsi128_ps(Vec4i().load(bm.a)), y);
 #endif
     }
@@ -2603,7 +2603,7 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
 #elif INSTRSET >= 5  // SSE4.1
         y = _mm_blend_pd (a, b, ((i0 & 2) ? 0x01 : 0) | ((i1 & 2) ? 0x02 : 0));
 #else  // SSE2
-        const EList <int64_t, 2> bm = make_broad_mask<Vec2d>(make_bit_mask<2, 0x301>(indexs));
+        constexpr EList <int64_t, 2> bm = make_broad_mask<Vec2d>(make_bit_mask<2, 0x301>(indexs));
         y = selectd(_mm_castsi128_pd(Vec2q().load(bm.a)), b, a);
 #endif
     }
@@ -2648,7 +2648,7 @@ static inline Vec2d blend2(Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm_maskz_mov_pd(zero_mask<2>(indexs), y);
 #else  // use broad mask
-        const EList <int64_t, 2> bm = zero_mask_broad<Vec2q>(indexs);
+        constexpr EList <int64_t, 2> bm = zero_mask_broad<Vec2q>(indexs);
         y = _mm_and_pd(_mm_castsi128_pd(Vec2q().load(bm.a)), y);
 #endif
     }
@@ -2740,7 +2740,7 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm_maskz_mov_ps(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
+        constexpr EList <int32_t, 4> bm = zero_mask_broad<Vec4i>(indexs);
         y = _mm_and_ps(_mm_castsi128_ps(Vec4i().load(bm.a)), y);
 #endif
     }
