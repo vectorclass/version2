@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2021-08-18
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -18,7 +18,7 @@
 * Each vector object is represented internally in the CPU a 512-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2014-2020 Agner Fog.
+* (c) Copyright 2014-2021 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 

@@ -1,8 +1,8 @@
 /****************************  vectori256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2021-08-18
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file defining integer vector classes as interface to intrinsic
@@ -28,7 +28,7 @@
 * Each vector object is represented internally in the CPU as a 256-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2021 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 

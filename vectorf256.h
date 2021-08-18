@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-03-06
-* Version:       2.01.02
+* Last modified: 2021-08-18
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes

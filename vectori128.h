@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2021-08-18
+* Version:       2.01.03
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -27,7 +27,7 @@
 * Each vector object is represented internally in the CPU as a 128-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2021 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -4790,6 +4790,7 @@ static inline Vec4i permute4(Vec4i const a) {
 #if  INSTRSET >= 4 && INSTRSET < 10 // SSSE3, but no compact mask
         else if constexpr ((flags & perm_zeroing) != 0) {
             // Do both permutation and zeroing with PSHUFB instruction
+            // (bm is constexpr rather than const to make sure it is calculated at compile time)
             constexpr EList <int8_t, 16> bm = pshufb_mask<Vec4i>(indexs);
             return _mm_shuffle_epi8(a, Vec4i().load(bm.a));
         }
@@ -4949,7 +4950,7 @@ static inline Vec8s permute8(Vec8s const a) {
                 y =     _mm_shufflehi_epi16(y, pH2H);      // permute high 64-bits
             }
             if constexpr (H2H || L2L) {                    // merge data from y and yswap
-                auto selb = make_bit_mask<8,0x102>(indexs);// blend by bit 2. invert upper half
+                auto constexpr selb = make_bit_mask<8,0x102>(indexs);// blend by bit 2. invert upper half
                 constexpr EList <int16_t, 8> bm = make_broad_mask<Vec8s>(selb);// convert to broad mask
                 y = selectb(Vec8s().load(bm.a), yswap, y);
             }
