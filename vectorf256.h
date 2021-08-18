@@ -2489,7 +2489,7 @@ static inline Vec4d permute4(Vec4d const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_pd(zero_mask<4>(indexs), y);
 #else               // use broad mask
-        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        constexpr EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
         //y = _mm256_and_pd(_mm256_castsi256_pd( Vec4q().load(bm.a) ), y);  // does not work with INSTRSET = 7
         __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
         y = _mm256_and_pd(_mm256_castsi256_pd(bm1), y);
@@ -2594,7 +2594,7 @@ static inline Vec8f permute8(Vec8f const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_ps(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        constexpr EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
         __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
         y = _mm256_and_ps(_mm256_castsi256_ps(bm1), y);
 #endif
@@ -2668,7 +2668,7 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_pd(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        constexpr EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
         __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
         y = _mm256_and_pd(_mm256_castsi256_pd(bm1), y);
 #endif
@@ -2744,7 +2744,7 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_ps(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        constexpr EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
         __m256i bm1 = _mm256_loadu_si256((const __m256i*)(bm.a));
         y = _mm256_and_ps(_mm256_castsi256_ps(bm1), y);
 #endif

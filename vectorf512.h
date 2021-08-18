@@ -1547,7 +1547,7 @@ static inline Vec8d permute8(Vec8d const a) {
                     return _mm512_permutevar_pd(a, pmask);
                 }
                 else { // with zeroing. pshufb may be marginally better because it needs no extra zero mask
-                    const EList <int8_t, 64> bm = pshufb_mask<Vec8q>(indexs);
+                    constexpr EList <int8_t, 64> bm = pshufb_mask<Vec8q>(indexs);
                     return _mm512_castsi512_pd(_mm512_shuffle_epi8(_mm512_castpd_si512(y), Vec8q().load(bm.a)));
                 }
             }
@@ -1629,7 +1629,7 @@ static inline Vec16f permute16(Vec16f const a) {
                     return _mm512_permutevar_ps(a, pmask);
                 }
                 else { // with zeroing. pshufb may be marginally better because it needs no extra zero mask
-                    const EList <int8_t, 64> bm = pshufb_mask<Vec16i>(indexs);
+                    constexpr EList <int8_t, 64> bm = pshufb_mask<Vec16i>(indexs);
                     return _mm512_castsi512_ps(_mm512_shuffle_epi8(_mm512_castps_si512(a), Vec16i().load(bm.a)));
                 }
             }
@@ -1686,7 +1686,7 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
             y = _mm512_shuffle_f64x2(b, a, shuf);
         }
         else {
-            const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
+            constexpr EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
             y = _mm512_permutex2var_pd(a, Vec8q().load(bm.a), b);
         }
     }
@@ -1710,7 +1710,7 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
         y = _mm512_shuffle_pd(b, a, uint8_t(flags >> blend_shufpattern));
     }
     else { // No special cases
-        const EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
+        constexpr EList <int64_t, 8> bm = perm_mask_broad<Vec8q>(indexs);
         y = _mm512_permutex2var_pd(a, Vec8q().load(bm.a), b);
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed
@@ -1794,7 +1794,7 @@ static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
         }
     }
     else { // No special cases
-        const EList <int32_t, 16> bm = perm_mask_broad<Vec16i>(indexs);
+        constexpr EList <int32_t, 16> bm = perm_mask_broad<Vec16i>(indexs);
         y = _mm512_permutex2var_ps(a, Vec16i().load(bm.a), b);
     }
     if constexpr ((flags & blend_zeroing) != 0) {          // additional zeroing needed

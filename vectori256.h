@@ -3946,7 +3946,7 @@ static inline Vec4q permute4(Vec4q const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi64(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        constexpr EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
         y = _mm256_and_si256(Vec4q().load(bm.a), y);
 #endif
     }
@@ -4025,7 +4025,7 @@ static inline Vec8i permute8(Vec8i const a) {
             else
 #endif
             if constexpr ((flags & perm_cross_lane) == 0) {  // no lane crossing. Use pshufb
-                const EList <int8_t, 32> bm = pshufb_mask<Vec8i>(indexs);
+                constexpr EList <int8_t, 32> bm = pshufb_mask<Vec8i>(indexs);
                 return _mm256_shuffle_epi8(a, Vec8i().load(bm.a));
             }
             // full permute needed
@@ -4043,7 +4043,7 @@ static inline Vec8i permute8(Vec8i const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi32(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        constexpr EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
         y = _mm256_and_si256(Vec8i().load(bm.a), y);
 #endif
     }
@@ -4108,7 +4108,7 @@ static inline Vec16s permute16(Vec16s const a) {
                     }
                 }
                 else {  // use pshufb
-                    const EList <int8_t, 32> bm = pshufb_mask<Vec16s>(indexs);
+                    constexpr EList <int8_t, 32> bm = pshufb_mask<Vec16s>(indexs);
                     return _mm256_shuffle_epi8(a, Vec16s().load(bm.a));
                 }
             }
@@ -4129,7 +4129,7 @@ static inline Vec16s permute16(Vec16s const a) {
             }
 #endif  // AVX512VBMI2
             else if constexpr ((flags & perm_cross_lane) == 0) {     // no lane crossing. Use pshufb
-                const EList <int8_t, 32> bm = pshufb_mask<Vec16s>(indexs);
+                constexpr EList <int8_t, 32> bm = pshufb_mask<Vec16s>(indexs);
                 return _mm256_shuffle_epi8(a, Vec16s().load(bm.a));
             }
             else if constexpr ((flags & perm_rotate_big) != 0) {// fits full rotate
@@ -4147,12 +4147,12 @@ static inline Vec16s permute16(Vec16s const a) {
             }
             else {  // full permute needed
 #if INSTRSET >= 10  // AVX512VL
-                const EList <int16_t, 16> bm = perm_mask_broad<Vec16s>(indexs);
+                constexpr EList <int16_t, 16> bm = perm_mask_broad<Vec16s>(indexs);
                 y = _mm256_permutexvar_epi16(Vec16s().load(bm.a), y);
 #else           // no full permute instruction available
                 __m256i swap = _mm256_permute4x64_epi64(y,0x4E);// swap high and low 128-bit lane
-                const EList <int8_t, 32> bm1 = pshufb_mask<Vec16s, 1>(indexs);
-                const EList <int8_t, 32> bm2 = pshufb_mask<Vec16s, 0>(indexs);
+                constexpr EList <int8_t, 32> bm1 = pshufb_mask<Vec16s, 1>(indexs);
+                constexpr EList <int8_t, 32> bm2 = pshufb_mask<Vec16s, 0>(indexs);
                 __m256i r1 = _mm256_shuffle_epi8(swap, Vec16s().load(bm1.a));
                 __m256i r2 = _mm256_shuffle_epi8(y,    Vec16s().load(bm2.a));
                 return       _mm256_or_si256(r1, r2);
@@ -4164,7 +4164,7 @@ static inline Vec16s permute16(Vec16s const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi16(zero_mask<16>(indexs), y);
 #else               // use broad mask
-        const EList <int16_t, 16> bm = zero_mask_broad<Vec16s>(indexs);
+        constexpr EList <int16_t, 16> bm = zero_mask_broad<Vec16s>(indexs);
         y = _mm256_and_si256(Vec16s().load(bm.a), y);
 #endif
     }
@@ -4214,7 +4214,7 @@ static inline Vec32c permute32(Vec32c const a) {
                 y = _mm256_alignr_epi8(a, a, (flags >> perm_rot_count) & 0xF);
             }
             else { // use pshufb
-                const EList <int8_t, 32> bm = pshufb_mask<Vec32c>(indexs);
+                constexpr EList <int8_t, 32> bm = pshufb_mask<Vec32c>(indexs);
                 return _mm256_shuffle_epi8(a, Vec32c().load(bm.a));
             }
         }
@@ -4234,7 +4234,7 @@ static inline Vec32c permute32(Vec32c const a) {
             }
 #endif  // AVX512VBMI2
             else if constexpr ((flags & perm_cross_lane) == 0) {     // no lane crossing. Use pshufb
-                const EList <int8_t, 32> bm = pshufb_mask<Vec32c>(indexs);
+                constexpr EList <int8_t, 32> bm = pshufb_mask<Vec32c>(indexs);
                 return _mm256_shuffle_epi8(a, Vec32c().load(bm.a));
             }
             else if constexpr ((flags & perm_rotate_big) != 0) {// fits full rotate
@@ -4252,13 +4252,13 @@ static inline Vec32c permute32(Vec32c const a) {
             }
             else {  // full permute needed
 #if INSTRSET >= 10 && defined ( __AVX512VBMI__ ) // AVX512VBMI
-                const EList <int8_t, 32> bm = perm_mask_broad<Vec32c>(indexs);
+                constexpr EList <int8_t, 32> bm = perm_mask_broad<Vec32c>(indexs);
                 y = _mm256_permutexvar_epi8(Vec32c().load(bm.a), y);
 #else
                 // no full permute instruction available
                 __m256i swap = _mm256_permute4x64_epi64(y, 0x4E);  // swap high and low 128-bit lane
-                const EList <int8_t, 32> bm1 = pshufb_mask<Vec32c, 1>(indexs);
-                const EList <int8_t, 32> bm2 = pshufb_mask<Vec32c, 0>(indexs);
+                constexpr EList <int8_t, 32> bm1 = pshufb_mask<Vec32c, 1>(indexs);
+                constexpr EList <int8_t, 32> bm2 = pshufb_mask<Vec32c, 0>(indexs);
                 __m256i r1 = _mm256_shuffle_epi8(swap, Vec32c().load(bm1.a));
                 __m256i r2 = _mm256_shuffle_epi8(y,    Vec32c().load(bm2.a));
                 return       _mm256_or_si256(r1, r2);
@@ -4270,7 +4270,7 @@ static inline Vec32c permute32(Vec32c const a) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi8(zero_mask<32>(indexs), y);
 #else  // use broad mask
-        const EList <int8_t, 32> bm = zero_mask_broad<Vec32c>(indexs);
+        constexpr EList <int8_t, 32> bm = zero_mask_broad<Vec32c>(indexs);
         y = _mm256_and_si256(Vec32c().load(bm.a), y);
 #endif
     }
@@ -4367,7 +4367,7 @@ static inline Vec4q blend4(Vec4q const a, Vec4q const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi64(zero_mask<4>(indexs), y);
 #else  // use broad mask
-        const EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
+        constexpr EList <int64_t, 4> bm = zero_mask_broad<Vec4q>(indexs);
         y = _mm256_and_si256(Vec4q().load(bm.a), y);
 #endif
     }
@@ -4454,7 +4454,7 @@ static inline Vec8i blend8(Vec8i const a, Vec8i const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi32(zero_mask<8>(indexs), y);
 #else  // use broad mask
-        const EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
+        constexpr EList <int32_t, 8> bm = zero_mask_broad<Vec8i>(indexs);
         y = _mm256_and_si256(Vec8i().load(bm.a), y);
 #endif
     }
@@ -4516,7 +4516,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
     else { // No special cases
 #if INSTRSET >= 10  // AVX512VL. use vpermi2w
         if constexpr ((flags & (blend_perma | blend_permb)) != 0) {
-            const EList <int16_t, 16> bm = perm_mask_broad<Vec16s>(indexs);
+            constexpr EList <int16_t, 16> bm = perm_mask_broad<Vec16s>(indexs);
             return _mm256_maskz_permutex2var_epi16(zero_mask<16>(indexs), a, Vec16s().load(bm.a), b);
         }
 #endif
@@ -4541,7 +4541,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
             y = _mm256_blend_epi16(ya, yb, (uint8_t)mb);
         }
         else {
-            const EList <int16_t, 16> bm = make_broad_mask<Vec16s>(mb);
+            constexpr EList <int16_t, 16> bm = make_broad_mask<Vec16s>(mb);
             y = _mm256_blendv_epi8 (ya, yb, Vec16s().load(bm.a));
         }
 #endif
@@ -4550,7 +4550,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi16(zero_mask<16>(indexs), y);
 #else  // use broad mask
-        const EList <int16_t, 16> bm = zero_mask_broad<Vec16s>(indexs);
+        constexpr EList <int16_t, 16> bm = zero_mask_broad<Vec16s>(indexs);
         y = _mm256_and_si256(Vec16s().load(bm.a), y);
 #endif
     }
@@ -4602,7 +4602,7 @@ static inline Vec32c blend32(Vec32c const a, Vec32c const b) {
     else { // No special cases
 #if INSTRSET >= 10 && defined (__AVX512VBMI__) // AVX512VL + AVX512VBMI. use vpermi2b
         if constexpr ((flags & (blend_perma | blend_permb)) != 0) {
-            const EList <int8_t, 32> bm = perm_mask_broad<Vec32c>(indexs);
+            constexpr EList <int8_t, 32> bm = perm_mask_broad<Vec32c>(indexs);
             return _mm256_maskz_permutex2var_epi8(zero_mask<32>(indexs), a, Vec32c().load(bm.a), b);
         }
 #endif
@@ -4627,7 +4627,7 @@ static inline Vec32c blend32(Vec32c const a, Vec32c const b) {
 #if INSTRSET >= 10 // AVX512VL
         y = _mm256_mask_mov_epi8 (ya, mb, yb);
 #else  // AVX2
-        const EList <int8_t, 32> bm = make_broad_mask<Vec32c>(mb);
+        constexpr EList <int8_t, 32> bm = make_broad_mask<Vec32c>(mb);
         y = _mm256_blendv_epi8 (ya, yb, Vec32c().load(bm.a));
 #endif
     }
@@ -4635,7 +4635,7 @@ static inline Vec32c blend32(Vec32c const a, Vec32c const b) {
 #if INSTRSET >= 10  // use compact mask
         y = _mm256_maskz_mov_epi8(zero_mask<32>(indexs), y);
 #else  // use broad mask
-        const EList <int8_t, 32> bm = zero_mask_broad<Vec32c>(indexs);
+        constexpr EList <int8_t, 32> bm = zero_mask_broad<Vec32c>(indexs);
         y = _mm256_and_si256(Vec32c().load(bm.a), y);
 #endif
     }
