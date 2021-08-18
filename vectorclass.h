@@ -2,7 +2,7 @@
 * Author:        Agner Fog
 * Date created:  2012-05-30
 * Last modified: 2021-08-18
-* Version:       2.01.03
+* Version:       2.01.04
 * Project:       vector class library
 * Home:          https://github.com/vectorclass
 * Description:

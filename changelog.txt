@@ -1,9 +1,13 @@
 Change log for Vector class library
 -----------------------------------
 
+2021-08-18 version 2.01.04
+  * fix bug in elementtype for Vec8uq
+  * improved optimization of permute functions in MS compiler by using constexpr
+
 2020-11-04 version 2.01.03
   * fix overflow in sin, cos, tan for large x
-  * Fix bug in is_nan for instruction sets prior to AVX
+  * fix bug in is_nan for instruction sets prior to AVX
   * warning for MS compiler versions with poor support for AVX512
 
 2020-04-11 version 2.01.02
