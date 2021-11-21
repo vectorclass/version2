@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-08-18
-* Version:       2.01.03
+* Last modified: 2021-11-21
+* Version:       2.01.04
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -2294,6 +2294,10 @@ inline Vec4d change_sign(Vec4d const a) {
 *****************************************************************************/
 
 #if INSTRSET >= 8  // AVX2
+
+#if defined (__GXX_ABI_VERSION) && __GXX_ABI_VERSION < 1004 && !defined(__clang__)
+#error Compiler ABI version must be at least 4
+#endif
 
 // ABI version 4 or later needed on Gcc for correct mangling of 256-bit intrinsic vectors.
 // If necessary, compile with -fabi-version=0 to get the latest abi version
