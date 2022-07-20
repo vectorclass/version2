@@ -1,8 +1,8 @@
 /****************************  vectorclass.h   ********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-08-18
-* Version:       2.01.04
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Home:          https://github.com/vectorclass
 * Description:
@@ -10,7 +10,7 @@
 * in x86 and x86-64 microprocessors with SSE2 and later instruction sets.
 *
 * Instructions:
-* Use Gnu, Clang, Intel or Microsoft C++ compiler. Compile for the desired
+* Use Gnu, Clang, Microsoft, or Intel C++ compiler. Compile for the desired
 * instruction set, which must be at least SSE2. Specify the supported
 * instruction set by a command line define, e.g. __SSE4_1__ if the
 * compiler does not automatically do so.
@@ -22,11 +22,12 @@
 * This header file includes the appropriate header files depending on the
 * selected instruction set.
 *
-* (c) Copyright 2012-2021 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
+
 #ifndef VECTORCLASS_H
-#define VECTORCLASS_H  20103
+#define VECTORCLASS_H  20200
 
 // Maximum vector size, bits. Allowed values are 128, 256, 512
 #ifndef MAX_VECTOR_SIZE
@@ -72,7 +73,7 @@
 #endif
 #endif  //  MAX_VECTOR_SIZE >= 512
 
-#include "vector_convert.h"  // conversion between different vector sizes
+#include "vector_convert.h"  // conversion between different vector sizes, and common templates
 
 #endif  // INSTRSET >= 2
 

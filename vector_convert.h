@@ -1,14 +1,14 @@
 /**************************  vector_convert.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2019-11-17
-* Version:       2.01.00
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file for conversion between different vector classes with different
 * sizes. Also includes verious generic template functions.
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -19,7 +19,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -164,6 +164,32 @@ static inline Vec4ui compress (Vec4uq const a) {
     return _mm256_cvtepi64_epi32(a);
 }
 
+// compress_saturated functions. overflow saturates
+static inline Vec16c compress_saturated (Vec16s const a) {
+    return _mm256_cvtsepi16_epi8(a);
+}
+
+static inline Vec16uc compress_saturated (Vec16us const a) {
+    return _mm256_cvtusepi16_epi8(a);
+}
+
+static inline Vec8s compress_saturated (Vec8i const a) {
+    return _mm256_cvtsepi32_epi16(a);
+}
+
+static inline Vec8us compress_saturated (Vec8ui const a) {
+    return _mm256_cvtusepi32_epi16(a);
+}
+
+static inline Vec4i compress_saturated (Vec4q const a) {
+    return _mm256_cvtsepi64_epi32(a);
+}
+
+static inline Vec4ui compress_saturated (Vec4uq const a) {
+    return _mm256_cvtusepi64_epi32(a);
+}
+
+
 #else  // no AVX512
 
 // compress functions. overflow wraps around
@@ -191,12 +217,98 @@ static inline Vec4ui compress (Vec4uq const a) {
     return compress(a.get_low(), a.get_high());
 }
 
+// compress_saturated functions. overflow saturates
+static inline Vec16c compress_saturated (Vec16s const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec16uc compress_saturated (Vec16us const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec8s compress_saturated (Vec8i const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec8us compress_saturated (Vec8ui const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec4i compress_saturated (Vec4q const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec4ui compress_saturated (Vec4uq const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
 #endif  // AVX512
 
 #endif // MAX_VECTOR_SIZE >= 256
 
 
 #if MAX_VECTOR_SIZE >= 512
+
+/*****************************************************************************
+*
+*          Reduce from 512 to 256 bit vectors
+*
+*****************************************************************************/
+#if INSTRSET >= 10  // AVX512VL
+
+// compress_saturated functions. overflow saturates
+static inline Vec32c compress_saturated (Vec32s const a) {
+    return _mm512_cvtsepi16_epi8(a);
+}
+
+static inline Vec32uc compress_saturated (Vec32us const a) {
+    return _mm512_cvtusepi16_epi8(a);
+}
+
+static inline Vec16s compress_saturated (Vec16i const a) {
+    return _mm512_cvtsepi32_epi16(a);
+}
+
+static inline Vec16us compress_saturated (Vec16ui const a) {
+    return _mm512_cvtusepi32_epi16(a);
+}
+
+static inline Vec8i compress_saturated (Vec8q const a) {
+    return _mm512_cvtsepi64_epi32(a);
+}
+
+static inline Vec8ui compress_saturated (Vec8uq const a) {
+    return _mm512_cvtusepi64_epi32(a);
+}
+
+#else  // no AVX512
+
+// compress_saturated functions. overflow saturates
+static inline Vec32c compress_saturated (Vec32s const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec32uc compress_saturated (Vec32us const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec16s compress_saturated (Vec16i const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec16us compress_saturated (Vec16ui const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec8i compress_saturated (Vec8q const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+static inline Vec8ui compress_saturated (Vec8uq const a) {
+    return compress_saturated(a.get_low(), a.get_high());
+}
+
+#endif  // AVX512
 
 /*****************************************************************************
 *
@@ -398,11 +510,18 @@ static inline Vec4f to_float (Vec2d const a) {
 *
 *****************************************************************************/
 
+// concatenate two vectors into one vector of double size
+template <typename T> auto concatenate2(T const a, T const b) {
+    static_assert(sizeof(T) * 8 < MAX_VECTOR_SIZE, "Maximum vector size exceeded");
+    return decltype(extend_z(a))(a, b);   // call constructor for double size vector type
+}
+
+
 // horizontal min/max of vector elements
 // implemented with universal template, works for all vector types:
 
 template <typename T> auto horizontal_min(T const x) {
-    if constexpr ((T::elementtype() & 16) != 0) {
+    if constexpr (T::elementtype() >= 15) {
         // T is a float or double vector
         if (horizontal_or(is_nan(x))) {
             // check for NAN because min does not guarantee NAN propagation
@@ -456,7 +575,7 @@ template <typename T> auto horizontal_min1(T const x) {
 }
 
 template <typename T> auto horizontal_max(T const x) {
-    if constexpr ((T::elementtype() & 16) != 0) {
+    if constexpr (T::elementtype() >= 15) {
         // T is a float or double vector
         if (horizontal_or(is_nan(x))) {
             // check for NAN because max does not guarantee NAN propagation
@@ -540,7 +659,7 @@ static inline int horizontal_count(V const x) {
 // conforming to the new IEEE-754 2019 standard
 template <typename V>
 static inline V maximum(V const a, V const b) {
-    if constexpr (V::elementtype() < 16) {
+    if constexpr (V::elementtype() < 15) {
         return max(a, b);              // integer type
     }
     else {                             // float or double vector
@@ -554,7 +673,7 @@ static inline V maximum(V const a, V const b) {
 
 template <typename V>
 static inline V minimum(V const a, V const b) {
-    if constexpr (V::elementtype() < 16) {
+    if constexpr (V::elementtype() < 15) {
         return min(a, b);              // integer type
     }
     else {                             // float or double vector
@@ -566,6 +685,141 @@ static inline V minimum(V const a, V const b) {
     }
 }
 
+// floating point remainder
+// -denominator/2 <= result < denominator/2
+template <typename V>
+static inline V fremainder(V const numerator, double const denominator) {
+    // (Optimization notice: Calculation of 1/denominator and constants for extended precision reduction
+    // may be optimized by a compiler moving loop-invariant code. This is intended)
+    static_assert(V::elementtype() == 16 || V::elementtype() == 17, "wrong vector type"); // supports only float and double
+    if (denominator > 0.) {                                // denominator must be positive
+        if constexpr (V::elementtype() == 16) {            // float
+#ifdef __FMA__
+            float recipd = float(1.0 / denominator);       // reciprocal denominator
+            float fd = float(denominator);                 // denominator rounded to single precision
+            float d2 = float(denominator - fd);            // remaining bits for double precision
+            V q = round(numerator * recipd);               // divide and round
+            V m = nmul_add(q, d2, nmul_add(q, fd, numerator));// double precision reduction
+#else  // no FMA. Use extended precision reduction
+            union {
+                float f;
+                uint32_t i;
+            } u;
+            u.f = float(denominator);
+            u.i &= 0xFFFFF000;                             // remove 12 least significant bits for extended precision reduction
+            float d2 = denominator - u.f;                  // remaining bits
+            float recipd = float(1.0 / denominator);       // reciprocal
+            V q = round(numerator * recipd);               // divide and round
+            V m = nmul_add(q, d2, nmul_add(q, u.f, numerator));// extended precision reduction
+#endif  // FMA
+            if (true) { // Check that result is within desired interval. This may be omitted if not essential:
+                // This check may be needed in extreme cases of numerator > 1.E5 * denominator
+                auto too_high = m >= float( denominator * 0.5);
+                auto too_low  = m <  float(-denominator * 0.5);
+                m = if_sub(too_high, m, float(denominator));
+                m = if_add(too_low,  m, float(denominator));
+            }
+            return m;
+        }
+        else if constexpr (V::elementtype() == 17) {       // double precision
+#ifdef __FMA__
+            double recipd = 1.0 / denominator;             // reciprocal
+            V q = round(numerator * recipd);               // divide and round
+            V m = nmul_add(q, denominator, numerator);     // nmul_add has extended precision
+#else  // no FMA. Use extended precision reduction
+            union {
+                double f;
+                uint64_t i;
+            } u;
+            u.f = denominator;
+            u.i &= 0xFFFFFFFFFF000000;                     // remove 24 least significant bits for extended precision reduction
+            double d2 = denominator - u.f;                 // remaining bits
+            double recipd = 1.0 / denominator;             // reciprocal
+            V q = round(numerator * recipd);               // divide and round
+            V m = nmul_add(q, d2, nmul_add(q, u.f, numerator));// extended precision reduction
+#endif  // FMA
+            if (true) { // Check that result is within desired interval. This may be omitted if not essential:
+                // This check is rarely needed except in extreme cases of numerator > 1.E14 * denominator
+                auto too_high = m >=  denominator * 0.5;
+                auto too_low  = m <  -denominator * 0.5;
+                m = if_sub(too_high, m, denominator);
+                m = if_add(too_low,  m, denominator);
+            }
+            return m;
+        }
+    }
+    else {
+        return nan_vec<V>(1);                              //  denominator is not positive
+    }
+}
+
+// floating point modulo
+// 0 <= result < denominator
+template <typename V>
+static inline V fmodulo(V const numerator, double const denominator) {
+    // (Optimization notice: Calculation of 1/denominator and constants for extended precision reduction
+    // may be optimized by a compiler moving loop-invariant code. This is intended)
+    static_assert(V::elementtype() == 16 || V::elementtype() == 17, "wrong vector type"); // supports only float and double
+    if (denominator > 0.) {                                // denominator must be positive
+        if constexpr (V::elementtype() == 16) {            // float
+#ifdef __FMA__
+            float recipd = float(1.0 / denominator);       // reciprocal denominator
+            float fd = float(denominator);                 // denominator rounded to single precision
+            float d2 = float(denominator - fd);            // remaining bits for double precision
+            V q = floor(numerator * recipd);               // divide and floor
+            V m = nmul_add(q, d2, nmul_add(q, fd, numerator));// double precision reduction
+#else  // no FMA. Use extended precision reduction
+            union {
+                float f;
+                uint32_t i;
+            } u;
+            u.f = float(denominator);
+            u.i &= 0xFFFFF000;                             // remove 12 least significant bits for extended precision reduction
+            float d2 = denominator - u.f;                  // remaining bits
+            float recipd = float(1.0 / denominator);       // reciprocal
+            V q = floor(numerator * recipd);               // divide and floor
+            V m = nmul_add(q, d2, nmul_add(q, u.f, numerator));// extended precision reduction
+#endif  // FMA
+            if (true) { // Check that result is within desired interval. This may be omitted if not essential:
+                // This check may be needed in extreme cases of numerator > 1.E5 * denominator
+                auto too_high = m >= float(denominator);
+                auto too_low  = m <  0.f;
+                m = if_sub(too_high, m, float(denominator));
+                m = if_add(too_low,  m, float(denominator));
+            }
+            return m;
+        }
+        else if constexpr (V::elementtype() == 17) {       // double precision
+#ifdef __FMA__
+            double recipd = 1.0 / denominator;             // reciprocal
+            V q = floor(numerator * recipd);               // divide and floor
+            V m = nmul_add(q, denominator, numerator);     // nmul_add has extended precision
+#else  // no FMA. Use extended precision reduction
+            union {
+                double f;
+                uint64_t i;
+            } u;
+            u.f = denominator;
+            u.i &= 0xFFFFFFFFFF000000;                     // remove 24 least significant bits for extended precision reduction
+            double d2 = denominator - u.f;                 // remaining bits
+            double recipd = 1.0 / denominator;             // reciprocal
+            V q = floor(numerator * recipd);               // divide and floor
+            V m = nmul_add(q, d2, nmul_add(q, u.f, numerator));// extended precision reduction
+#endif  // FMA
+            if (true) { // Check that result is within desired interval. This may be omitted if not essential:
+                // This check is rarely needed except in extreme cases of numerator > 1.E14 * denominator
+                auto too_high = m >= denominator;
+                auto too_low  = m <  0.;
+                m = if_sub(too_high, m, denominator);
+                m = if_add(too_low,  m, denominator);
+            }
+            return m;
+        }
+    }
+    else {
+        return nan_vec<V>(1);                              //  denominator is not positive
+    }
+}
 
 #ifdef VCL_NAMESPACE
 }

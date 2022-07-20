@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-11-21
-* Version:       2.01.04
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -18,7 +18,7 @@
 * Each vector object is represented internally in the CPU as a 256-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2021 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -29,7 +29,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -81,8 +81,7 @@ protected:
     __m256 ymm; // Float vector
 public:
     // Default constructor:
-    Vec8fb() {
-    }
+    Vec8fb() = default;
     // Constructor to build from all elements:
     Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
 #if INSTRSET >= 8  // AVX2
@@ -326,8 +325,7 @@ protected:
     __m256d ymm; // double vector
 public:
     // Default constructor:
-    Vec4db() {
-    }
+    Vec4db() = default;
     // Constructor to build from all elements:
     Vec4db(bool b0, bool b1, bool b2, bool b3) {
 #if INSTRSET >= 8  // AVX2
@@ -576,8 +574,7 @@ protected:
     __m256 ymm; // Float vector
 public:
     // Default constructor:
-    Vec8f() {
-    }
+    Vec8f() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8f(float f) {
         ymm = _mm256_set1_ps(f);
@@ -889,7 +886,7 @@ static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) {
 // vector operator > : returns true for elements for which a > b
 static inline Vec8fb operator > (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
-    return _mm256_cmp_ps_mask(a, b, 6);
+    return _mm256_cmp_ps_mask(a, b, 6+8);
 #else
     return b < a;
 #endif
@@ -898,7 +895,7 @@ static inline Vec8fb operator > (Vec8f const a, Vec8f const b) {
 // vector operator >= : returns true for elements for which a >= b
 static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
-    return _mm256_cmp_ps_mask(a, b, 5);
+    return _mm256_cmp_ps_mask(a, b, 5+8);
 #else
     return b <= a;
 #endif
@@ -1049,7 +1046,7 @@ static inline Vec8fb is_finite(Vec8f const a) {
     return __mmask8(~ _mm256_fpclass_ps_mask (a, 0x99));
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     Vec8i t1 = _mm256_castps_si256(a);    // reinterpret as 32-bit integer
-    Vec8i t2 = t1 << 1;                // shift out sign bit
+    Vec8i t2 = t1 << 1;                   // shift out sign bit
     Vec8ib t3 = Vec8i(t2 & 0xFF000000) != 0xFF000000; // exponent field is not all 1s
     return t3;
 #else
@@ -1101,7 +1098,7 @@ static inline Vec8fb is_nan(Vec8f const a) {
 #endif
 
 
-// Function is_subnormal: gives true for elements that are subnormal (denormal)
+// Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
 static inline Vec8fb is_subnormal(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
@@ -1118,7 +1115,7 @@ static inline Vec8fb is_subnormal(Vec8f const a) {
 #endif
 }
 
-// Function is_zero_or_subnormal: gives true for elements that are zero or subnormal (denormal)
+// Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
 static inline Vec8fb is_zero_or_subnormal(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
@@ -1228,6 +1225,7 @@ static inline Vec8f ceil(Vec8f const a) {
 // function roundi: round to nearest integer (even). (result as integer vector)
 static inline Vec8i roundi(Vec8f const a) {
     // Note: assume MXCSR control register is set to rounding
+    // Note: +INF gives 0x80000000
     return _mm256_cvtps_epi32(a);
 }
 
@@ -1436,8 +1434,7 @@ protected:
     __m256d ymm; // double vector
 public:
     // Default constructor:
-    Vec4d() {
-    }
+    Vec4d() = default;
     // Constructor to broadcast the same value into all elements:
     Vec4d(double d) {
         ymm = _mm256_set1_pd(d);
@@ -1739,7 +1736,7 @@ static inline Vec4db operator <= (Vec4d const a, Vec4d const b) {
 // vector operator > : returns true for elements for which a > b
 static inline Vec4db operator > (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
-    return _mm256_cmp_pd_mask(a, b, 6);
+    return _mm256_cmp_pd_mask(a, b, 6+8);
 #else
     return b < a;
 #endif
@@ -1748,7 +1745,7 @@ static inline Vec4db operator > (Vec4d const a, Vec4d const b) {
 // vector operator >= : returns true for elements for which a >= b
 static inline Vec4db operator >= (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
-    return _mm256_cmp_pd_mask(a, b, 5);
+    return _mm256_cmp_pd_mask(a, b, 5+8);
 #else
     return b <= a;
 #endif
@@ -1933,7 +1930,7 @@ static inline Vec4db is_nan(Vec4d const a) {
 #endif
 
 
-// Function is_subnormal: gives true for elements that are subnormal (denormal)
+// Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
 static inline Vec4db is_subnormal(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
@@ -1950,7 +1947,7 @@ static inline Vec4db is_subnormal(Vec4d const a) {
 #endif
 }
 
-// Function is_zero_or_subnormal: gives true for elements that are zero or subnormal (denormal)
+// Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
 static inline Vec4db is_zero_or_subnormal(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
@@ -2382,6 +2379,47 @@ static inline __m256d reinterpret_d (Vec256b const x) {
 }
 
 #endif  // AVX2
+
+
+// extend vectors to double size by adding zeroes
+
+#if defined(__GNUC__) && __GNUC__ <= 9
+// GCC v. 9 is missing the _mm256_zextps128_ps256 intrinsic
+
+static inline Vec8f extend_z(Vec4f a) {
+    return Vec8f(a, Vec4f(0));
+}
+static inline Vec4d extend_z(Vec2d a) {
+    return Vec4d(a, Vec2d(0));
+}
+#if INSTRSET < 10 
+static inline Vec8fb extend_z(Vec4fb a) {
+    return Vec8fb(a, Vec4fb(false));
+}
+static inline Vec4db extend_z(Vec2db a) {
+    return Vec4db(a, Vec2db(false));
+}
+#endif // INSTRSET < 10 
+#else
+
+static inline Vec8f extend_z(Vec4f a) {
+    return _mm256_zextps128_ps256(a);
+}
+static inline Vec4d extend_z(Vec2d a) {
+    return _mm256_zextpd128_pd256(a);
+}
+
+#if INSTRSET < 10  // broad boolean vectors
+
+static inline Vec8fb extend_z(Vec4fb a) {
+    return _mm256_zextps128_ps256(a);
+}
+static inline Vec4db extend_z(Vec2db a) {
+    return _mm256_zextpd128_pd256(a);
+}
+
+#endif // INSTRSET
+#endif // __GNUC__
 
 // Function infinite4f: returns a vector where all elements are +INF
 static inline Vec8f infinite8f() {

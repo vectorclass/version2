@@ -1,8 +1,8 @@
 /****************************  vectori512se.h   *******************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2020-02-23
-* Version:       2.01.01
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 8 and 16 bit integers.
@@ -22,7 +22,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -33,7 +33,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -60,8 +60,7 @@ protected:
     Vec256b z1;          // higher 256 bits
 public:
     // Default constructor:
-    Vec64c() {
-    }
+    Vec64c() = default;
     // Constructor to build from two Vec32c:
     Vec64c(Vec32c const a0, Vec32c const a1) {
         z0 = a0;
@@ -240,8 +239,8 @@ public:
 class Vec64cb : public Vec64c {
 public:
     // Default constructor:
-    Vec64cb () {
-    }
+    Vec64cb() = default;
+
     Vec64cb (Vec64c const a) : Vec64c(a) {}
 
     // Constructor to build from all elements: Not implemented
@@ -640,8 +639,7 @@ static inline Vec64c rotate_left(Vec64c const a, int b) {
 class Vec64uc : public Vec64c {
 public:
     // Default constructor:
-    Vec64uc() {
-    }
+    Vec64uc() = default;
     // Construct from Vec64c
     Vec64uc(Vec64c const a) : Vec64c(a) {
     }
@@ -864,8 +862,7 @@ static inline Vec64uc min(Vec64uc const a, Vec64uc const b) {
 class Vec32s : public Vec64c {
 public:
     // Default constructor:
-    Vec32s() {
-    }
+    Vec32s() = default;
     // Constructor to broadcast the same value into all elements:
     Vec32s(int16_t i) {
         z0 = z1 = Vec16s(i);
@@ -1014,8 +1011,7 @@ public:
 class Vec32sb : public Vec32s {
 public:
     // Default constructor:
-    Vec32sb () {
-    }
+    Vec32sb() = default;
     // Constructor to build from all elements: Not implemented
 
     // Constructor to convert from type __mmask32 used in intrinsics: not possible
@@ -1395,8 +1391,7 @@ static inline Vec32s rotate_left(Vec32s const a, int b) {
 class Vec32us : public Vec32s {
 public:
     // Default constructor:
-    Vec32us() {
-    }
+    Vec32us() = default;
     // Construct from Vec32s
     Vec32us(Vec32s const a) {
         z0 = a.get_low();  z1 = a.get_high();
@@ -1789,7 +1784,7 @@ static inline Vec64c shift_bytes_down(Vec64c const a) {
 
 /*****************************************************************************
 *
-*          Functions for conversion between integer sizes
+*          Functions for conversion between integer sizes and vector types
 *
 *****************************************************************************/
 
@@ -1889,6 +1884,30 @@ static inline Vec32us compress (Vec16ui const low, Vec16ui const high) {
 static inline Vec32us compress_saturated (Vec16ui const low, Vec16ui const high) {
     return Vec32us(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
+
+// extend vectors to double size by adding zeroes
+static inline Vec64c extend_z(Vec32c a) {
+    return Vec64c(a, Vec32c(0));
+}
+static inline Vec64uc extend_z(Vec32uc a) {
+    return Vec64uc(a, Vec32uc(0));
+}
+static inline Vec32s extend_z(Vec16s a) {
+    return Vec32s(a, Vec16s(0));
+}
+static inline Vec32us extend_z(Vec16us a) {
+    return Vec32us(a, Vec16us(0));
+}
+
+// broad boolean vectors
+
+static inline Vec64cb extend_z(Vec32cb a) {
+    return Vec64cb(a, Vec32cb(false));
+}
+static inline Vec32sb extend_z(Vec16sb a) {
+    return Vec32sb(a, Vec16sb(false));
+}
+
 
 
 /*****************************************************************************

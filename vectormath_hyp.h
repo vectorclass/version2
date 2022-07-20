@@ -1,8 +1,8 @@
 /****************************  vectormath_hyp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-07-09
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of hyperbolic and inverse
@@ -24,12 +24,12 @@
 *
 * For detailed instructions, see vectormath_common.h and vcl_manual.pdf
 *
-* (c) Copyright 2014-2019 Agner Fog.
+* (c) Copyright 2014-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef VECTORMATH_HYP_H
-#define VECTORMATH_HYP_H  1
+#define VECTORMATH_HYP_H  2
 
 #include "vectormath_exp.h"
 

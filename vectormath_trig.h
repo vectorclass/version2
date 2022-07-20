@@ -1,8 +1,8 @@
 /****************************  vectormath_trig.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2020-06-08
-* Version:       2.00.03
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file containing inline version of trigonometric functions
@@ -10,7 +10,7 @@
 * sin, cos, sincos, tan
 * asin, acos, atan, atan2
 *
-* Theory, methods and inspiration based partially on these sources:
+* Theory, methods, and inspiration based partially on these sources:
 * > Moshier, Stephen Lloyd Baluk: Methods and programs for mathematical functions.
 *   Ellis Horwood, 1989.
 * > VDT library developed on CERN by Danilo Piparo, Thomas Hauth and
@@ -20,12 +20,12 @@
 *
 * For detailed instructions, see vectormath_common.h and vcl_manual.pdf
 *
-* (c) Copyright 2014-2020 Agner Fog.
+* (c) Copyright 2014-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef VECTORMATH_TRIG_H
-#define VECTORMATH_TRIG_H  1
+#define VECTORMATH_TRIG_H  2
 
 #include "vectormath_common.h"
 
@@ -39,8 +39,8 @@ namespace VCL_NAMESPACE {
 // *************************************************************
 // Template parameters:
 // VTYPE:  f.p. vector type
-// SC:     1 = sin, 2 = cos, 3 = sincos
-// Paramterers:
+// SC:     1 = sin, 2 = cos, 3 = sincos, 4 = tan, 8 = multiply by pi
+// Parameters:
 // xx = input x (radians)
 // cosret = return pointer (only if SC = 3)
 template<typename VTYPE, int SC>
@@ -64,11 +64,7 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
     const double DP1 = 7.853981554508209228515625E-1 * 2.;
     const double DP2 = 7.94662735614792836714E-9 * 2.;
     const double DP3 = 3.06161699786838294307E-17 * 2.;
-    /*
-    const double DP1sc = 7.85398125648498535156E-1;
-    const double DP2sc = 3.77489470793079817668E-8;
-    const double DP3sc = 2.69515142907905952645E-15;
-    */
+
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
     typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
@@ -78,21 +74,41 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
 
     BVTYPE swap, overflow;                       // boolean vectors
 
+#if INSTRSET < 8  // no FMA
+    const double input_limit = 1.E13;            // lower overflow limit without FMA
+#else
+    const double input_limit = 1.E15;
+#endif
+
     xa = abs(xx);
 
     // Find quadrant
-    y = round(xa * (double)(2. / VM_PI));        // quadrant, as float
+    if constexpr ((SC & 8) != 0) {
+        y = round(xa * 2.0);
+    }
+    else {
+        xa = select(xa > VTYPE(input_limit), VTYPE(0.f), xa); // overflow limit
+        y = round(xa * (double)(2. / VM_PI));    // quadrant, as float
+    }
     q = roundi(y);                               // quadrant, as integer
-    // Find quadrant
+    // Quadrant:
     //      0 -   pi/4 => 0
     //   pi/4 - 3*pi/4 => 1
     // 3*pi/4 - 5*pi/4 => 2
     // 5*pi/4 - 7*pi/4 => 3
     // 7*pi/4 - 8*pi/4 => 4
 
-    // Reduce by extended precision modular arithmetic
-    x = nmul_add(y, DP3, nmul_add(y, DP2, nmul_add(y, DP1, xa)));    // x = ((xa - y * DP1) - y * DP2) - y * DP3;
-
+    if constexpr ((SC & 8) != 0) {
+        x = nmul_add(y, 0.5, xa) * (VM_PI);
+    }
+    else {
+        // Reduce by extended precision modular arithmetic
+#if INSTRSET < 8  // no FMA
+        x = ((xa - y * DP1) - y * DP2) - y * DP3;
+#else
+        x = nmul_add(y, DP3, nmul_add(y, DP2 + DP1, xa));
+#endif
+    }
     // Expansion of sin and cos, valid for -pi/4 <= x <= pi/4
     x2 = x * x;
     s = polynomial_5(x2, P0sin, P1sin, P2sin, P3sin, P4sin, P5sin);
@@ -102,12 +118,6 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
 
     // swap sin and cos if odd quadrant
     swap = BVTYPE((q & 1) != 0);
-
-    // check for overflow
-    overflow = BVTYPE(UITYPE(q) > 0x80000000000000);  // q big if overflow
-    overflow &= is_finite(xa);
-    s = select(overflow, 0.0, s);
-    c = select(overflow, 1.0, c);
 
     if constexpr ((SC & 1) != 0) {  // calculate sin
         sin1 = select(swap, c, s);
@@ -119,7 +129,7 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
         signcos = ((q + 1) & 2) << 62;
         cos1 ^= reinterpret_d(signcos);
     }
-    if constexpr (SC == 3) {  // calculate both. cos returned through pointer
+    if constexpr ((SC & 7) == 3) {  // calculate both. cos returned through pointer
         *cosret = cos1;
     }
     if constexpr ((SC & 1) != 0) return sin1; else return cos1;
@@ -139,6 +149,19 @@ static inline Vec2d sincos(Vec2d * cosret, Vec2d const x) {
     return sincos_d<Vec2d, 3>(cosret, x);
 }
 
+static inline Vec2d sinpi(Vec2d const x) {
+    return sincos_d<Vec2d, 9>(0, x);
+}
+
+static inline Vec2d cospi(Vec2d const x) {
+    return sincos_d<Vec2d, 10>(0, x);
+}
+
+static inline Vec2d sincospi(Vec2d * cosret, Vec2d const x) {
+    return sincos_d<Vec2d, 11>(cosret, x);
+}
+
+
 #if MAX_VECTOR_SIZE >= 256
 static inline Vec4d sin(Vec4d const x) {
     return sincos_d<Vec4d, 1>(0, x);
@@ -151,6 +174,19 @@ static inline Vec4d cos(Vec4d const x) {
 static inline Vec4d sincos(Vec4d * cosret, Vec4d const x) {
     return sincos_d<Vec4d, 3>(cosret, x);
 }
+
+static inline Vec4d sinpi(Vec4d const x) {
+    return sincos_d<Vec4d, 9>(0, x);
+}
+
+static inline Vec4d cospi(Vec4d const x) {
+    return sincos_d<Vec4d, 10>(0, x);
+}
+
+static inline Vec4d sincospi(Vec4d * cosret, Vec4d const x) {
+    return sincos_d<Vec4d, 11>(cosret, x);
+}
+
 #endif // MAX_VECTOR_SIZE >= 256
 
 #if MAX_VECTOR_SIZE >= 512
@@ -165,6 +201,19 @@ static inline Vec8d cos(Vec8d const x) {
 static inline Vec8d sincos(Vec8d * cosret, Vec8d const x) {
     return sincos_d<Vec8d, 3>(cosret, x);
 }
+
+static inline Vec8d sinpi(Vec8d const x) {
+    return sincos_d<Vec8d, 9>(0, x);
+}
+
+static inline Vec8d cospi(Vec8d const x) {
+    return sincos_d<Vec8d, 10>(0, x);
+}
+
+static inline Vec8d sincospi(Vec8d * cosret, Vec8d const x) {
+    return sincos_d<Vec8d, 11>(cosret, x);
+}
+
 #endif // MAX_VECTOR_SIZE >= 512
 
 
@@ -173,12 +222,12 @@ static inline Vec8d sincos(Vec8d * cosret, Vec8d const x) {
 // *************************************************************
 // Template parameters:
 // VTYPE:  f.p. vector type
-// SC:     1 = sin, 2 = cos, 3 = sincos, 4 = tan
-// Paramterers:
+// SC:     1 = sin, 2 = cos, 3 = sincos, 4 = tan, 8 = multiply by pi
+// Parameters:
 // xx = input x (radians)
 // cosret = return pointer (only if SC = 3)
 template<typename VTYPE, int SC>
-static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
+static inline VTYPE sincos_f(VTYPE* cosret, VTYPE const xx) {
 
     // define constants
     const float DP1F = 0.78515625f * 2.f;
@@ -196,6 +245,12 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
     typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
+    
+#if INSTRSET < 8  // no FMA
+    const float input_limit = 1.E5f;             // lower overflow limit without FMA
+#else
+    const float input_limit = 1.E7f;
+#endif
 
     VTYPE  xa, x, y, x2, s, c, sin1, cos1;       // data vectors
     ITYPE  q, signsin, signcos;                  // integer vectors
@@ -204,21 +259,32 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
     xa = abs(xx);
 
     // Find quadrant
-    y = round(xa * (float)(2. / VM_PI));         // quadrant, as float
+    if constexpr ((SC & 8) != 0) {
+        y = round(xa * 2.0f);
+    }
+    else {
+        xa = select(xa > VTYPE(input_limit), VTYPE(0.f), xa); // overflow limit
+        y = round(xa * (float)(2. / VM_PI));     // quadrant, as float
+    }
     q = roundi(y);                               // quadrant, as integer
+    // Quadrant:
     //      0 -   pi/4 => 0
     //   pi/4 - 3*pi/4 => 1
     // 3*pi/4 - 5*pi/4 => 2
     // 5*pi/4 - 7*pi/4 => 3
     // 7*pi/4 - 8*pi/4 => 4
 
-    // Reduce by extended precision modular arithmetic
-    // x = ((xa - y * DP1F) - y * DP2F) - y * DP3F;
-    x = nmul_add(y, DP3F, nmul_add(y, DP2F, nmul_add(y, DP1F, xa)));
-
-    // A two-step reduction saves time at the cost of precision for very big x:
-    //x = (xa - y * DP1F) - y * (DP2F+DP3F);
-
+    if constexpr ((SC & 8) != 0) {
+        x = nmul_add(y, 0.5f, xa)*float(VM_PI);
+    }
+    else {
+        // Reduce by extended precision modular arithmetic
+#if INSTRSET < 8  // no FMA
+        x = ((xa - y * DP1F) - y * DP2F) - y * DP3F;
+#else
+        x = nmul_add(y, DP3F, nmul_add(y, DP2F + DP1F, xa));
+#endif
+    }
     // Taylor expansion of sin and cos, valid for -pi/4 <= x <= pi/4
     x2 = x * x;
     s = polynomial_2(x2, P0sinf, P1sinf, P2sinf) * (x*x2) + x;
@@ -226,12 +292,6 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
 
     // swap sin and cos if odd quadrant
     swap = BVTYPE((q & 1) != 0);
-
-    // check for overflow
-    overflow = BVTYPE(UITYPE(q) > 0x2000000);  // q big if overflow
-    overflow &= is_finite(xa);
-    s = select(overflow, 0.0f, s);
-    c = select(overflow, 1.0f, c);
 
     if constexpr ((SC & 5) != 0) {  // calculate sin
         sin1 = select(swap, c, s);
@@ -243,13 +303,18 @@ static inline VTYPE sincos_f(VTYPE * cosret, VTYPE const xx) {
         signcos = ((q + 1) & 2) << 30;
         cos1 ^= reinterpret_f(signcos);
     }
-    if constexpr (SC == 1) return sin1;
-    else if constexpr (SC == 2) return cos1;
-    else if constexpr (SC == 3) {  // calculate both. cos returned through pointer
+    if constexpr ((SC & 7) == 1) return sin1;
+    else if constexpr ((SC & 7) == 2) return cos1;
+    else if constexpr ((SC & 7) == 3) {  // calculate both. cos returned through pointer
         *cosret = cos1;
         return sin1;
     }
     else {  // SC == 4. tan
+        if constexpr (SC == 12) {
+            // tanpi can give INF result, tan cannot. Get the right sign of INF result according to IEEE 754-2019
+            cos1 = select(cos1 == 0.f, 0.f, cos1); // remove sign of 0
+            // the sign of zero output is arbitrary. fixing it would be a waste of code
+        }
         return sin1 / cos1;
     }
 }
@@ -272,6 +337,22 @@ static inline Vec4f tan(Vec4f const x) {
     return sincos_f<Vec4f, 4>(0, x);
 }
 
+static inline Vec4f sinpi(Vec4f const x) {
+    return sincos_f<Vec4f, 9>(0, x);
+}
+
+static inline Vec4f cospi(Vec4f const x) {
+    return sincos_f<Vec4f, 10>(0, x);
+}
+
+static inline Vec4f sincospi(Vec4f * cosret, Vec4f const x) {
+    return sincos_f<Vec4f, 11>(cosret, x);
+}
+
+static inline Vec4f tanpi(Vec4f const x) {
+    return sincos_f<Vec4f, 12>(0, x);
+}
+
 #if MAX_VECTOR_SIZE >= 256
 static inline Vec8f sin(Vec8f const x) {
     return sincos_f<Vec8f, 1>(0, x);
@@ -287,7 +368,24 @@ static inline Vec8f sincos(Vec8f * cosret, Vec8f const x) {
 
 static inline Vec8f tan(Vec8f const x) {
     return sincos_f<Vec8f, 4>(0, x);
+} 
+
+static inline Vec8f sinpi(Vec8f const x) {
+    return sincos_f<Vec8f, 9>(0, x);
 }
+
+static inline Vec8f cospi(Vec8f const x) {
+    return sincos_f<Vec8f, 10>(0, x);
+}
+
+static inline Vec8f sincospi(Vec8f * cosret, Vec8f const x) {
+    return sincos_f<Vec8f, 11>(cosret, x);
+}
+
+static inline Vec8f tanpi(Vec8f const x) {
+    return sincos_f<Vec8f, 12>(0, x);
+}
+
 #endif // MAX_VECTOR_SIZE >= 256
 
 #if MAX_VECTOR_SIZE >= 512
@@ -306,6 +404,23 @@ static inline Vec16f sincos(Vec16f * cosret, Vec16f const x) {
 static inline Vec16f tan(Vec16f const x) {
     return sincos_f<Vec16f, 4>(0, x);
 }
+
+static inline Vec16f sinpi(Vec16f const x) {
+    return sincos_f<Vec16f, 9>(0, x);
+}
+
+static inline Vec16f cospi(Vec16f const x) {
+    return sincos_f<Vec16f, 10>(0, x);
+}
+
+static inline Vec16f sincospi(Vec16f * cosret, Vec16f const x) {
+    return sincos_f<Vec16f, 11>(cosret, x);
+}
+
+static inline Vec16f tanpi(Vec16f const x) {
+    return sincos_f<Vec16f, 12>(0, x);
+}
+
 #endif // MAX_VECTOR_SIZE >= 512
 
 
@@ -314,15 +429,17 @@ static inline Vec16f tan(Vec16f const x) {
 // *************************************************************
 // Template parameters:
 // VTYPE:  f.p. vector type
-// Paramterers:
+// Template parameters:
+// SC:  0 = tan, 8 = multiply by pi
+// Parameters:
 // x = input x (radians)
-template<typename VTYPE>
+template<typename VTYPE, int SC>
 static inline VTYPE tan_d(VTYPE const x) {
 
     // define constants
-    const double DP1 = 7.853981554508209228515625E-1 * 2.;;
-    const double DP2 = 7.94662735614792836714E-9 * 2.;;
-    const double DP3 = 3.06161699786838294307E-17 * 2.;;
+    const double DP1 = 7.853981554508209228515625E-1 * 2.;
+    const double DP2 = 7.94662735614792836714E-9 * 2.;
+    const double DP3 = 3.06161699786838294307E-17 * 2.;
 
     const double P2tan = -1.30936939181383777646E4;
     const double P1tan = 1.15351664838587416140E6;
@@ -338,24 +455,36 @@ static inline VTYPE tan_d(VTYPE const x) {
     BVTYPE doinvert, xzero, overflow;       // boolean vectors
     typedef decltype(nan_code(x)) UITYPE;   // unsigned integer vector type
 
-
     xa = abs(x);
 
     // Find quadrant
-    y = round(xa * (double)(2. / VM_PI));   // quadrant, as float
-    auto q = roundi(y);                     // quadrant, as integer
-    // Find quadrant
+    if constexpr ((SC & 8) != 0) {
+        y = round(xa * 2.0);
+    }
+    else {
+        xa = select(xa > VTYPE(1.E15), VTYPE(0.), xa); // overflow limit
+        y = round(xa * (double)(2. / VM_PI));    // quadrant, as float
+    }
+    auto q = roundi(y);                          // quadrant, as integer
+    // Quadrant:
     //      0 -   pi/4 => 0
     //   pi/4 - 3*pi/4 => 1
     // 3*pi/4 - 5*pi/4 => 2
     // 5*pi/4 - 7*pi/4 => 3
     // 7*pi/4 - 8*pi/4 => 4
 
-    // Reduce by extended precision modular arithmetic
-    // z = ((xa - y * DP1) - y * DP2) - y * DP3;
-    z = nmul_add(y, DP3, nmul_add(y, DP2, nmul_add(y, DP1, xa)));
-
-    // Pade expansion of tan, valid for -pi/4 <= x <= pi/4
+    if constexpr ((SC & 8) != 0) {
+        z = nmul_add(y, 0.5, xa) * (VM_PI);
+    }
+    else {
+        // Reduce by extended precision modular arithmetic
+#if INSTRSET < 8  // no FMA
+        z = ((xa - y * DP1) - y * DP2) - y * DP3;
+#else
+        z = nmul_add(y, DP3, nmul_add(y, DP2 + DP1, xa));
+#endif
+    }
+    // Pade approximation of tan, valid for -pi/4 <= x <= pi/4
     zz = z * z;
     px = polynomial_2(zz, P0tan, P1tan, P2tan);
     qx = polynomial_4n(zz, Q0tan, Q1tan, Q2tan, Q3tan);
@@ -365,35 +494,48 @@ static inline VTYPE tan_d(VTYPE const x) {
 
     // if (q&2) tn = -1/tn
     doinvert = BVTYPE((q & 1) != 0);
-    xzero = (xa == 0.);
-    // avoid division by 0. We will not be using recip anyway if xa == 0.
-    // tn never becomes exactly 0 when x = pi/2 so we only have to make
-    // a special case for x == 0.
-    recip = (-1.) / select(xzero, VTYPE(-1.), tn);
+
+    if constexpr ((SC & 8) != 0) {
+        // tan cannot give infinity because the input cannot be exactly pi/2.
+        // tanpi can generate infinity. Get the right sign of infinity:
+        UITYPE infsign = UITYPE(q) << 62;   // get bit 1 into the sign bit position
+        VTYPE  zsign = sign_combine(VTYPE(-0.), reinterpret_d(infsign));
+        tn = select(tn == 0., zsign, tn);   // get INF with the right sign when tn == 0
+        // the sign of zero output is arbitrary. fixing it would be a waste of code
+    }
+    recip = -1. / tn;
     tn = select(doinvert, recip, tn);
-    tn = sign_combine(tn, x);       // get original sign
-
-    overflow = BVTYPE(UITYPE(q) > 0x80000000000000) & is_finite(xa);
-    tn = select(overflow, 0., tn);
-
+    tn = sign_combine(tn, x);       // combine with original sign of x
     return tn;
 }
 
 // instantiations of tan_d template:
 
 static inline Vec2d tan(Vec2d const x) {
-    return tan_d(x);
+    return tan_d<Vec2d, 0>(x);
+}
+
+static inline Vec2d tanpi(Vec2d const x) {
+    return tan_d<Vec2d, 8>(x);
 }
 
 #if MAX_VECTOR_SIZE >= 256
 static inline Vec4d tan(Vec4d const x) {
-    return tan_d(x);
+    return tan_d<Vec4d, 0>(x);
+}
+
+static inline Vec4d tanpi(Vec4d const x) {
+    return tan_d<Vec4d, 8>(x);
 }
 #endif // MAX_VECTOR_SIZE >= 256
 
 #if MAX_VECTOR_SIZE >= 512
 static inline Vec8d tan(Vec8d const x) {
-    return tan_d(x);
+    return tan_d<Vec8d, 0>(x);
+}
+
+static inline Vec8d tanpi(Vec8d const x) {
+    return tan_d<Vec8d, 8>(x);
 }
 #endif // MAX_VECTOR_SIZE >= 512
 
@@ -412,7 +554,7 @@ static inline Vec8d tan(Vec8d const x) {
 // Template parameters:
 // VTYPE:  f.p. vector type
 // AC: 0 = asin, 1 = acos
-// Paramterers:
+// Parameters:
 // x = input x
 template<typename VTYPE, int AC>
 static inline VTYPE asin_d(VTYPE const x) {
@@ -560,7 +702,7 @@ static inline Vec8d acos(Vec8d const x) {
 // Template parameters:
 // VTYPE:  f.p. vector type
 // AC: 0 = asin, 1 = acos
-// Paramterers:
+// Parameters:
 // x = input x
 template<typename VTYPE, int AC>
 static inline VTYPE asin_f(VTYPE const x) {
@@ -641,7 +783,7 @@ static inline Vec16f acos(Vec16f const x) {
 // Template parameters:
 // VTYPE:  f.p. vector type
 // T2:     0 = atan, 1 = atan2
-// Paramterers:
+// Parameters:
 // y, x. calculate tan(y/x)
 // result is between -pi/2 and +pi/2 when x > 0
 // result is between -pi and -pi/2 or between pi/2 and pi when x < 0 for atan2
@@ -771,7 +913,7 @@ static inline Vec8d atan(Vec8d const y) {
 // Template parameters:
 // VTYPE:  f.p. vector type
 // T2:     0 = atan, 1 = atan2
-// Paramterers:
+// Parameters:
 // y, x. calculate tan(y/x)
 // result is between -pi/2 and +pi/2 when x > 0
 // result is between -pi and -pi/2 or between pi/2 and pi when x < 0 for atan2

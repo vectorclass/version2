@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -19,7 +19,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2014-2020 Agner Fog.
+* (c) Copyright 2014-2022 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -30,7 +30,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -52,8 +52,7 @@ namespace VCL_NAMESPACE {
 class Vec16fb : public Vec16b {
 public:
     // Default constructor:
-    Vec16fb () {
-    }
+    Vec16fb () = default;
     // Constructor to build from all elements:
     Vec16fb(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7,
         bool x8, bool x9, bool x10, bool x11, bool x12, bool x13, bool x14, bool x15) :
@@ -171,8 +170,7 @@ static inline Vec16fb & operator ^= (Vec16fb & a, Vec16fb const b) {
 class Vec8db : public Vec512b {
 public:
     // Default constructor:
-    Vec8db () {
-    }
+    Vec8db () = default;
     // Constructor to build from all elements:
     Vec8db(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7) {
         z0 = Vec4qb(x0, x1, x2, x3);
@@ -323,8 +321,7 @@ protected:
     Vec8f z1;
 public:
     // Default constructor:
-    Vec16f() {
-    }
+    Vec16f() = default;
     // Constructor to broadcast the same value into all elements:
     Vec16f(float f) {
         z0 = z1 = Vec8f(f);
@@ -960,8 +957,7 @@ protected:
     Vec4d z1;
 public:
     // Default constructor:
-    Vec8d() {
-    }
+    Vec8d() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8d(double d) {
         z0 = z1 = Vec4d(d);
@@ -1639,6 +1635,20 @@ static inline Vec8d reinterpret_d (Vec16f  const x) {
 static inline Vec8d reinterpret_d (Vec8d const x) {
     return x;
 }
+
+// extend vectors to double size by adding zeroes
+static inline Vec16f extend_z(Vec8f a) {
+    return Vec16f(a, Vec8f(0));
+}
+static inline Vec8d extend_z(Vec4d a) {
+    return Vec8d(a, Vec4d(0));
+} 
+static inline Vec16fb extend_z(Vec8fb a) {
+    return Vec16fb(a, Vec8fb(false));
+}
+static inline Vec8db extend_z(Vec4db a) {
+    return Vec8db(a, Vec4db(false));
+} 
 
 
 /*****************************************************************************

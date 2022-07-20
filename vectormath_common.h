@@ -1,15 +1,15 @@
 /***************************  vectormath_common.h   ****************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2020-06-08
-* Version:       2.01.03
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector classes
 * Description:
 * Header file containing common code for inline version of mathematical functions.
 *
 * For detailed instructions, see VectorClass.pdf
 *
-* (c) Copyright 2014-2020 Agner Fog.
+* (c) Copyright 2014-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -26,7 +26,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20000
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -62,7 +62,7 @@ namespace VCL_NAMESPACE {
 /******************************************************************************
       templates for producing infinite and nan in desired vector type
 ******************************************************************************/
-template <class VTYPE>
+template <typename VTYPE>
 static inline VTYPE infinite_vec();
 
 template <>

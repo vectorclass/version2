@@ -1,8 +1,8 @@
 /****************************  vectori512e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector classes
 * Description:
 * Header file defining 512-bit integer vector classes for 32 and 64 bit integers.
@@ -21,7 +21,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -32,7 +32,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -59,8 +59,7 @@ protected:
     Vec256b z1;                         // high half
 public:
     // Default constructor:
-    Vec512b() {
-    }
+    Vec512b() = default;
     // Constructor to build from two Vec256b:
     Vec512b(Vec256b const a0, Vec256b const a1) {
         z0 = a0;  z1 = a1;
@@ -169,8 +168,7 @@ static inline Vec512b andnot (Vec512b const a, Vec512b const b) {
 class Vec16b : public Vec512b {
 public:
     // Default constructor:
-    Vec16b () {
-    }
+    Vec16b() = default;
     // Constructor to build from all elements:
     Vec16b(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7,
     bool b8, bool b9, bool b10, bool b11, bool b12, bool b13, bool b14, bool b15) {
@@ -332,8 +330,7 @@ static inline bool horizontal_or (Vec16b const a) {
 class Vec16ib : public Vec16b {
 public:
     // Default constructor:
-    Vec16ib () {
-    }
+    Vec16ib () = default;
     /*
     Vec16ib (Vec16b const & x) {
         z0 = x.get_low();
@@ -456,8 +453,7 @@ static inline Vec16ib andnot (Vec16ib const a, Vec16ib const b) {
 class Vec8b : public Vec16b {
 public:
     // Default constructor:
-    Vec8b () {
-    }
+    Vec8b () = default;
     /*
     Vec8b (Vec16b const & x) {
         z0 = x.get_low();
@@ -536,8 +532,7 @@ public:
 class Vec8qb : public Vec8b {
 public:
     // Default constructor:
-    Vec8qb () {
-    }
+    Vec8qb() = default;
     Vec8qb (Vec16b const x) {
         z0 = x.get_low();
         z1 = x.get_high();
@@ -659,8 +654,7 @@ static inline Vec8qb andnot (Vec8qb const a, Vec8qb const b) {
 class Vec16i: public Vec512b {
 public:
     // Default constructor:
-    Vec16i() {
-    }
+    Vec16i() = default;
     // Constructor to broadcast the same value into all elements:
     Vec16i(int i) {
         z0 = z1 = Vec8i(i);
@@ -1001,18 +995,17 @@ static inline Vec16i rotate_left(Vec16i const a, int b) {
 class Vec16ui : public Vec16i {
 public:
     // Default constructor:
-    Vec16ui() {
-    };
+    Vec16ui() = default;
     // Constructor to broadcast the same value into all elements:
     Vec16ui(uint32_t i) {
         z0 = z1 = Vec8ui(i);
-    };
+    }
     // Constructor to build from all elements:
     Vec16ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7,
     uint32_t i8, uint32_t i9, uint32_t i10, uint32_t i11, uint32_t i12, uint32_t i13, uint32_t i14, uint32_t i15) {
         z0 = Vec8ui(i0, i1, i2, i3, i4, i5, i6, i7);
         z1 = Vec8ui(i8, i9, i10, i11, i12, i13, i14, i15);
-    };
+    }
     // Constructor to build from two Vec8ui:
     Vec16ui(Vec8ui const a0, Vec8ui const a1) {
         z0 = a0;
@@ -1215,8 +1208,7 @@ static inline Vec16ui min(Vec16ui const a, Vec16ui const b) {
 class Vec8q : public Vec512b {
 public:
     // Default constructor:
-    Vec8q() {
-    }
+    Vec8q() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8q(int64_t i) {
         z0 = z1 = Vec4q(i);
@@ -1557,8 +1549,7 @@ static inline Vec8q rotate_left(Vec8q const a, int b) {
 class Vec8uq : public Vec8q {
 public:
     // Default constructor:
-    Vec8uq() {
-    }
+    Vec8uq() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8uq(uint64_t i) {
         z0 = z1 = Vec4uq(i);
@@ -2102,7 +2093,7 @@ static inline Vec8q gather8q(void const * a) {
 
 /*****************************************************************************
 *
-*          Functions for conversion between integer sizes
+*          Functions for conversion between integer sizes and vector types
 *
 *****************************************************************************/
 
@@ -2206,6 +2197,29 @@ static inline Vec16i compress_saturated (Vec8q const low, Vec8q const high) {
 static inline Vec16ui compress_saturated (Vec8uq const low, Vec8uq const high) {
     return Vec16ui(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
+
+// extend vectors to double size by adding zeroes
+static inline Vec16i extend_z(Vec8i a) {
+    return Vec16i(a, Vec8i(0));
+}
+static inline Vec16ui extend_z(Vec8ui a) {
+    return Vec16ui(a, Vec8ui(0));
+}
+static inline Vec8q extend_z(Vec4q a) {
+    return Vec8q(a, Vec4q(0));
+}
+static inline Vec8uq extend_z(Vec4uq a) {
+    return Vec8uq(a, Vec4uq(0));
+}
+
+// broad boolean vectors
+
+static inline Vec16ib extend_z(Vec8ib a) {
+    return Vec16ib(a, Vec8ib(false));
+}
+static inline Vec8qb extend_z(Vec4qb a) {
+    return Vec8qb(a, Vec4qb(false));
+} 
 
 
 /*****************************************************************************

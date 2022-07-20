@@ -1,8 +1,8 @@
 /****************************  vectormath_lib.h   *****************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining mathematical functions on floating point vectors
@@ -18,13 +18,13 @@
 *
 * For detailed instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 \*****************************************************************************/
 
 // check combination of header files
 #ifndef VECTORMATH_LIB_H
-#define VECTORMATH_LIB_H  1
+#define VECTORMATH_LIB_H  2
 
 #ifdef VECTORMATH_COMMON_H
 #error conflicting header files. More than one implementation of mathematical functions included

@@ -1,8 +1,8 @@
 /****************************  vectorf256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2020-03-26
-* Version:       2.01.02
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -19,7 +19,7 @@
 * Each vector object is represented internally in the CPU as two 128-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2020 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -30,7 +30,7 @@
 #include "vectorclass.h"
 #endif
 
-#if VECTORCLASS_H < 20100
+#if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
 #endif
 
@@ -55,7 +55,7 @@ protected:
     __m128 y0;                         // low half
     __m128 y1;                         // high half
 public:
-    Vec256fe(void) {};                 // default constructor
+    Vec256fe() = default;              // default constructor
     Vec256fe(__m128 x0, __m128 x1) {   // constructor to build from two __m128
         y0 = x0;  y1 = x1;
     }
@@ -70,7 +70,7 @@ public:
 // base class to replace __m256d when AVX is not supported
 class Vec256de {
 public:
-    Vec256de() {};                     // default constructor
+    Vec256de() = default;              // default constructor
     Vec256de(__m128d x0, __m128d x1) { // constructor to build from two __m128d
         y0 = x0;  y1 = x1;
     }
@@ -118,8 +118,7 @@ static inline Vec256de selectd (Vec256de const s, Vec256de const a, Vec256de con
 class Vec8fb : public Vec256fe {
 public:
     // Default constructor:
-    Vec8fb() {
-    }
+    Vec8fb() = default;
     // Constructor to build from all elements:
     Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
         y0 = Vec4fb(b0, b1, b2, b3);
@@ -306,8 +305,7 @@ static inline bool horizontal_or (Vec8fb const a) {
 class Vec4db : public Vec256de {
 public:
     // Default constructor:
-    Vec4db() {
-    }
+    Vec4db() = default;
     // Constructor to build from all elements:
     Vec4db(bool b0, bool b1, bool b2, bool b3) {
         y0 = Vec2db(b0, b1);
@@ -494,8 +492,7 @@ static inline bool horizontal_or (Vec4db const a) {
 class Vec8f : public Vec256fe {
 public:
     // Default constructor:
-    Vec8f() {
-    }
+    Vec8f() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8f(float f) {
         y1 = y0 = _mm_set1_ps(f);
@@ -1088,8 +1085,7 @@ inline Vec8f change_sign(Vec8f const a) {
 class Vec4d : public Vec256de {
 public:
     // Default constructor:
-    Vec4d() {
-    }
+    Vec4d() = default;
     // Constructor to broadcast the same value into all elements:
     Vec4d(double d) {
         y1 = y0 = _mm_set1_pd(d);
@@ -1739,6 +1735,21 @@ static inline Vec256de reinterpret_d (Vec256fe  const x) {
 
 static inline Vec256de reinterpret_d (Vec256de const x) {
     return x;
+}
+
+// extend vectors to double size by adding zeroes
+static inline Vec8f extend_z(Vec4f a) {
+    return Vec8f(a, _mm_setzero_ps());
+}
+static inline Vec4d extend_z(Vec2d a) {
+    return Vec4d(a, _mm_setzero_pd());
+}
+
+static inline Vec8fb extend_z(Vec4fb a) {
+    return Vec8fb(a, Vec4fb(false));
+}
+static inline Vec4db extend_z(Vec2db a) {
+    return Vec4db(a, Vec2db(false));
 }
 
 

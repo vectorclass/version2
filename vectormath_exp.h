@@ -1,8 +1,8 @@
 /****************************  vectormath_exp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2020-11-24
-* Version:       2.01.04
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of logarithms, exponential
@@ -29,12 +29,12 @@
 *
 * For detailed instructions see vcl_manual.pdf
 *
-* (c) Copyright 2014-2020 Agner Fog.
+* (c) Copyright 2014-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef VECTORMATH_EXP_H
-#define VECTORMATH_EXP_H  1
+#define VECTORMATH_EXP_H  2
 
 #include "vectormath_common.h"
 
@@ -1852,7 +1852,7 @@ static inline VTYPE pow_template_f(VTYPE const x0, VTYPE const y) {
     ee = e1 + e2 + e3;
     ei = roundi(ee);
     // biased exponent of result:
-    ej = ei + (ITYPE(reinterpret_i(z)) >> 23);
+    ej = ei + (ITYPE(reinterpret_i(abs(z))) >> 23);
     // check exponent for overflow and underflow
     overflow  = BVTYPE(ej >= 0x0FF) | (ee >  300.f);
     underflow = BVTYPE(ej <= 0x000) | (ee < -300.f);
@@ -1872,7 +1872,7 @@ static inline VTYPE pow_template_f(VTYPE const x0, VTYPE const y) {
     if (horizontal_or(overflow | underflow)) {
         // handle errors
         z = select(underflow, VTYPE(0.f), z);
-        z = select(overflow, infinite_vec<VTYPE>(), z);
+        z = select(overflow, infinite_vec<VTYPE>(), z);                
     }
 
     // check for x == 0
