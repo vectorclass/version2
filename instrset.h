@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2021-05-20
-* Version:       2.01.04
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -16,12 +16,12 @@
 *
 * For instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2021 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef INSTRSET_H
-#define INSTRSET_H 20104
+#define INSTRSET_H 20200
 
 
 // Allow the use of floating point permute instructions on integer vectors.
@@ -79,51 +79,6 @@
 #endif // instruction set defines
 #endif // INSTRSET
 
-/* Old compilers need specific header files. Not needed any more:
-#if INSTRSET > 7                       // AVX2 and later
-#if defined (__GNUC__) && ! defined (__INTEL_COMPILER)
-#include <x86intrin.h>                 // x86intrin.h includes header files for whatever instruction sets are specified on the compiler command line
-#else
-#include <immintrin.h>                 // MS/Intel version of immintrin.h covers AVX and later
-#endif // __GNUC__
-#elif INSTRSET == 7
-#include <immintrin.h>                 // AVX
-#elif INSTRSET == 6
-#include <nmmintrin.h>                 // SSE4.2
-#elif INSTRSET == 5
-#include <smmintrin.h>                 // SSE4.1
-#elif INSTRSET == 4
-#include <tmmintrin.h>                 // SSSE3
-#elif INSTRSET == 3
-#include <pmmintrin.h>                 // SSE3
-#elif INSTRSET == 2
-#include <emmintrin.h>                 // SSE2
-#elif INSTRSET == 1
-#include <xmmintrin.h>                 // SSE
-#endif // INSTRSET
-
-// AMD  instruction sets
-#if defined (__XOP__) || defined (__FMA4__)
-#ifdef __GNUC__
-#include <x86intrin.h>                 // AMD XOP (Gnu)
-#else
-#include <ammintrin.h>                 // AMD XOP (Microsoft)
-#endif //  __GNUC__
-#elif defined (__SSE4A__)              // AMD SSE4A
-#include <ammintrin.h>
-#endif // __XOP__
-
-// FMA3 instruction set
-#if defined (__FMA__) && (defined(__GNUC__) || defined(__clang__))  && ! defined (__INTEL_COMPILER)
-#include <fmaintrin.h>
-#endif // __FMA__
-
-// FMA4 instruction set
-#if defined (__FMA4__) && (defined(__GNUC__) || defined(__clang__))
-#include <fma4intrin.h> // must have both x86intrin.h and fma4intrin.h, don't know why
-#endif // __FMA4__
-
-*/
 
 #if INSTRSET >= 8 && !defined(__FMA__)
 // Assume that all processors that have AVX2 also have FMA3
@@ -144,10 +99,8 @@
 #include <x86intrin.h>                 // Gcc or Clang compiler
 #endif
 
-
 #include <stdint.h>                    // Define integer types with known size
 #include <stdlib.h>                    // define abs(int)
-
 
 
 // functions in instrset_detect.cpp:
@@ -161,6 +114,8 @@ namespace VCL_NAMESPACE {
     bool hasAVX512ER(void);            // true if AVX512ER instructions supported
     bool hasAVX512VBMI(void);          // true if AVX512VBMI instructions supported
     bool hasAVX512VBMI2(void);         // true if AVX512VBMI2 instructions supported
+    bool hasF16C(void);                // true if F16C instructions supported
+    bool hasAVX512FP16(void);          // true if AVX512_FP16 instructions supported
 
     // function in physical_processors.cpp:
     int physicalProcessors(int * logical_processors = 0);
@@ -168,7 +123,6 @@ namespace VCL_NAMESPACE {
 #ifdef VCL_NAMESPACE
 }
 #endif
-
 
 
 // GCC version
@@ -195,7 +149,7 @@ namespace VCL_NAMESPACE {
 #endif
 
 // warning for poor support for AVX512F in MS compiler
-#ifndef __INTEL_COMPILER
+#if !defined(__INTEL_COMPILER) && !defined(__clang__)
 #if INSTRSET == 9
 #pragma message("Warning: MS compiler cannot generate code for AVX512F without AVX512DQ")
 #endif
@@ -205,12 +159,8 @@ namespace VCL_NAMESPACE {
 #endif // __INTEL_COMPILER
 #endif // _MSC_VER
 
-/* Intel compiler problem:
-The Intel compiler currently cannot compile version 2.00 of VCL. It seems to have
-a problem with constexpr function returns not being constant enough.
-*/
-#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 9999
-#error The Intel compiler version 19.00 cannot compile VCL version 2. Use Version 1.xx of VCL instead
+#if defined(__INTEL_COMPILER) && __INTEL_COMPILER < 2021
+#error The Intel compiler version 19.00 cannot compile VCL version 2
 #endif
 
 /* Clang problem:
@@ -226,9 +176,9 @@ We need different version checks with and whithout __apple_build_version__
 #define FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
 #endif
 
-#if defined (GCC_VERSION) && GCC_VERSION < 99999 && !defined(__clang__)
-// To do: add gcc version that has these zero-extension intrinsics
-#define ZEXT_MISSING  // Gcc 7.4.0 does not have _mm256_zextsi128_si256 and similar functions
+#if defined (__GNUC__) && __GNUC__ < 10 && !defined(__clang__)
+// Gcc 9 and earlier donot have _mm256_zextsi128_si256 and similar functions for xero-extending vector registers
+#define ZEXT_MISSING
 #endif
 
 
@@ -424,7 +374,7 @@ template <uint32_t n> class Const_uint_t {};     // represent compile-time unsig
 // template for producing quiet NAN
 template <class VTYPE>
 static inline VTYPE nan_vec(uint32_t payload = 0x100) {
-    if constexpr ((VTYPE::elementtype() & 1) != 0) {  // double
+    if constexpr (VTYPE::elementtype() == 17) {  // double
         union {
             uint64_t q;
             double f;
@@ -433,13 +383,23 @@ static inline VTYPE nan_vec(uint32_t payload = 0x100) {
         ud.q = 0x7FF8000000000000 | uint64_t(payload) << 29;
         return VTYPE(ud.f);
     }
-    // float will be converted to double if necessary
-    union {
-        uint32_t i;
-        float f;
-    } uf;
-    uf.i = 0x7FC00000 | (payload & 0x003FFFFF);
-    return VTYPE(uf.f);
+    if constexpr (VTYPE::elementtype() == 16) {  // float
+        union {
+            uint32_t i;
+            float f;
+        } uf;
+        uf.i = 0x7FC00000 | (payload & 0x003FFFFF);
+        return VTYPE(uf.f);
+    }
+    /*  // defined in vectorfp16.h
+    if constexpr (VTYPE::elementtype() == 15) {  // _Float16
+        union {
+            uint16_t i;
+            _Float16 f;  // error if _Float16 not defined
+        } uf;
+        uf.i = 0x7C00 | (payload & 0x03FF);
+        return VTYPE(uf.f);
+    } */
 }
 
 
@@ -470,7 +430,6 @@ Rules for constexpr functions:
 
 > Do not make constexpr functions that return vector types. This requires type
   punning with a union, which is not allowed in constexpr functions under C++17.
-  It may be possible under C++20.
 
 *****************************************************************************/
 
@@ -613,7 +572,8 @@ const int perm_cross_lane       = 0x40;  // permutation crossing 128-bit lanes
 const int perm_same_pattern     = 0x80;  // same permute pattern in all 128-bit lanes
 const int perm_punpckh         = 0x100;  // permutation pattern fits punpckh instruction
 const int perm_punpckl         = 0x200;  // permutation pattern fits punpckl instruction
-const int perm_rotate          = 0x400;  // permutation pattern fits rotation within lanes. 4 bit count returned in bit perm_rot_count
+const int perm_rotate          = 0x400;  // permutation pattern fits 128-bit rotation within lanes. 4 bit byte count returned in bit perm_rot_count
+const int perm_swap            = 0x800;  // permutation pattern fits swap of adjacent vector elements
 const int perm_shright        = 0x1000;  // permutation pattern fits shift right within lanes. 4 bit count returned in bit perm_rot_count
 const int perm_shleft         = 0x2000;  // permutation pattern fits shift left within lanes. negative count returned in bit perm_rot_count
 const int perm_rotate_big     = 0x4000;  // permutation pattern fits rotation across lanes. 6 bit count returned in bit perm_rot_count
@@ -748,7 +708,8 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
 
     if (r & perm_same_pattern) {
         // same pattern in all lanes. check if it fits specific patterns
-        bool fit = true;
+        bool fit = true;                                   // fits perm_rotate
+        bool fitswap = true;                               // fits perm_swap
         // fit shift or rotate
         for (i = 0; i < lanesize; i++) {
             if (lanepattern[i] >= 0) {
@@ -759,9 +720,11 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
                 else { // check if fit
                     if (rot != rot1) fit = false;
                 }
+                if ((uint32_t)lanepattern[i] != (i ^ 1)) fitswap = false;
             }
         }
-        rot &= lanesize-1;  // prevent out of range values
+        rot &= lanesize-1;                                 // prevent out of range values
+        if (fitswap) r |= perm_swap;
         if (fit) {   // fits rotate, and possibly shift
             uint64_t rot2 = (rot * elementsize) & 0xF;     // rotate right count in bytes
             r |= rot2 << perm_rot_count;                   // put shift/rotate count in output bit 16-19

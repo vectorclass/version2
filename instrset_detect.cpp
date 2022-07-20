@@ -1,13 +1,13 @@
 /**************************  instrset_detect.cpp   ****************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2019-08-01
-* Version:       2.00.00
+* Last modified: 2022-07-20
+* Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Functions for checking which instruction sets are supported.
 *
-* (c) Copyright 2012-2019 Agner Fog.
+* (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -130,14 +130,6 @@ bool hasXOP(void) {
     return ((abcd[2] & (1 << 11)) != 0);                   // ecx bit 11 indicates XOP
 }
 
-// detect if CPU supports the F16C instruction set
-bool hasF16C(void) {
-    if (instrset_detect() < 7) return false;               // must have AVX
-    int abcd[4];                                           // cpuid results
-    cpuid(abcd, 1);                                        // call cpuid function 1
-    return ((abcd[2] & (1 << 29)) != 0);                   // ecx bit 29 indicates F16C
-}
-
 // detect if CPU supports the AVX512ER instruction set
 bool hasAVX512ER(void) {
     if (instrset_detect() < 9) return false;               // must have AVX512F
@@ -161,6 +153,23 @@ bool hasAVX512VBMI2(void) {
     cpuid(abcd, 7);                                        // call cpuid function 7
     return ((abcd[2] & (1 << 6)) != 0);                    // ecx bit 6 indicates AVX512VBMI2
 }
+
+// detect if CPU supports the F16C instruction set
+bool hasF16C(void) {
+    if (instrset_detect() < 7) return false;               // must have AVX
+    int abcd[4];                                           // cpuid results
+    cpuid(abcd, 1);                                        // call cpuid function 1
+    return ((abcd[2] & (1 << 29)) != 0);                   // ecx bit 29 indicates F16C
+}
+
+// detect if CPU supports the AVX512_FP16 instruction set
+bool hasAVX512FP16(void) {
+    if (instrset_detect() < 10) return false;              // must have AVX512
+    int abcd[4];                                           // cpuid results
+    cpuid(abcd, 7);                                        // call cpuid function 1
+    return ((abcd[3] & (1 << 23)) != 0);                   // edx bit 23 indicates AVX512_FP16
+}
+
 
 #ifdef VCL_NAMESPACE
 }

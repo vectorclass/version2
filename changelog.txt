@@ -1,6 +1,20 @@
 Change log for Vector class library
 -----------------------------------
 
+2022-07-20 version 2.02.00
+  * support half precision floating point vectors
+  * new trigonometric functions sinpi, cospi, sincospi, tanpi
+  * floating point modulo and remainder functions
+  * functions extend_z and concatenate2
+  * functions compress_saturated with one integer parameter
+  * support for Intel compiler
+  * fix bug for NAN inputs in operator > and >=
+  * fix bug for underflow in pow function
+  * fix unsafe optimization in store_partial function
+  * new add-on package with container class and matrix class templates
+  * major improvements in add-on package 'complex'
+  * minor improvements in add-on packages 'random' and 'vector3d'
+  
 2021-08-18 version 2.01.04
   * fix bug in elementtype for Vec8uq
   * improved optimization of permute functions in MS compiler by using constexpr
@@ -15,7 +29,7 @@ Change log for Vector class library
 
 2020-02-25 version 2.01.01
   * added function store_nt
-  * New dispatch_example1.cpp dispatch_example2.cpp
+  * New dispatch_example1.cpp, dispatch_example2.cpp
 
 2019-11-23 version 2.01.00
   * problem with performance of permute and blend functions fixed by avoiding
