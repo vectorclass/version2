@@ -2,7 +2,7 @@
 Author:        Agner Fog
 Date created:  2012-05-30
 Last modified: 2020-02-25
-Version:       2.01.00
+Version:       2.02.00
 Project:       vector class library
 
 Description:   Example of automatic CPU dispatching.
@@ -51,7 +51,7 @@ clang++ -O2 -m64 -msse2 -std=c++17 dispatch_example1.cpp instrset_detect.cpp d7.
 # Run the program
 ./test.exe
 
-(c) Copyright 2012-2020 Agner Fog.
+(c) Copyright 2012-2022 Agner Fog.
 Apache License version 2.0 or later.
 ******************************************************************************/
 
