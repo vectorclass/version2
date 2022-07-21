@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
+* Last modified: 2022-07-21
 * Version:       2.02.00
 * Project:       vector class library
 * Description:
@@ -260,10 +260,13 @@ static inline int32_t vml_popcnt(uint64_t a) {
 #endif
 
 // Define bit-scan-forward function. Gives index to lowest set bit
-#if defined (__GNUC__) || defined(__clang__)
-    // gcc and Clang have no bit_scan_forward intrinsic
-#if defined(__clang__)   // fix clang bug
-    // Clang uses a k register as parameter a when inlined from horizontal_find_first
+#if (defined (__GNUC__) || defined(__clang__)) && !defined (_MSC_VER)
+// _BitScanForward intrinsics are defined only under Windows and only when _MSC_VER is defined
+
+// Use inline assembly for gcc and Clang
+#if defined(__clang_major__) && __clang_major__ < 10
+    // fix bug in Clang version 6. (not detected in version 8 and later)
+    // Clang version 6 uses a k register as parameter a when inlined from horizontal_find_first
 __attribute__((noinline))
 #endif
 static uint32_t bit_scan_forward(uint32_t a) {
@@ -277,7 +280,7 @@ static inline uint32_t bit_scan_forward(uint64_t a) {
     uint32_t hi = uint32_t(a >> 32);
     return bit_scan_forward(hi) + 32;
 }
-#else  // other compilers
+#else  // MS compatible compilers under Windows
 static inline uint32_t bit_scan_forward(uint32_t a) {
     unsigned long r;
     _BitScanForward(&r, a);            // defined in intrin.h for MS and Intel compilers
@@ -301,7 +304,11 @@ static inline uint32_t bit_scan_forward(uint64_t a) {
 
 
 // Define bit-scan-reverse function. Gives index to highest set bit = floor(log2(a))
-#if defined (__GNUC__) || defined(__clang__)
+#if (defined (__GNUC__) || defined(__clang__)) && !defined (_MSC_VER)
+// _BitScanReverse intrinsics are defined only under Windows and only when _MSC_VER is defined
+
+// Use inline assembly for gcc and Clang
+
 static inline uint32_t bit_scan_reverse(uint32_t a) __attribute__((pure));
 static inline uint32_t bit_scan_reverse(uint32_t a) {
     uint32_t r;
@@ -321,16 +328,16 @@ static inline uint32_t bit_scan_reverse(uint64_t a) {
     else return bit_scan_reverse(uint32_t(ahi)) + 32;
 }
 #endif
-#else
+#else  // MS compatible compilers under Windows
 static inline uint32_t bit_scan_reverse(uint32_t a) {
     unsigned long r;
-    _BitScanReverse(&r, a);            // defined in intrin.h for MS and Intel compilers
+    _BitScanReverse(&r, a);            // defined in intrin.h for MS compatible compilers
     return r;
 }
 #ifdef __x86_64__
 static inline uint32_t bit_scan_reverse(uint64_t a) {
     unsigned long r;
-    _BitScanReverse64(&r, a);          // defined in intrin.h for MS and Intel compilers
+    _BitScanReverse64(&r, a);          // defined in intrin.h for MS compatible compilers
     return r;
 }
 #else   // 32 bit mode
