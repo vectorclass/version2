@@ -34,7 +34,7 @@
 ******************************************************************************/
 
 #ifndef VECTORMATH_EXP_H
-#define VECTORMATH_EXP_H  2
+#define VECTORMATH_EXP_H  202
 
 #include "vectormath_common.h"
 
@@ -1547,7 +1547,7 @@ static inline VTYPE pow_template_d(VTYPE const x0, VTYPE const y) {
     // data vectors
     VTYPE x, x1, x2;                             // x variable
     VTYPE px, qx, ef, yr, v;                     // calculation of logarithm
-    VTYPE lg, lg1, lg2;
+    VTYPE lg, lg1;
     VTYPE lgerr, x2err;
     VTYPE e1, e2, ee;
     VTYPE e3, z, z1;                             // calculation of exp and pow

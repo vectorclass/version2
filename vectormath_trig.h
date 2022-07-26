@@ -1,7 +1,7 @@
 /****************************  vectormath_trig.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2022-07-20
+* Last modified: 2022-07-26
 * Version:       2.02.00
 * Project:       vector class library
 * Description:
@@ -25,7 +25,7 @@
 ******************************************************************************/
 
 #ifndef VECTORMATH_TRIG_H
-#define VECTORMATH_TRIG_H  2
+#define VECTORMATH_TRIG_H  202
 
 #include "vectormath_common.h"
 
@@ -66,13 +66,13 @@ static inline VTYPE sincos_d(VTYPE * cosret, VTYPE const xx) {
     const double DP3 = 3.06161699786838294307E-17 * 2.;
 
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
-    typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
+    //typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
 
     VTYPE  xa, x, y, x2, s, c, sin1, cos1;       // data vectors
-    ITYPE  q, qq, signsin, signcos;              // integer vectors, 64 bit
+    ITYPE  q, signsin, signcos;                  // integer vectors, 64 bit
 
-    BVTYPE swap, overflow;                       // boolean vectors
+    BVTYPE swap;                                 // boolean vector
 
 #if INSTRSET < 8  // no FMA
     const double input_limit = 1.E13;            // lower overflow limit without FMA
@@ -243,7 +243,7 @@ static inline VTYPE sincos_f(VTYPE* cosret, VTYPE const xx) {
     const float P2cosf = 2.443315711809948E-5f;
 
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
-    typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
+    //typedef decltype(nan_code(xx)) UITYPE;       // unsigned integer vector type
     typedef decltype(xx < xx) BVTYPE;            // boolean vector type
     
 #if INSTRSET < 8  // no FMA
@@ -254,7 +254,7 @@ static inline VTYPE sincos_f(VTYPE* cosret, VTYPE const xx) {
 
     VTYPE  xa, x, y, x2, s, c, sin1, cos1;       // data vectors
     ITYPE  q, signsin, signcos;                  // integer vectors
-    BVTYPE swap, overflow;                       // boolean vectors
+    BVTYPE swap;                                 // boolean vector
 
     xa = abs(xx);
 
@@ -452,7 +452,7 @@ static inline VTYPE tan_d(VTYPE const x) {
 
     typedef decltype(x > x) BVTYPE;         // boolean vector type
     VTYPE  xa, y, z, zz, px, qx, tn, recip; // data vectors
-    BVTYPE doinvert, xzero, overflow;       // boolean vectors
+    BVTYPE doinvert;                        // boolean vector
     typedef decltype(nan_code(x)) UITYPE;   // unsigned integer vector type
 
     xa = abs(x);
@@ -584,7 +584,7 @@ static inline VTYPE asin_d(VTYPE const x) {
     const double Q1asin = 1.395105614657485689735E2;
     const double Q0asin = -4.918853881490881290097E1;
 
-    VTYPE  xa, xb, x1, x2, x3, x4, x5, px, qx, rx, sx, vx, wx, y1, yb, z, z1, z2;
+    VTYPE  xa, xb, x1, x2, x3, x4, x5, px, qx, rx, sx, vx, wx, y1, z, z1, z2;
     bool   dobig, dosmall;
 
     xa = abs(x);

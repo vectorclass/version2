@@ -29,7 +29,7 @@
 ******************************************************************************/
 
 #ifndef VECTORMATH_HYP_H
-#define VECTORMATH_HYP_H  2
+#define VECTORMATH_HYP_H  202
 
 #include "vectormath_exp.h"
 
