@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-21
+* Last modified: 2022-07-26
 * Version:       2.02.00
 * Project:       vector class library
 * Description:
@@ -23,6 +23,16 @@
 #ifndef INSTRSET_H
 #define INSTRSET_H 20200
 
+// check if compiled for C++17
+#if defined(_MSVC_LANG)  // MS compiler has its own version of __cplusplus with different value
+#if _MSVC_LANG < 201703
+#error Please compile for C++17 or higher
+#endif
+#else  // all other compilers
+#if __cplusplus < 201703
+#error Please compile for C++17 or higher
+#endif
+#endif
 
 // Allow the use of floating point permute instructions on integer vectors.
 // Some CPU's have an extra latency of 1 or 2 clock cycles for this, but

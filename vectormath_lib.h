@@ -1,19 +1,18 @@
 /****************************  vectormath_lib.h   *****************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-26
+* Last modified: 2022-08-02
 * Version:       2.02.00
 * Project:       vector class library
 * Description:
 * Header file defining mathematical functions on floating point vectors
-* using Intel SVML library
+* using Intel SVML (Short Vector Math Library)
 *
-* Instructions to use SVML library:
-* Include this file and link with svml
-*
+* Include this file if you want to use SVML for math functions on vectors
+* See vcl_manual.pdf for details on how to obtain the SVML library and link to it.
 * Alternatively, use the inline math functions by including
-* vectormath_exp.h for power and exponential functions
-* vectormath_trig.h for trigonometric functions
+* vectormath_exp.h for power and exponential functions,
+* vectormath_trig.h for trigonometric functions,
 * vectormath_hyp.h for hyperbolic functions
 *
 * For detailed instructions, see vcl_manual.pdf
@@ -36,6 +35,16 @@
 namespace VCL_NAMESPACE {    // optional name space
 #endif
 
+#if defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)
+#define USE_SVML_INTRINSICS  // Intel compilers have intrinsic functions of access to SVML library
+#endif
+
+#if !(defined(USE_SVML_INTRINSICS))
+// sinpi, cospi, and tanpi functions are included in SVML, but undocumented
+// (The "Classic" version of Intel compiler accepts the intrinsics of these functions even though they are not in the header files)
+#define TRIGPI_FUNCTIONS
+#endif
+
 #if defined(__clang__) || defined (__GNUC__)
 #define SINCOS_ASM  // sincos can be fixed with inline assembly
 #else
@@ -43,12 +52,8 @@ namespace VCL_NAMESPACE {    // optional name space
 #endif
 
 
-#if !(defined(__INTEL_COMPILER) && defined(__clang__))
-#define TRIGPI_FUNCTIONS   // sinpi etc. not yet defined intel icpx compiler 2022.1
-#endif
 
-
-#ifdef __INTEL_COMPILER
+#ifdef USE_SVML_INTRINSICS
 
 /*****************************************************************************
 *
@@ -284,7 +289,7 @@ static inline Vec2d cdfnorminv(Vec2d const x) {  // inverse cumulative normal di
 *
 *************************************************************************************/
 
-#if (defined(_WIN64) && !defined(__INTEL_COMPILER) )
+#if (defined(_WIN64) && !defined(USE_SVML_INTRINSICS) )
 // (call with one parameter may work without __vectorcall because the parameter happens to be in zmm0, but that would be unsafe)
 #define V_VECTORCALL  __vectorcall  // fix calling convention, one parameter.
 #define V_VECTORCALL2 __vectorcall  // fix calling convention, two parameters or two returns
@@ -627,7 +632,7 @@ static inline Vec2d cdfnorminv (Vec2d const x) { // inverse cumulative normal di
     return  __svml_cdfnorminv2(x);
 }
 
-#endif   // __INTEL_COMPILER
+#endif   // USE_SVML_INTRINSICS
 
 
 
@@ -635,7 +640,7 @@ static inline Vec2d cdfnorminv (Vec2d const x) { // inverse cumulative normal di
 
 #if defined (VECTORF256_H)  // 256-bit vector registers supported
 
-#ifdef __INTEL_COMPILER
+#ifdef USE_SVML_INTRINSICS
 /*****************************************************************************
 *
 *      256-bit vector functions using Intel compiler intrinsic functions
@@ -863,7 +868,7 @@ static inline Vec4d cdfnorminv(Vec4d const x) {// inverse cumulative normal dist
     return _mm256_cdfnorminv_pd(x);
 }
 
-#else    // not __INTEL_COMPILER
+#else    // not USE_SVML_INTRINSICS
 /*****************************************************************************
 *
 *      256-bit vector functions using other compiler than Intel
@@ -1170,7 +1175,7 @@ static inline Vec4d cdfnorminv (Vec4d const x) {  // inverse cumulative normal d
     return  __svml_cdfnorminv4(x);
 }
 
-#endif   // __INTEL_COMPILER
+#endif   // USE_SVML_INTRINSICS
 
 #else    // not VECTORF256_H
 
@@ -1415,7 +1420,7 @@ static inline Vec4d cdfnorminv (Vec4d const x) { // inverse cumulative normal di
 
 #if defined (VECTORF512_H)  // 512-bit vector registers supported
 
-#ifdef __INTEL_COMPILER
+#ifdef USE_SVML_INTRINSICS
 /*****************************************************************************
 *
 *      512-bit vector functions using Intel compiler intrinsic functions
@@ -1540,12 +1545,15 @@ static inline Vec8d cospi(Vec8d const x) {       // cosine
 static inline Vec16f tanpi(Vec16f const x) {     // tangent
     return _mm512_tanpi_ps(x);
 }
-/*
-static inline Vec8d tanpi(Vec8d const x) {       // tangent
-    // bug in compiler intrinsic? expecting argument __m512, should be __m512d
-    return _mm512_tanpi_pd(x);
-} */
 
+static inline Vec8d tanpi(Vec8d const x) {       // tangent
+#ifdef __INTEL_COMPILER
+    // see https://community.intel.com/t5/Intel-C-Compiler/mm512-tanpi-pd-wrong-declaration/m-p/1404627
+    return _mm512_castps_pd(_mm512_tanpi_pd(_mm512_castpd_ps(x)));
+#else
+    return _mm512_tanpi_pd(x);
+#endif
+}
 #endif  // TRIGPI_FUNCTIONS
 
 // inverse trigonometric functions
@@ -1647,7 +1655,7 @@ static inline Vec8d cdfnorminv(Vec8d const x) {  // inverse cumulative normal di
     return _mm512_cdfnorminv_pd(x);
 }
 
-#else    // __INTEL_COMPILER
+#else    // USE_SVML_INTRINSICS
 /*****************************************************************************
 *
 *      512-bit vector functions using other compiler than Intel
@@ -1954,7 +1962,7 @@ static inline Vec8d cdfnorminv (Vec8d const x) {    // inverse cumulative normal
     return  __svml_cdfnorminv8(x);
 }
 
-#endif   // __INTEL_COMPILER
+#endif   // USE_SVML_INTRINSICS
 
 #else    // VECTORF512_H
 
