@@ -1302,6 +1302,11 @@ static inline Vec16s & operator <<= (Vec16s & a, int b) {
     return a;
 }
 
+// vector operator << : shift left by variable amount
+static inline Vec16s operator << (Vec16s const a, Vec16s const b) {
+    return Vec16s(a.get_low() << b.get_low(), a.get_high() << b.get_high());
+}
+
 // vector operator >> : shift right arithmetic
 static inline Vec16s operator >> (Vec16s const a, int b) {
     return Vec16s(a.get_low() >> b, a.get_high() >> b);
@@ -1575,6 +1580,11 @@ static inline Vec16us & operator >>= (Vec16us & a, uint32_t b) {
 // vector operator << : shift left all elements
 static inline Vec16us operator << (Vec16us const a, uint32_t b) {
     return Vec16us(a.get_low() << b, a.get_high() << b);
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec16us operator << (Vec16us const a, Vec16us const b) {
+    return Vec16us(a.get_low() << b.get_low(), a.get_high() << b.get_high());
 }
 
 // vector operator << : shift left all elements
@@ -2034,6 +2044,11 @@ static inline Vec8i & operator <<= (Vec8i & a, int32_t b) {
     return a;
 }
 
+// vector operator << : shift left by variable amount
+static inline Vec8i operator << (Vec8i const a, Vec8i const b) {
+    return Vec8i(a.get_low() << b.get_low(), a.get_high() << b.get_high());
+}
+
 // vector operator >> : shift right arithmetic
 static inline Vec8i operator >> (Vec8i const a, int32_t b) {
     return Vec8i(a.get_low() >> b, a.get_high() >> b);
@@ -2317,6 +2332,11 @@ static inline Vec8ui & operator >>= (Vec8ui & a, int32_t b) {
 // vector operator << : shift left all elements
 static inline Vec8ui operator << (Vec8ui const a, uint32_t b) {
     return Vec8ui ((Vec8i)a << (int32_t)b);
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec8ui operator << (Vec8ui const a, Vec8ui const b) {
+    return Vec8ui ((Vec8i)a << (Vec8i)b);
 }
 
 // vector operator << : shift left all elements
@@ -2766,6 +2786,11 @@ static inline Vec4q & operator <<= (Vec4q & a, int32_t b) {
     return a;
 }
 
+// vector operator << : shift left by variable amount
+static inline Vec4q operator << (Vec4q const a, Vec4q const b) {
+    return Vec4q(a.get_low() << b.get_low(), a.get_high() << b.get_high());
+}
+
 // vector operator >> : shift right arithmetic
 static inline Vec4q operator >> (Vec4q const a, int32_t b) {
     return Vec4q(a.get_low() >> b, a.get_high() >> b);
@@ -3016,6 +3041,11 @@ static inline Vec4uq & operator >>= (Vec4uq & a, uint32_t b) {
 // vector operator << : shift left all elements
 static inline Vec4uq operator << (Vec4uq const a, uint32_t b) {
     return Vec4uq ((Vec4q)a << (int32_t)b);
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec4uq operator << (Vec4uq const a, Vec4uq const b) {
+    return Vec4uq ((Vec4q)a << (Vec4q)b);
 }
 
 // vector operator << : shift left all elements

@@ -2207,6 +2207,22 @@ static inline Vec8s & operator <<= (Vec8s & a, int b) {
     return a;
 }
 
+// vector operator << : shift left by variable amount
+static inline Vec8s operator << (Vec8s const a, Vec8s const b) {
+#if INSTRSET >= 10
+    return _mm_sllv_epi16(a, b);
+#else
+    return Vec8s(a.extract(0) << b.extract(0),
+                 a.extract(1) << b.extract(1),
+                 a.extract(2) << b.extract(2),
+                 a.extract(3) << b.extract(3),
+                 a.extract(4) << b.extract(4),
+                 a.extract(5) << b.extract(5),
+                 a.extract(6) << b.extract(6),
+                 a.extract(7) << b.extract(7));
+#endif
+}
+
 // vector operator >> : shift right arithmetic
 static inline Vec8s operator >> (Vec8s const a, int b) {
     return _mm_sra_epi16(a, _mm_cvtsi32_si128(b));
@@ -2558,6 +2574,22 @@ static inline Vec8us & operator >>= (Vec8us & a, int b) {
 // vector operator << : shift left all elements
 static inline Vec8us operator << (Vec8us const a, uint32_t b) {
     return _mm_sll_epi16(a, _mm_cvtsi32_si128((int)b));
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec8us operator << (Vec8us const a, Vec8us const b) {
+#if INSTRSET >= 10
+    return _mm_sllv_epi16(a, b);
+#else
+    return Vec8us(a.extract(0) << b.extract(0),
+                 a.extract(1) << b.extract(1),
+                 a.extract(2) << b.extract(2),
+                 a.extract(3) << b.extract(3),
+                 a.extract(4) << b.extract(4),
+                 a.extract(5) << b.extract(5),
+                 a.extract(6) << b.extract(6),
+                 a.extract(7) << b.extract(7));
+#endif
 }
 
 // vector operator << : shift left all elements
@@ -3131,6 +3163,19 @@ static inline Vec4i & operator *= (Vec4i & a, Vec4i const b) {
 static inline Vec4i operator << (Vec4i const a, int32_t b) {
     return _mm_sll_epi32(a, _mm_cvtsi32_si128(b));
 }
+
+// vector operator << : shift left by variable amount
+static inline Vec4i operator << (Vec4i const a, Vec4i const b) {
+#if INSTRSET >= 10
+    return _mm_sllv_epi32(a, b);
+#else
+    return Vec4i(a.extract(0) << b.extract(0),
+                  a.extract(1) << b.extract(1),
+                  a.extract(2) << b.extract(2),
+                  a.extract(3) << b.extract(3));
+#endif
+}
+
 // vector operator <<= : shift left
 static inline Vec4i & operator <<= (Vec4i & a, int32_t b) {
     a = a << b;
@@ -4089,6 +4134,16 @@ static inline Vec2q & operator *= (Vec2q & a, Vec2q const b) {
 // vector operator << : shift left
 static inline Vec2q operator << (Vec2q const a, int32_t b) {
     return _mm_sll_epi64(a, _mm_cvtsi32_si128(b));
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec2q operator << (Vec2q const a, Vec2q const b) {
+#if INSTRSET >= 10
+    return _mm_sllv_epi64(a, b);
+#else
+    return Vec2q(a.extract(0) << b.extract(0),
+                 a.extract(1) << b.extract(1));
+#endif
 }
 
 // vector operator <<= : shift left

@@ -1664,6 +1664,11 @@ static inline Vec16s & operator <<= (Vec16s & a, int b) {
     return a;
 }
 
+// vector operator << : shift left by variable amount
+static inline Vec16s operator << (Vec16s const a, Vec16s const b) {
+    return _mm256_sllv_epi16(a,b);
+}
+
 // vector operator >> : shift right arithmetic
 static inline Vec16s operator >> (Vec16s const a, int b) {
     return _mm256_sra_epi16(a,_mm_cvtsi32_si128(b));
@@ -1998,6 +2003,11 @@ static inline Vec16us operator << (Vec16us const a, uint32_t b) {
 // vector operator << : shift left all elements
 static inline Vec16us operator << (Vec16us const a, int32_t b) {
     return a << (uint32_t)b;
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec16us operator << (Vec16us const a, Vec16us const b) {
+    return _mm256_sllv_epi16(a, b);
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
@@ -2506,6 +2516,11 @@ static inline Vec8i operator << (Vec8i const a, int32_t b) {
 static inline Vec8i & operator <<= (Vec8i & a, int32_t b) {
     a = a << b;
     return a;
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec8i operator << (Vec8i const a, Vec8i const b) {
+    return _mm256_sllv_epi32(a, b);
 }
 
 // vector operator >> : shift right arithmetic
@@ -3380,6 +3395,11 @@ static inline Vec4q operator << (Vec4q const a, int32_t b) {
 static inline Vec4q & operator <<= (Vec4q & a, int32_t b) {
     a = a << b;
     return a;
+}
+
+// vector operator << : shift left by variable amount
+static inline Vec4q operator << (Vec4q const a, Vec4q const b) {
+    return _mm256_sllv_epi64(a, b);
 }
 
 // vector operator >> : shift right arithmetic
