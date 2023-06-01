@@ -168,7 +168,7 @@ float myfunc_dispatch(float const f[]) {
     // Choose which version of the entry function we want to point to:
     if      (iset >= 10) myfunc_pointer = &Ns_AVX512::myfunc;  // AVX512 version
     else if (iset >=  8) myfunc_pointer = &Ns_AVX2::myfunc;    // AVX2 version
-    else if (iset >=  5) myfunc_pointer = &Ns_AVX::myfunc;     // AVX version
+    else if (iset >=  7) myfunc_pointer = &Ns_AVX::myfunc;     // AVX version
     else if (iset >=  2) myfunc_pointer = &Ns_SSE2::myfunc;    // SSE2 version
     else {
         // Error: lowest instruction set not supported.
