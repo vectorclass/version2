@@ -1,5 +1,7 @@
 Change log for Vector class library
 -----------------------------------
+2022-06-03 version 2.02.01
+  * minor bug fixes and updates
 
 2022-07-20 version 2.02.00
   * support half precision floating point vectors

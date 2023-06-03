@@ -1,7 +1,7 @@
 /*************************  dispatch_example2.cpp   ***************************
 Author:        Agner Fog
 Date created:  2012-05-30
-Last modified: 2020-02-25
+Last modified: 2023-06-03
 Version:       2.02.00
 Project:       vector class library
 Description:   Example of automatic CPU dispatching.
@@ -49,7 +49,7 @@ clang++ -O2 -m64 -msse2 -std=c++17 dispatch_example2.cpp instrset_detect.cpp d7.
 # Run the program
 ./test.exe
 
-(c) Copyright 2012-2022 Agner Fog.
+(c) Copyright 2012-2023 Agner Fog.
 Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -168,7 +168,7 @@ float myfunc_dispatch(float const f[]) {
     // Choose which version of the entry function we want to point to:
     if      (iset >= 10) myfunc_pointer = &Ns_AVX512::myfunc;  // AVX512 version
     else if (iset >=  8) myfunc_pointer = &Ns_AVX2::myfunc;    // AVX2 version
-    else if (iset >=  5) myfunc_pointer = &Ns_AVX::myfunc;     // AVX version
+    else if (iset >=  7) myfunc_pointer = &Ns_AVX::myfunc;     // AVX version
     else if (iset >=  2) myfunc_pointer = &Ns_SSE2::myfunc;    // SSE2 version
     else {
         // Error: lowest instruction set not supported.

@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -27,7 +27,7 @@
 * Each vector object is represented internally in the CPU as a 128-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -5547,7 +5547,10 @@ static inline Vec16c lookup(Vec16c const index, void const * table) {
     if constexpr (n <= 32) return lookup32(index, Vec16c().load(table), Vec16c().load((int8_t*)table + 16));
     // n > 32. Limit index
     Vec16uc index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec16uc(index) & uint8_t(n - 1);
     }
@@ -5596,7 +5599,10 @@ static inline Vec8s lookup(Vec8s const index, void const * table) {
     if constexpr (n <= 16) return lookup16(index, Vec8s().load(table), Vec8s().load((int16_t*)table + 8));
     // n > 16. Limit index
     Vec8us index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8us(index) & (n - 1);
     }
@@ -5682,7 +5688,10 @@ static inline Vec4i lookup(Vec4i const index, void const * table) {
     if constexpr (n <= 8) return lookup8(index, Vec4i().load(table), Vec4i().load((int32_t*)table + 4));
     // n > 8. Limit index
     Vec4ui index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec4ui(index) & (n - 1);
     }
@@ -5714,7 +5723,10 @@ static inline Vec2q lookup(Vec2q const index, void const * table) {
     if constexpr (n <= 0) return 0;
     // n > 0. Limit index
     Vec2uq index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec2uq(index) & (n - 1);
     }

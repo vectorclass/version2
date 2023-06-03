@@ -1,8 +1,8 @@
 /****************************  vectorfp16e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file emulating half precision floating point vector classes
@@ -17,7 +17,7 @@
 *
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -350,19 +350,19 @@ public:
 #ifdef __F16C__    // F16C instruction set has conversion instructions
 
 // extend precision: Vec8h -> Vec4f. upper half ignored
-Vec4f convert8h_4f (Vec8h h) {
+static inline Vec4f convert8h_4f (Vec8h h) {
     return _mm_cvtph_ps(h);
 }
 
 // reduce precision: Vec4f -> Vec8h. upper half zero
-Vec8h convert4f_8h (Vec4f f) {
+static inline Vec8h convert4f_8h (Vec4f f) {
     return _mm_cvtps_ph(f, 0);
 }
 
 #else
 
 // extend precision: Vec8h -> Vec4f. upper half ignored
-Vec4f convert8h_4f (Vec8h x) {
+static Vec4f convert8h_4f (Vec8h x) {
     // __m128i a = _mm_cvtepu16_epi32(x);                            // SSE4.1
     __m128i a = _mm_unpacklo_epi16(x, _mm_setzero_si128 ());         // zero extend
     __m128i b = _mm_slli_epi32(a, 16);                               // left-justify
@@ -387,7 +387,7 @@ Vec4f convert8h_4f (Vec8h x) {
 }
 
 // reduce precision: Vec4f -> Vec8h. upper half zero
-Vec8h convert4f_8h (Vec4f x) {
+static Vec8h convert4f_8h (Vec4f x) {
     __m128i a = _mm_castps_si128(x);                                 // bit-cast to integer
     // 23 bit mantissa rounded to 10 bits - nearest or even
     __m128i r = _mm_srli_epi32(a, 12);                               // get first discarded mantissa bit
@@ -437,12 +437,12 @@ Vec8h convert4f_8h (Vec4f x) {
 #if defined (__F16C__) && INSTRSET >= 8  // F16C instruction set has conversion instructions
 
 // extend precision: Vec8h -> Vec8f
-Vec8f to_float (Vec8h h) {
+static inline Vec8f to_float (Vec8h h) {
     return _mm256_cvtph_ps(h);
 }
 
 // reduce precision: Vec8f -> Vec8h
-Vec8h to_float16 (Vec8f f) {
+static inline Vec8h to_float16 (Vec8f f) {
     return _mm256_cvtps_ph(f, 0);
 }
 
@@ -1115,7 +1115,7 @@ static inline Vec8h exp2(Vec8s const n) {
 // change signs on vectors Vec8h
 // Each index i0 - i7 is 1 for changing sign on the corresponding element, 0 for no change
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
-static inline Vec8h change_sign(Vec8h const a) {
+Vec8h change_sign(Vec8h const a) {
     if constexpr ((i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7) == 0) return a;
     __m128i mask = constant4ui<
         (i0 ? 0x8000 : 0) | (i1 ? 0x80000000 : 0), 
@@ -1155,7 +1155,7 @@ static inline __m128i reinterpret_h(__m128i const x) {
 *****************************************************************************/
 // permute vector Vec8h
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
-static inline Vec8h permute8(Vec8h const a) {
+Vec8h permute8(Vec8h const a) {
     return __m128i(permute8<i0, i1, i2, i3, i4, i5, i6, i7>(Vec8s(__m128i(a))));
 }
 
@@ -1193,7 +1193,7 @@ static inline Vec8h lookup16(Vec8s const index, Vec8h const table0, Vec8h const 
 }
 
 template <int n>
-static inline Vec8h lookup(Vec8s const index, void const * table) {
+Vec8h lookup(Vec8s const index, void const * table) {
     return __m128i(lookup<n>(index, (void const *)(table)));
 }
 
@@ -1927,7 +1927,7 @@ static inline Vec16h exp2(Vec16s const n) {
 // Each index i0 - i15 is 1 for changing sign on the corresponding element, 0 for no change
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
-static inline Vec16h change_sign(Vec16h const a) {
+Vec16h change_sign(Vec16h const a) {
 #if INSTRSET >= 8
     if constexpr ((i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7 | i8 | i9 | i10 | i11 | i12 | i13 | i14 | i15) == 0) return a;
     __m256i mask = constant8ui<
@@ -1961,7 +1961,7 @@ static inline Vec16h change_sign(Vec16h const a) {
 // permute vector Vec16h
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
-static inline Vec16h permute16(Vec16h const a) {
+Vec16h permute16(Vec16h const a) {
     return reinterpret_h (
     permute16<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15> (
     Vec16s(reinterpret_i(a))));

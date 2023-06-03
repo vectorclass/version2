@@ -1,8 +1,8 @@
 /****************************  vectorfp16.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file defining half precision floating point vector classes
@@ -23,7 +23,7 @@
 * g++ version 12.1 with binutils version 2.34
 * Intel c++ compiler version 2022.0
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -687,24 +687,24 @@ static inline Vec8h change_sign(Vec8h const a) {
 
 // conversions Vec8h <-> Vec4f
 // extend precision: Vec8h -> Vec4f. upper half ignored
-Vec4f convert8h_4f (Vec8h h) {
+static inline Vec4f convert8h_4f (Vec8h h) {
     return _mm_cvtph_ps(_mm_castph_si128(h));
 }
 
 // reduce precision: Vec4f -> Vec8h. upper half zero
-Vec8h convert4f_8h (Vec4f f) {
+static inline Vec8h convert4f_8h (Vec4f f) {
     return _mm_castsi128_ph(_mm_cvtps_ph(f, 0));
 }
 
 #if MAX_VECTOR_SIZE >= 256
 // conversions Vec8h <-> Vec8f
 // extend precision: Vec8h -> Vec8f
-Vec8f to_float (Vec8h h) {
+static inline Vec8f to_float (Vec8h h) {
     return _mm256_cvtph_ps(_mm_castph_si128(h));
 }
 
 // reduce precision: Vec8f -> Vec8h
-Vec8h to_float16 (Vec8f f) {
+static inline Vec8h to_float16 (Vec8f f) {
     return _mm_castsi128_ph(_mm256_cvtps_ph(f, 0));
 } 
 #endif
@@ -1308,7 +1308,7 @@ inline Vec16h pow<uint32_t>(Vec16h const x0, uint32_t const n) {
 
 // implement as function pow(vector, const_int)
 template <int n>
-static inline Vec16h pow(Vec16h const a, Const_int_t<n>) {
+Vec16h pow(Vec16h const a, Const_int_t<n>) {
     return pow_n<Vec16h, n>(a);
 }
 
@@ -1422,7 +1422,7 @@ static inline Vec16h exp2(Vec16s const n) {
 // Each index i0 - i15 is 1 for changing sign on the corresponding element, 0 for no change
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
-static inline Vec16h change_sign(Vec16h const a) {
+Vec16h change_sign(Vec16h const a) {
     if constexpr ((i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7 | i8 | i9 | i10 | i11 | i12 | i13 | i14 | i15) == 0) return a;
     __m256i mask = constant8ui<
         (i0  ? 0x8000 : 0) | (i1  ? 0x80000000 : 0), 
@@ -1443,12 +1443,12 @@ static inline Vec16h change_sign(Vec16h const a) {
 *****************************************************************************/
 #if MAX_VECTOR_SIZE >= 512
 // extend precision: Vec8h -> Vec8f
-Vec16f to_float (Vec16h h) {
+static inline Vec16f to_float (Vec16h h) {
     return _mm512_cvtph_ps(_mm256_castph_si256(h));
 }
 
 // reduce precision: Vec8f -> Vec8h
-Vec16h to_float16 (Vec16f f) {
+static inline Vec16h to_float16 (Vec16f f) {
     return _mm256_castsi256_ph(_mm512_cvtps_ph(f, 0));
 }
 #endif
@@ -1496,7 +1496,7 @@ static inline Vec16h extend_z(Vec8h a) {
 // permute vector Vec16h
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
-static inline Vec16h permute16(Vec16h const a) {
+Vec16h permute16(Vec16h const a) {
     return _mm256_castsi256_ph (
     permute16<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15> (
     Vec16s(_mm256_castph_si256(a))));
@@ -1512,7 +1512,7 @@ static inline Vec16h permute16(Vec16h const a) {
 // permute and blend Vec16h
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, 
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
-static inline Vec16h blend16(Vec16h const a, Vec16h const b) {
+Vec16h blend16(Vec16h const a, Vec16h const b) {
     return _mm256_castsi256_ph (
     blend16<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15> (
     Vec16s(_mm256_castph_si256(a)), Vec16s(_mm256_castph_si256(b))));
@@ -1535,7 +1535,7 @@ static inline Vec16h lookup16 (Vec16s const index, Vec16h const table) {
 }
 
 template <int n>
-static inline Vec16h lookup(Vec16s const index, void const * table) {
+Vec16h lookup(Vec16s const index, void const * table) {
     return _mm256_castsi256_ph(lookup<n>(index, (void const *)(table)));
 }
 
@@ -2063,7 +2063,7 @@ inline Vec32h pow<uint32_t>(Vec32h const x0, uint32_t const n) {
 
 // implement as function pow(vector, const_int)
 template <int n>
-static inline Vec32h pow(Vec32h const a, Const_int_t<n>) {
+Vec32h pow(Vec32h const a, Const_int_t<n>) {
     return pow_n<Vec32h, n>(a);
 }
 
@@ -2178,7 +2178,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15,
 int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
 int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
-static inline Vec32h change_sign(Vec32h const a) {
+Vec32h change_sign(Vec32h const a) {
     if constexpr ((i0 | i1 | i2 | i3 | i4 | i5 | i6 | i7 | i8 | i9 | i10 | i11 | i12 | i13 | i14 | i15 |
     i16 | i17 | i18 | i19 | i20 | i21 | i22 | i23 | i24 | i25 | i26 | i27 | i28 | i29 | i30 | i31)
     == 0) return a;
@@ -2247,7 +2247,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15,
 int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
 int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
-static inline Vec32h permute32(Vec32h const a) {
+Vec32h permute32(Vec32h const a) {
     return _mm512_castsi512_ph (
     permute32<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
     i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31 > (
@@ -2266,7 +2266,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15,
 int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
 int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
-static inline Vec32h blend32(Vec32h const a, Vec32h const b) {
+Vec32h blend32(Vec32h const a, Vec32h const b) {
     return _mm512_castsi512_ph (
     blend32<i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
     i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31 > (
@@ -2307,7 +2307,7 @@ static inline Vec32h lookup(Vec32s const index, void const * table) {
 
 // pow(2,n)
 template <typename V>
-static inline V vh_pow2n (V const n) {           
+V vh_pow2n (V const n) {           
     typedef decltype(roundi(n)) VI;              // corresponding integer vector type
     const _Float16 pow2_10 =  1024.;             // 2^10
     const _Float16 bias = 15.;                   // bias in exponent
@@ -2355,7 +2355,7 @@ inline Vec32h infinite_vech<Vec32h>() {
 // BA: 0 for exp, 1 for 0.5*exp, 2 for pow(2,x), 10 for pow(10,x)
 
 template<typename VTYPE, int M1, int BA>
-static inline VTYPE exp_h(VTYPE const initial_x) {
+VTYPE exp_h(VTYPE const initial_x) {
 
     // Taylor coefficients
     const _Float16 P0expf   =  1.f/2.f;
@@ -2444,7 +2444,7 @@ static inline Vec32us unsigned_int_type(Vec32h) { return 0; }
 // xx = input x (radians)
 // cosret = return pointer (only if SC = 3)
 template<typename VTYPE, int SC>
-static inline VTYPE sincos_h(VTYPE * cosret, VTYPE const xx) {
+VTYPE sincos_h(VTYPE * cosret, VTYPE const xx) {
 
     // define constants
     const _Float16 dp1h = 1.57031250f;           // pi/2 with lower bits of mantissa removed

@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-26
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -16,7 +16,7 @@
 *
 * For instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -110,6 +110,7 @@
 #endif
 
 #include <stdint.h>                    // Define integer types with known size
+#include <limits.h>                    // Define INT_MAX
 #include <stdlib.h>                    // define abs(int)
 
 

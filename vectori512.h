@@ -1,8 +1,8 @@
 /****************************  vectori512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 32 and 64 bit integers.
@@ -22,7 +22,7 @@
 * Each vector object is represented internally in the CPU as a 512-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -1676,7 +1676,10 @@ static inline Vec16i lookup(Vec16i const index, void const * table) {
     }
     // n > 32. Limit index
     Vec16ui index1;
-    if constexpr ((n & (n-1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec16ui(index) & (n-1);
     }
@@ -1707,7 +1710,10 @@ static inline Vec8q lookup(Vec8q const index, void const * table) {
     }
     // n > 16. Limit index
     Vec8uq index1;
-    if constexpr ((n & (n-1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n-1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec8uq(index) & (n-1);
     }

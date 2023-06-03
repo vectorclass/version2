@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-06-03
+* Version:       2.02.01
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -18,7 +18,7 @@
 * Each vector object is represented internally in the CPU as a 128-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -2801,7 +2801,10 @@ static inline Vec4f lookup(Vec4i const index, float const * table) {
     }
     // n > 8. Limit index
     Vec4ui index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec4ui(index) & (n - 1);
     }
@@ -2853,7 +2856,10 @@ static inline Vec2d lookup(Vec2q const index, double const * table) {
 #endif
     // Limit index
     Vec2uq index1;
-    if constexpr ((n & (n - 1)) == 0) {
+    if constexpr (n == INT_MAX) {
+        index1 = index;
+    }
+    else if constexpr ((n & (n - 1)) == 0) {
         // n is a power of 2, make index modulo n
         index1 = Vec2uq(index) & (n - 1);
     }
