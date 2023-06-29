@@ -71,27 +71,27 @@ static inline Vec4uq extend (Vec4ui const a) {
 #else  // no AVX2. 256 bit integer vectors are emulated
 
 // sign extend and zero extend functions:
-static inline Vec16s extend (Vec16c const a) {
+static inline Vec16s extend (Vec16c const a) noexcept {
     return Vec16s(extend_low(a), extend_high(a));
 }
 
-static inline Vec16us extend (Vec16uc const a) {
+static inline Vec16us extend (Vec16uc const a) noexcept {
     return Vec16us(extend_low(a), extend_high(a));
 }
 
-static inline Vec8i extend (Vec8s const a) {
+static inline Vec8i extend (Vec8s const a) noexcept {
     return Vec8i(extend_low(a), extend_high(a));
 }
 
-static inline Vec8ui extend (Vec8us const a) {
+static inline Vec8ui extend (Vec8us const a) noexcept {
     return Vec8ui(extend_low(a), extend_high(a));
 }
 
-static inline Vec4q extend (Vec4i const a) {
+static inline Vec4q extend (Vec4i const a) noexcept {
     return Vec4q(extend_low(a), extend_high(a));
 }
 
-static inline Vec4uq extend (Vec4ui const a) {
+static inline Vec4uq extend (Vec4ui const a) noexcept {
     return Vec4uq(extend_low(a), extend_high(a));
 }
 
@@ -117,14 +117,14 @@ static inline Vec4f to_float (Vec4d const a) {
 #else  // no AVX2. 256 bit float vectors are emulated
 
 // float to double
-static inline Vec4d to_double (Vec4f const a) {
+static inline Vec4d to_double (Vec4f const a) noexcept {
     Vec2d lo = _mm_cvtps_pd(a);
     Vec2d hi = _mm_cvtps_pd(_mm_movehl_ps(a, a));
     return Vec4d(lo,hi);
 }
 
 // double to float
-static inline Vec4f to_float (Vec4d const a) {
+static inline Vec4f to_float (Vec4d const a) noexcept {
     Vec4f lo = _mm_cvtpd_ps(a.get_low());
     Vec4f hi = _mm_cvtpd_ps(a.get_high());
     return _mm_movelh_ps(lo, hi);
@@ -193,52 +193,52 @@ static inline Vec4ui compress_saturated (Vec4uq const a) {
 #else  // no AVX512
 
 // compress functions. overflow wraps around
-static inline Vec16c compress (Vec16s const a) {
+static inline Vec16c compress (Vec16s const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec16uc compress (Vec16us const a) {
+static inline Vec16uc compress (Vec16us const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec8s compress (Vec8i const a) {
+static inline Vec8s compress (Vec8i const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec8us compress (Vec8ui const a) {
+static inline Vec8us compress (Vec8ui const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec4i compress (Vec4q const a) {
+static inline Vec4i compress (Vec4q const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec4ui compress (Vec4uq const a) {
+static inline Vec4ui compress (Vec4uq const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
 // compress_saturated functions. overflow saturates
-static inline Vec16c compress_saturated (Vec16s const a) {
+static inline Vec16c compress_saturated (Vec16s const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec16uc compress_saturated (Vec16us const a) {
+static inline Vec16uc compress_saturated (Vec16us const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec8s compress_saturated (Vec8i const a) {
+static inline Vec8s compress_saturated (Vec8i const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec8us compress_saturated (Vec8ui const a) {
+static inline Vec8us compress_saturated (Vec8ui const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec4i compress_saturated (Vec4q const a) {
+static inline Vec4i compress_saturated (Vec4q const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec4ui compress_saturated (Vec4uq const a) {
+static inline Vec4ui compress_saturated (Vec4uq const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
@@ -284,27 +284,27 @@ static inline Vec8ui compress_saturated (Vec8uq const a) {
 #else  // no AVX512
 
 // compress_saturated functions. overflow saturates
-static inline Vec32c compress_saturated (Vec32s const a) {
+static inline Vec32c compress_saturated (Vec32s const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec32uc compress_saturated (Vec32us const a) {
+static inline Vec32uc compress_saturated (Vec32us const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec16s compress_saturated (Vec16i const a) {
+static inline Vec16s compress_saturated (Vec16i const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec16us compress_saturated (Vec16ui const a) {
+static inline Vec16us compress_saturated (Vec16ui const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec8i compress_saturated (Vec8q const a) {
+static inline Vec8i compress_saturated (Vec8q const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
-static inline Vec8ui compress_saturated (Vec8uq const a) {
+static inline Vec8ui compress_saturated (Vec8uq const a) noexcept {
     return compress_saturated(a.get_low(), a.get_high());
 }
 
@@ -361,32 +361,32 @@ static inline Vec8uq extend (Vec8ui const a) {
 
 
 // sign extend
-static inline Vec32s extend (Vec32c const a) {
+static inline Vec32s extend (Vec32c const a) noexcept {
     return Vec32s(extend_low(a), extend_high(a));
 }
 
 // zero extend
-static inline Vec32us extend (Vec32uc const a) {
+static inline Vec32us extend (Vec32uc const a) noexcept {
     return Vec32us(extend_low(a), extend_high(a));
 }
 
 // sign extend
-static inline Vec16i extend (Vec16s const a) {
+static inline Vec16i extend (Vec16s const a) noexcept {
     return Vec16i(extend_low(a), extend_high(a));
 }
 
 // zero extend
-static inline Vec16ui extend (Vec16us const a) {
+static inline Vec16ui extend (Vec16us const a) noexcept {
     return Vec16ui(extend_low(a), extend_high(a));
 }
 
 // sign extend
-static inline Vec8q extend (Vec8i const a) {
+static inline Vec8q extend (Vec8i const a) noexcept {
     return Vec8q(extend_low(a), extend_high(a));
 }
 
 // zero extend
-static inline Vec8uq extend (Vec8ui const a) {
+static inline Vec8uq extend (Vec8ui const a) noexcept {
     return Vec8uq(extend_low(a), extend_high(a));
 }
 
@@ -432,27 +432,27 @@ static inline Vec8ui compress (Vec8uq const a) {
 #else  // no AVX512
 
 // compress functions. overflow wraps around
-static inline Vec32c compress (Vec32s const a) {
+static inline Vec32c compress (Vec32s const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec32uc compress (Vec32us const a) {
+static inline Vec32uc compress (Vec32us const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec16s compress (Vec16i const a) {
+static inline Vec16s compress (Vec16i const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec16us compress (Vec16ui const a) {
+static inline Vec16us compress (Vec16ui const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec8i compress (Vec8q const a) {
+static inline Vec8i compress (Vec8q const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
-static inline Vec8ui compress (Vec8uq const a) {
+static inline Vec8ui compress (Vec8uq const a) noexcept {
     return compress(a.get_low(), a.get_high());
 }
 
@@ -479,14 +479,14 @@ static inline Vec8f to_float (Vec8d const a) {
 #else  // no AVX512. 512 bit float vectors are emulated
 
 // float to double
-static inline Vec8d to_double (Vec8f const a) {
+static inline Vec8d to_double (Vec8f const a) noexcept {
     Vec4d lo = to_double(a.get_low());
     Vec4d hi = to_double(a.get_high());
     return Vec8d(lo,hi);
 }
 
 // double to float
-static inline Vec8f to_float (Vec8d const a) {
+static inline Vec8f to_float (Vec8d const a) noexcept {
     Vec4f lo = to_float(a.get_low());
     Vec4f hi = to_float(a.get_high());
     return Vec8f(lo, hi);
@@ -497,7 +497,7 @@ static inline Vec8f to_float (Vec8d const a) {
 #endif // MAX_VECTOR_SIZE >= 512
 
 // double to float
-static inline Vec4f to_float (Vec2d const a) {
+static inline Vec4f to_float (Vec2d const a) noexcept {
     return _mm_cvtpd_ps(a);
 }
 
