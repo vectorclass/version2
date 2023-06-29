@@ -1405,22 +1405,22 @@ static inline Vec8d pow(Vec8d const a, Const_int_t<n>) {
 
 
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec8d round(Vec8d const a) {
+static inline Vec8d round(Vec8d const a) noexcept {
     return Vec8d(round(a.get_low()), round(a.get_high()));
 }
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec8d truncate(Vec8d const a) {
+static inline Vec8d truncate(Vec8d const a) noexcept {
     return Vec8d(truncate(a.get_low()), truncate(a.get_high()));
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec8d floor(Vec8d const a) {
+static inline Vec8d floor(Vec8d const a) noexcept {
     return Vec8d(floor(a.get_low()), floor(a.get_high()));
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec8d ceil(Vec8d const a) {
+static inline Vec8d ceil(Vec8d const a) noexcept {
     return Vec8d(ceil(a.get_low()), ceil(a.get_high()));
 }
 
@@ -1444,7 +1444,7 @@ static inline Vec8q truncatei(Vec8d const a) noexcept {
 //static inline Vec8q truncate_to_int64(Vec8d const a) {return truncatei(a);} // deprecated
 
 // function roundi: round to nearest or even. (inefficient)
-static inline Vec8q roundi(Vec8d const a) {
+static inline Vec8q roundi(Vec8d const a) noexcept {
     return Vec8q(roundi(a.get_low()), roundi(a.get_high()));
 }
 //static inline Vec8q round_to_int64(Vec8d const a) {return roundi(a);} // deprecated

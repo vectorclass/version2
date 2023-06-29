@@ -244,11 +244,11 @@ static inline void cpuid(int output[4], int functionnumber, int ecxleaf = 0) noe
 #if INSTRSET >= 6   // SSE4.2
 // The popcnt instruction is not officially part of the SSE4.2 instruction set,
 // but available in all known processors with SSE4.2
-static inline uint32_t vml_popcnt(uint32_t a) {
+static inline uint32_t vml_popcnt(uint32_t a) noexcept {
     return (uint32_t)_mm_popcnt_u32(a);  // Intel intrinsic. Supported by gcc and clang
 }
 #ifdef __x86_64__
-static inline int64_t vml_popcnt(uint64_t a) {
+static inline int64_t vml_popcnt(uint64_t a) noexcept {
     return _mm_popcnt_u64(a);            // Intel intrinsic.
 }
 #else   // 32 bit mode

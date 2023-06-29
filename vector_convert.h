@@ -105,12 +105,12 @@ static inline Vec4uq extend (Vec4ui const a) noexcept {
 #if INSTRSET >= 7  // AVX. 256 bit float vectors
 
 // float to double
-static inline Vec4d to_double (Vec4f const a) {
+static inline Vec4d to_double (Vec4f const a) noexcept {
     return _mm256_cvtps_pd(a);
 }
 
 // double to float
-static inline Vec4f to_float (Vec4d const a) {
+static inline Vec4f to_float (Vec4d const a) noexcept {
     return _mm256_cvtpd_ps(a);
 }
 

@@ -56,16 +56,16 @@ typedef Vec8b  Vec8db;
 
 #if INSTRSET == 9  // special cases of mixed compact and broad vectors
 inline Vec16b::Vec16b(Vec8ib const x0, Vec8ib const x1) {
-    mm = to_bits(x0) | uint16_t(to_bits(x1) << 8);
+    mm = static_cast<__mmask16>(to_bits(x0) | uint16_t(to_bits(x1) << 8));
 }
 inline Vec16b::Vec16b(Vec8fb const x0, Vec8fb const x1) {
-    mm = to_bits(x0) | uint16_t(to_bits(x1) << 8);
+    mm = static_cast<__mmask16>(to_bits(x0) | uint16_t(to_bits(x1) << 8));
 }
 inline Vec8b::Vec8b(Vec4qb const x0, Vec4qb const x1) {
-    mm = to_bits(x0) | (to_bits(x1) << 4);
+    mm = static_cast<__mmask16>(to_bits(x0) | (to_bits(x1) << 4));
 }
 inline Vec8b::Vec8b(Vec4db const x0, Vec4db const x1) {
-    mm = to_bits(x0) | (to_bits(x1) << 4);
+    mm = static_cast<__mmask16>(to_bits(x0) | (to_bits(x1) << 4));
 }
 
 inline Vec8ib Vec16b::get_low() const {
@@ -75,10 +75,10 @@ inline Vec8ib Vec16b::get_high() const {
     return Vec8ib().load_bits(uint8_t((uint16_t)mm >> 8u));
 }
 inline Vec4qb Vec8b::get_low() const {
-    return Vec4qb().load_bits(mm & 0xF);
+    return Vec4qb().load_bits(static_cast<uint8_t>(mm & 0xF));
 }
 inline Vec4qb Vec8b::get_high() const {
-    return Vec4qb().load_bits(mm >> 4u);
+    return Vec4qb().load_bits(static_cast<uint8_t>(mm >> 4u));
 }
 
 #endif
@@ -1481,7 +1481,7 @@ static inline Vec16f infinite16f() {
 
 // Function nan4f: returns a vector where all elements are +NAN (quiet)
 static inline Vec16f nan16f(int n = 0x100) {
-    return nan_vec<Vec16f>(n);
+    return nan_vec<Vec16f>(static_cast<uint32_t>(n));
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
@@ -1491,7 +1491,7 @@ static inline Vec8d infinite8d() {
 
 // Function nan8d: returns a vector where all elements are +NAN (quiet NAN)
 static inline Vec8d nan8d(int n = 0x10) {
-    return nan_vec<Vec8d>(n);
+    return nan_vec<Vec8d>(static_cast<uint32_t>(n));
 }
 
 

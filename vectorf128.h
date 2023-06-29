@@ -2096,7 +2096,7 @@ static inline Vec2d pow(Vec2d const a, Const_int_t<n>) {
 
 // function round: round to nearest integer (even). (result as double vector)
 #if INSTRSET >= 5   // SSE4.1 supported
-static inline Vec2d round(Vec2d const a) {
+static inline Vec2d round(Vec2d const a) noexcept {
     return _mm_round_pd(a, 0 + 8);
 }
 #else
@@ -2130,7 +2130,7 @@ static inline Vec2d round(Vec2d const a) {
 #endif
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec2d truncate(Vec2d const a) {
+static inline Vec2d truncate(Vec2d const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 3 + 8);
 #else  // SSE2
@@ -2143,7 +2143,7 @@ static inline Vec2d truncate(Vec2d const a) {
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec2d floor(Vec2d const a) {
+static inline Vec2d floor(Vec2d const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 1 + 8);
 #else  // SSE2
@@ -2157,7 +2157,7 @@ static inline Vec2d floor(Vec2d const a) {
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec2d ceil(Vec2d const a) {
+static inline Vec2d ceil(Vec2d const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 2 + 8);
 #else  // SSE2
@@ -2219,7 +2219,7 @@ static inline Vec4i round_to_int32(Vec2d const a) noexcept {
 //static inline Vec4i round_to_int(Vec2d const a) { return round_to_int32(a); }  // deprecated
 
 // function round_to_int64: round to nearest or even. (inefficient for lower instruction sets)
-static inline Vec2q roundi(Vec2d const a) {
+static inline Vec2q roundi(Vec2d const a) noexcept {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     return _mm_cvtpd_epi64(a);
 #else

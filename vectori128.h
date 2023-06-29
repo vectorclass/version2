@@ -263,7 +263,8 @@ public:
 
 // Members of Vec16b that refer to Vec8b:
 inline Vec16b::Vec16b(Vec8b const x0, Vec8b const x1) {
-    mm = uint8_t(x0) | uint16_t(x1) << 8;
+    const auto mm_ = uint8_t(x0) | uint16_t(x1) << 8;
+    mm = static_cast<__mmask16>(mm_);
 }
 #if INSTRSET >= 10
 inline Vec8b Vec16b::get_low() const {
