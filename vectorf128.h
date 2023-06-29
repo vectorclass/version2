@@ -340,8 +340,11 @@ public:
 #endif
     // Member function to change a single element in vector
     Vec2db const insert(int index, bool value) {
+        // mask with FFFFFFFFFFFFFFFF at index position
+        const auto index_position = (index & 1) * 2;
         const int32_t maskl[8] = { 0,0,0,0,-1,-1,0,0 };
-        __m128 mask = _mm_loadu_ps((float const*)(maskl + 4 - (index & 1) * 2)); // mask with FFFFFFFFFFFFFFFF at index position
+        const auto A = maskl + 4 - index_position;
+        __m128 mask = _mm_loadu_ps((float const*)A);
         if (value) {
             xmm = _mm_or_pd(xmm, _mm_castps_pd(mask));
         }
