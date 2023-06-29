@@ -2111,7 +2111,7 @@ static inline Vec2d round(Vec2d const a) __attribute__((optnone));
 #pragma float_control(precise,on)
 #endif
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec2d round(Vec2d const a) {
+static inline Vec2d round(Vec2d const a) noexcept {
     // Note: assume MXCSR control register is set to rounding
     // (don't use conversion to int, it will limit the value to +/- 2^31)
     Vec2d signmask = _mm_castsi128_pd(constant4ui<0, 0x80000000, 0, 0x80000000>()); // -0.0

@@ -1503,22 +1503,22 @@ static inline Vec4d pow(Vec4d const a, Const_int_t<n>) {
 
 
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec4d round(Vec4d const a) {
+static inline Vec4d round(Vec4d const a) noexcept {
     return Vec4d(round(a.get_low()), round(a.get_high()));
 }
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec4d truncate(Vec4d const a) {
+static inline Vec4d truncate(Vec4d const a) noexcept {
     return Vec4d(truncate(a.get_low()), truncate(a.get_high()));
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec4d floor(Vec4d const a) {
+static inline Vec4d floor(Vec4d const a) noexcept {
     return Vec4d(floor(a.get_low()), floor(a.get_high()));
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec4d ceil(Vec4d const a) {
+static inline Vec4d ceil(Vec4d const a) noexcept {
     return Vec4d(ceil(a.get_low()), ceil(a.get_high()));
 }
 
@@ -1540,7 +1540,7 @@ static inline Vec4q truncatei(Vec4d const a) noexcept {
 }
 
 // function roundi: round to nearest or even. (inefficient)
-static inline Vec4q roundi(Vec4d const a) {
+static inline Vec4q roundi(Vec4d const a) noexcept {
     return truncatei(round(a));
 }
 
