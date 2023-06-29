@@ -266,7 +266,7 @@ static inline uint32_t vml_popcnt(uint32_t a) {
     return   e >> 24;
 }
 static inline int32_t vml_popcnt(uint64_t a) {
-    return vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a));
+    return static_cast<int32_t>(vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a)));
 }
 #endif
 

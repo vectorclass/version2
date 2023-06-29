@@ -1571,7 +1571,7 @@ static inline Vec16c rotate_left(Vec16c const a, int b) {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec16c)_mm_rot_epi8(a, _mm_set1_epi8(b));
 #else  // SSE2 instruction set
-    uint8_t mask = 0xFFu << b;                             // mask off overflow bits
+    const auto mask = static_cast<char>(0xFFu << b);  // mask off overflow bits
     __m128i m = _mm_set1_epi8(mask);
     __m128i bb = _mm_cvtsi32_si128(b & 7);                 // b modulo 8
     __m128i mbb = _mm_cvtsi32_si128((-b) & 7);             // 8-b modulo 8

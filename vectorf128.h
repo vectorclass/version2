@@ -1031,7 +1031,7 @@ static inline Vec4f infinite4f() {
 
 // Function nan4f: returns a vector where all elements are NAN (quiet)
 static inline Vec4f nan4f(int n = 0x10) {
-    return nan_vec<Vec4f>(n);
+    return nan_vec<Vec4f>(static_cast<uint32_t>(n));
 }
 
 // General arithmetic functions, etc.
@@ -2423,7 +2423,7 @@ static inline Vec2d infinite2d() {
 
 // Function nan2d: returns a vector where all elements are +NAN (quiet)
 static inline Vec2d nan2d(int n = 0x10) {
-    return nan_vec<Vec2d>(n);
+    return nan_vec<Vec2d>(static_cast<uint32_t>(n));
 }
 
 
