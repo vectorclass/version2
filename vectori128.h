@@ -1060,6 +1060,12 @@ public:
 *
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
+
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec16cb : public Vec16c {
 public:
     // Default constructor
@@ -1129,6 +1135,10 @@ public:
     Vec16cb(int b) = delete;
     Vec16cb & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 #else
 typedef Vec16b Vec16cb;  // compact boolean vector
@@ -1572,7 +1582,7 @@ static inline Vec16c rotate_left(Vec16c const a, int b) {
     return (Vec16c)_mm_rot_epi8(a, _mm_set1_epi8(b));
 #else  // SSE2 instruction set
     uint8_t mask = 0xFFu << b;                             // mask off overflow bits
-    __m128i m = _mm_set1_epi8(mask);
+    __m128i m = _mm_set1_epi8(static_cast<char>(mask));
     __m128i bb = _mm_cvtsi32_si128(b & 7);                 // b modulo 8
     __m128i mbb = _mm_cvtsi32_si128((-b) & 7);             // 8-b modulo 8
     __m128i left = _mm_sll_epi16(a, bb);                   // a << b
@@ -1986,6 +1996,11 @@ public:
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec8sb : public Vec8s {
 public:
     // Constructor to build from all elements:
@@ -2040,6 +2055,11 @@ public:
     Vec8sb(int b) = delete;
     Vec8sb & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
+
 #else
 typedef Vec8b Vec8sb;
 #endif
@@ -2904,6 +2924,11 @@ public:
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec4ib : public Vec4i {
 public:
     // Default constructor:
@@ -2957,6 +2982,10 @@ public:
     Vec4ib(int b) = delete;
     Vec4ib & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 #else
 
@@ -3855,6 +3884,11 @@ public:
 
 #if INSTRSET < 10   // broad boolean vectors
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 // Definition will be different for the AVX512 instruction set
 class Vec2qb : public Vec2q {
 public:
@@ -3909,6 +3943,10 @@ public:
     Vec2qb(int b) = delete;
     Vec2qb & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 #else
 

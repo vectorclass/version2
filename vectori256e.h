@@ -337,6 +337,10 @@ public:
 *          Vec32cb: Vector of 32 Booleans for use with Vec32c and Vec32uc
 *
 *****************************************************************************/
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
 
 class Vec32cb : public Vec32c {
 public:
@@ -398,6 +402,9 @@ public:
     Vec32cb & operator = (int x) = delete;
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *
@@ -1077,6 +1084,11 @@ public:
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec16sb : public Vec16s {
 public:
     // Default constructor:
@@ -1141,6 +1153,9 @@ public:
     Vec16sb & operator = (int x) = delete;
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *
@@ -1813,6 +1828,11 @@ public:
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec8ib : public Vec8i {
 public:
     // Default constructor:
@@ -1874,6 +1894,10 @@ public:
     Vec8ib(int b) = delete;
     Vec8ib & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *
@@ -2554,6 +2578,11 @@ public:
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec4qb : public Vec4q {
 public:
     // Default constructor:
@@ -2616,6 +2645,9 @@ public:
     Vec4qb & operator = (int x) = delete;
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *

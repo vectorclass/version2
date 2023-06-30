@@ -236,6 +236,11 @@ public:
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec64cb : public Vec64c {
 public:
     // Default constructor:
@@ -314,6 +319,9 @@ public:
     Vec64cb & operator = (int x) = delete; // Prevent assigning int because of ambiguity
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *
@@ -1008,6 +1016,11 @@ public:
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec32sb : public Vec32s {
 public:
     // Default constructor:
@@ -1067,6 +1080,9 @@ public:
     Vec32sb & operator = (int x) = delete; // Prevent assigning int because of ambiguity
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *

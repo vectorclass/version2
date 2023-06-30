@@ -165,6 +165,11 @@ static inline Vec512b andnot (Vec512b const a, Vec512b const b) {
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec16b : public Vec512b {
 public:
     // Default constructor:
@@ -247,6 +252,10 @@ public:
     // Prevent assigning int because of ambiguity
     Vec16b & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 // Define operators for this class
 
@@ -449,6 +458,10 @@ static inline Vec16ib andnot (Vec16ib const a, Vec16ib const b) {
 *          Vec8b: Base class vector of 8 Booleans
 *
 *****************************************************************************/
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
 
 class Vec8b : public Vec16b {
 public:
@@ -522,6 +535,9 @@ public:
     Vec8b & operator = (int x) = delete;
 };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 /*****************************************************************************
 *

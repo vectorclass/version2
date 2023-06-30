@@ -167,6 +167,11 @@ static inline Vec16fb & operator ^= (Vec16fb & a, Vec16fb const b) {
 *
 *****************************************************************************/
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec8db : public Vec512b {
 public:
     // Default constructor:
@@ -246,6 +251,10 @@ public:
     // Prevent assigning int because of ambiguity
     Vec8db & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 // Define operators for Vec8db
 
