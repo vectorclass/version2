@@ -76,6 +76,11 @@ inline __m256 constant8f() {
 
 #if INSTRSET < 10  // broad boolean vectors
 
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
+
 class Vec8fb {
 protected:
     __m256 ymm; // Float vector
@@ -212,6 +217,10 @@ public:
     Vec8fb & operator = (int x) = delete;
     };
 
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
+
 #else
 
 typedef Vec8b Vec8fb;  // compact boolean vector
@@ -319,6 +328,11 @@ static inline uint8_t to_bits(Vec8fb const x) {
 *****************************************************************************/
 
 #if INSTRSET < 10  // broad boolean vectors
+
+#if _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
+#endif // _MSC_VER
 
 class Vec4db {
 protected:
@@ -455,6 +469,10 @@ public:
     Vec4db(int b) = delete;
     Vec4db & operator = (int x) = delete;
 };
+
+#if _MSC_VER
+#pragma warning(pop)
+#endif // _MSC_VER
 
 #else
 
@@ -2428,7 +2446,7 @@ static inline Vec8f infinite8f() {
 
 // Function nan8f: returns a vector where all elements are +NAN (quiet)
 static inline Vec8f nan8f(int n = 0x10) {
-    return nan_vec<Vec8f>(n);
+    return nan_vec<Vec8f>(static_cast<uint32_t>(n));
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
@@ -2438,7 +2456,7 @@ static inline Vec4d infinite4d() {
 
 // Function nan4d: returns a vector where all elements are +NAN (quiet)
 static inline Vec4d nan4d(int n = 0x10) {
-    return nan_vec<Vec4d>(n);
+    return nan_vec<Vec4d>(static_cast<uint32_t>(n));
 }
 
 
