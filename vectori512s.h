@@ -606,7 +606,7 @@ static inline Vec64c abs_saturated(Vec64c const a) {
 // Use negative count to rotate right
 static inline Vec64c rotate_left(Vec64c const a, int b) {
     uint8_t mask  = 0xFFu << b;                    // mask off overflow bits
-    __m512i m     = _mm512_set1_epi8(mask);
+    __m512i m     = _mm512_set1_epi8(static_cast<char>(mask));
     __m128i bb    = _mm_cvtsi32_si128(b & 7);      // b modulo 8
     __m128i mbb   = _mm_cvtsi32_si128((- b) & 7);  // 8-b modulo 8
     __m512i left  = _mm512_sll_epi16(a, bb);       // a << b

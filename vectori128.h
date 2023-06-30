@@ -295,11 +295,11 @@ public:
     }
     // Constructor to build from all elements:
     Vec4b(bool b0, bool b1, bool b2, bool b3) {
-        mm = (uint8_t)b0 | (uint8_t)b1 << 1 | (uint8_t)b2 << 2 | (uint8_t)b3 << 3;
+        mm = static_cast<__mmask8>((uint8_t)b0 | (uint8_t)b1 << 1 | (uint8_t)b2 << 2 | (uint8_t)b3 << 3);
     }
     // Constructor to broadcast single value:
     Vec4b(bool b) {
-        mm = -int8_t(b) & 0x0F;
+        mm = static_cast<__mmask8>(-int8_t(b) & 0x0F);
     }
     // Assignment operator to broadcast scalar value:
     Vec4b & operator = (bool b) {
@@ -312,7 +312,7 @@ public:
 
     // Member function to change a bitfield to a boolean vector
     Vec4b & load_bits(uint8_t a) {
-        mm = a & 0x0F;
+        mm = static_cast<__mmask8>(a & 0x0F);
         return *this;
     }
     // Number of elements
@@ -336,11 +336,11 @@ public:
     }
     // Constructor to build from all elements:
     Vec2b(bool b0, bool b1) {
-        mm = (uint8_t)b0 | (uint8_t)b1 << 1;
+        mm = static_cast<__mmask8>((uint8_t)b0 | (uint8_t)b1 << 1);
     }
     // Constructor to broadcast single value:
     Vec2b(bool b) {
-        mm = -int8_t(b) & 0x03;
+        mm = static_cast<__mmask8>(-int8_t(b) & 0x03);
     }
     // Assignment operator to broadcast scalar value:
     Vec2b & operator = (bool b) {
@@ -349,7 +349,7 @@ public:
     }
     // Member function to change a bitfield to a boolean vector
     Vec2b & load_bits(uint8_t a) {
-        mm = a & 0x03;
+        mm = static_cast<__mmask8>(a & 0x03);
         return *this;
     }
     // Number of elements
@@ -360,23 +360,23 @@ public:
 
 // Members of Vec8b that refer to Vec4b:
 inline Vec8b::Vec8b(Vec4b const x0, Vec4b const x1) {
-    mm = (uint8_t(x0) & 0x0F) | (uint8_t(x1) << 4);
+    mm = static_cast<__mmask8>((uint8_t(x0) & 0x0F) | (uint8_t(x1) << 4));
 }
 inline Vec4b Vec8b::get_low() const {
-    return Vec4b().load_bits(mm & 0xF);
+    return Vec4b().load_bits(static_cast<uint8_t>(mm & 0xF));
 }
 inline Vec4b Vec8b::get_high() const {
-    return Vec4b().load_bits(mm >> 4u);
+    return Vec4b().load_bits(static_cast<uint8_t>(mm >> 4u));
 }
 //  Members of Vec4b that refer to Vec2b:
 inline Vec4b::Vec4b(Vec2b const x0, Vec2b const x1) {
-    mm = (uint8_t(x0) & 0x03) | (uint8_t(x1) << 2);
+    mm = static_cast<__mmask8>((uint8_t(x0) & 0x03) | (uint8_t(x1) << 2));
 }
 inline Vec2b Vec4b::get_low() const {
-    return Vec2b().load_bits(mm & 3);
+    return Vec2b().load_bits(static_cast<uint8_t>(mm & 3));
 }
 inline Vec2b Vec4b::get_high() const {
-    return Vec2b().load_bits(mm >> 2u);
+    return Vec2b().load_bits(static_cast<uint8_t>(mm >> 2u));
 }
 
 #endif
@@ -6976,12 +6976,12 @@ static inline uint8_t to_bits(Vec8b const x) {
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec4b const x) {
-    return __mmask8(x) & 0x0F;
+    return static_cast<uint8_t>(__mmask8(x) & 0x0F);
 }
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec2b const x) {
-    return __mmask8(x) & 0x03;
+    return static_cast<uint8_t>(__mmask8(x) & 0x03);
 }
 
 #else  // broad boolean vectors
