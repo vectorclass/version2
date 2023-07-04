@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -51,7 +51,7 @@ namespace VCL_NAMESPACE {
 
 // Generate a constant vector of 8 integers stored in memory
 template <uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7>
-inline __m256 constant8f() noexcept {
+inline __m256 constant8f() {
     /*
     const union {
         uint32_t i[8];
@@ -83,7 +83,7 @@ public:
     // Default constructor:
     Vec8fb() = default;
     // Constructor to build from all elements:
-    Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) noexcept {
+    Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
 #if INSTRSET >= 8  // AVX2
         ymm = _mm256_castsi256_ps(_mm256_setr_epi32(-(int)b0, -(int)b1, -(int)b2, -(int)b3, -(int)b4, -(int)b5, -(int)b6, -(int)b7));
 #else
@@ -93,20 +93,20 @@ public:
 #endif
     }
     // Constructor to build from two Vec4fb:
-    Vec8fb(Vec4fb const a0, Vec4fb const a1) noexcept {
+    Vec8fb(Vec4fb const a0, Vec4fb const a1) {
         ymm = set_m128r(a0, a1);
     }
     // Constructor to convert from type __m256 used in intrinsics:
-    Vec8fb(__m256 const x) noexcept {
+    Vec8fb(__m256 const x) {
         ymm = x;
     }
     // Assignment operator to convert from type __m256 used in intrinsics:
-    Vec8fb & operator = (__m256 const x) noexcept {
+    Vec8fb & operator = (__m256 const x) {
         ymm = x;
         return *this;
     }
     // Constructor to broadcast the same value into all elements:
-    Vec8fb(bool b) noexcept {
+    Vec8fb(bool b) {
 #if INSTRSET >= 8  // AVX2
         ymm = _mm256_castsi256_ps(_mm256_set1_epi32(-(int)b));
 #else
@@ -116,12 +116,12 @@ public:
 #endif
     }
     // Assignment operator to broadcast scalar value:
-    Vec8fb & operator = (bool b) noexcept {
+    Vec8fb & operator = (bool b) {
         *this = Vec8fb(b);
         return *this;
     }
     // Type cast operator to convert to __m256 used in intrinsics
-    operator __m256() const noexcept {
+    operator __m256() const {
         return ymm;
     }
 #if INSTRSET >= 8  // AVX2
@@ -148,11 +148,11 @@ public:
 #endif
 #else  // AVX version
     // Constructor to convert from type Vec8ib used as Boolean for integer vectors
-    Vec8fb(Vec8ib const x) noexcept {
+    Vec8fb(Vec8ib const x) {
         ymm = set_m128r(_mm_castsi128_ps(x.get_low()), _mm_castsi128_ps(x.get_high()));
     }
     // Assignment operator to convert from type Vec8ib used as Boolean for integer vectors
-    Vec8fb & operator = (Vec8ib const x) noexcept {
+    Vec8fb & operator = (Vec8ib const x) {
         ymm = set_m128r(_mm_castsi128_ps(x.get_low()), _mm_castsi128_ps(x.get_high()));
         return *this;
     }
@@ -165,12 +165,12 @@ public:
         return *this;
     }
     // Type cast operator to convert to type Vec8ib used as Boolean for integer vectors
-    operator Vec8ib() const noexcept {
+    operator Vec8ib() const {
         return Vec8i(_mm_castps_si128(get_low()), _mm_castps_si128(get_high()));
     }
 #endif // AVX2
     // Member function to change a single element in vector
-    Vec8fb const insert(int index, bool value) noexcept {
+    Vec8fb const insert(int index, bool value) {
         const int32_t maskl[16] = {0,0,0,0,0,0,0,0,-1,0,0,0,0,0,0,0};
         __m256 mask  = _mm256_loadu_ps((float const*)(maskl+8-(index & 7))); // mask with FFFFFFFF at index position
         if (value) {
@@ -182,7 +182,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const noexcept {
+    bool extract(int index) const {
         union {
             float   f[8];
             int32_t i[8];
@@ -191,14 +191,14 @@ public:
         return u.i[index & 7] != 0;
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const noexcept {
+    bool operator [] (int index) const {
         return extract(index);
     }
     // Member functions to split into two Vec4fb:
-    Vec4fb get_low() const noexcept {
+    Vec4fb get_low() const {
         return _mm256_castps256_ps128(ymm);
     }
-    Vec4fb get_high() const noexcept {
+    Vec4fb get_high() const {
         return _mm256_extractf128_ps(ymm,1);
     }
     static constexpr int size() {
@@ -228,84 +228,84 @@ typedef Vec8b Vec8fb;  // compact boolean vector
 #if INSTRSET < 10  // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec8fb operator & (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator & (Vec8fb const a, Vec8fb const b) {
     return _mm256_and_ps(a, b);
 }
-static inline Vec8fb operator && (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator && (Vec8fb const a, Vec8fb const b) {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec8fb & operator &= (Vec8fb & a, Vec8fb const b) noexcept {
+static inline Vec8fb & operator &= (Vec8fb & a, Vec8fb const b) {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec8fb operator | (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator | (Vec8fb const a, Vec8fb const b) {
     return _mm256_or_ps(a, b);
 }
-static inline Vec8fb operator || (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator || (Vec8fb const a, Vec8fb const b) {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec8fb & operator |= (Vec8fb & a, Vec8fb const b) noexcept {
+static inline Vec8fb & operator |= (Vec8fb & a, Vec8fb const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec8fb operator ~ (Vec8fb const a) noexcept {
+static inline Vec8fb operator ~ (Vec8fb const a) {
     return _mm256_xor_ps(a, constant8f<0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu>());
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8fb operator ^ (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator ^ (Vec8fb const a, Vec8fb const b) {
     return _mm256_xor_ps(a, b);
 }
 
 // vector operator == : xnor
-static inline Vec8fb operator == (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator == (Vec8fb const a, Vec8fb const b) {
     return Vec8fb(a ^ Vec8fb(~b));
 }
 
 // vector operator != : xor
-static inline Vec8fb operator != (Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb operator != (Vec8fb const a, Vec8fb const b) {
     return _mm256_xor_ps(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec8fb & operator ^= (Vec8fb & a, Vec8fb const b) noexcept {
+static inline Vec8fb & operator ^= (Vec8fb & a, Vec8fb const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not all bits in an element are the same)
-static inline Vec8fb operator ! (Vec8fb const a) noexcept {
+static inline Vec8fb operator ! (Vec8fb const a) {
 return Vec8fb( !Vec8ib(a));
 }
 
 // Functions for Vec8fb
 
 // andnot: a & ~ b
-static inline Vec8fb andnot(Vec8fb const a, Vec8fb const b) noexcept {
+static inline Vec8fb andnot(Vec8fb const a, Vec8fb const b) {
     return _mm256_andnot_ps(b, a);
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec8fb const a) noexcept {
+static inline bool horizontal_and (Vec8fb const a) {
     return _mm256_testc_ps(a,constant8f<0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu>()) != 0;
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec8fb const a) noexcept {
+static inline bool horizontal_or (Vec8fb const a) {
     return ! _mm256_testz_ps(a,a);
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec8fb const x) noexcept {
+static inline uint8_t to_bits(Vec8fb const x) {
     return to_bits(Vec8ib(x));
 }
 
@@ -327,7 +327,7 @@ public:
     // Default constructor:
     Vec4db() = default;
     // Constructor to build from all elements:
-    Vec4db(bool b0, bool b1, bool b2, bool b3) noexcept {
+    Vec4db(bool b0, bool b1, bool b2, bool b3) {
 #if INSTRSET >= 8  // AVX2
         ymm = _mm256_castsi256_pd(_mm256_setr_epi64x(-(int64_t)b0, -(int64_t)b1, -(int64_t)b2, -(int64_t)b3));
 #else
@@ -337,21 +337,21 @@ public:
 #endif
     }
     // Constructor to build from two Vec2db:
-    Vec4db(Vec2db const a0, Vec2db const a1) noexcept {
+    Vec4db(Vec2db const a0, Vec2db const a1) {
         ymm = _mm256_castps_pd(set_m128r(_mm_castpd_ps(a0),_mm_castpd_ps(a1)));
         //ymm = _mm256_set_m128d(a1, a0);
     }
     // Constructor to convert from type __m256d used in intrinsics:
-    Vec4db(__m256d const x) noexcept {
+    Vec4db(__m256d const x) {
         ymm = x;
     }
     // Assignment operator to convert from type __m256d used in intrinsics:
-    Vec4db & operator = (__m256d const x) noexcept {
+    Vec4db & operator = (__m256d const x) {
         ymm = x;
         return *this;
     }
     // Constructor to broadcast the same value into all elements:
-    Vec4db(bool b) noexcept {
+    Vec4db(bool b) {
 #if INSTRSET >= 8  // AVX2
         ymm = _mm256_castsi256_pd(_mm256_set1_epi64x(-(int64_t)b));
 #else
@@ -360,12 +360,12 @@ public:
 #endif
     }
     // Assignment operator to broadcast scalar value:
-    Vec4db & operator = (bool b) noexcept {
+    Vec4db & operator = (bool b) {
         ymm = _mm256_castsi256_pd(_mm256_set1_epi32(-int32_t(b)));
         return *this;
     }
     // Type cast operator to convert to __m256d used in intrinsics
-    operator __m256d() const noexcept {
+    operator __m256d() const {
         return ymm;
     }
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -392,16 +392,16 @@ public:
 #endif
 #else   // 256 bit integer vectors emulated without AVX2
     // Constructor to convert from type Vec4qb used as Boolean for integer vectors
-    Vec4db(Vec4qb const x) noexcept {
+    Vec4db(Vec4qb const x) {
         *this = Vec4db(_mm_castsi128_pd(x.get_low()), _mm_castsi128_pd(x.get_high()));
     }
     // Assignment operator to convert from type Vec4qb used as Boolean for integer vectors
-    Vec4db & operator = (Vec4qb const x) noexcept {
+    Vec4db & operator = (Vec4qb const x) {
         *this = Vec4db(_mm_castsi128_pd(x.get_low()), _mm_castsi128_pd(x.get_high()));
         return *this;
     }
     // Type cast operator to convert to type Vec4qb used as Boolean for integer vectors
-    operator Vec4qb() const noexcept {
+    operator Vec4qb() const {
         return Vec4q(_mm_castpd_si128(get_low()), _mm_castpd_si128(get_high()));
     }
     // Member function to change a bitfield to a boolean vector
@@ -414,12 +414,10 @@ public:
     }
 #endif // AVX2
     // Member function to change a single element in vector
-    Vec4db const insert(int index, bool value) noexcept {
-        // mask with FFFFFFFFFFFFFFFF at index position
-        const auto index_position = (index & 3) * 2;
-        const int32_t maskl[16] = { 0,0,0,0,0,0,0,0,-1,-1,0,0,0,0,0,0 };
-        const auto A = maskl + 8 - index_position;
-        __m256d mask = _mm256_loadu_pd((double const*)A);
+    Vec4db const insert(int index, bool value) {
+        const int32_t maskl[16] = {0,0,0,0,0,0,0,0,-1,-1,0,0,0,0,0,0};
+        const size_t two = 2;  // avoid silly warning from MS compiler
+        __m256d mask = _mm256_loadu_pd((double const*)(maskl+8-(index&3)*two)); // mask with FFFFFFFFFFFFFFFF at index position
         if (value) {
             ymm = _mm256_or_pd(ymm,mask);
         }
@@ -429,7 +427,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const noexcept {
+    bool extract(int index) const {
         union {
             double  f[8];
             int32_t i[16];
@@ -438,14 +436,14 @@ public:
         return u.i[(index & 3) * 2 + 1] != 0;
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const noexcept {
+    bool operator [] (int index) const {
         return extract(index);
     }
     // Member functions to split into two Vec4fb:
-    Vec2db get_low() const noexcept {
+    Vec2db get_low() const {
         return _mm256_castpd256_pd128(ymm);
     }
-    Vec2db get_high() const noexcept {
+    Vec2db get_high() const {
         return _mm256_extractf128_pd(ymm,1);
     }
     static constexpr int size() {
@@ -474,74 +472,74 @@ typedef Vec4b Vec4db;  // compact boolean vector
 #if INSTRSET < 10  // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec4db operator & (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator & (Vec4db const a, Vec4db const b) {
     return _mm256_and_pd(a, b);
 }
-static inline Vec4db operator && (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator && (Vec4db const a, Vec4db const b) {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec4db & operator &= (Vec4db & a, Vec4db const b) noexcept {
+static inline Vec4db & operator &= (Vec4db & a, Vec4db const b) {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4db operator | (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator | (Vec4db const a, Vec4db const b) {
     return _mm256_or_pd(a, b);
 }
-static inline Vec4db operator || (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator || (Vec4db const a, Vec4db const b) {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec4db & operator |= (Vec4db & a, Vec4db const b) noexcept {
+static inline Vec4db & operator |= (Vec4db & a, Vec4db const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4db operator ~ (Vec4db const a) noexcept {
+static inline Vec4db operator ~ (Vec4db const a) {
     return _mm256_xor_pd(a, _mm256_castps_pd (constant8f<0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu,0xFFFFFFFFu>()));
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4db operator ^ (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator ^ (Vec4db const a, Vec4db const b) {
     return _mm256_xor_pd(a, b);
 }
 
 // vector operator == : xnor
-static inline Vec4db operator == (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator == (Vec4db const a, Vec4db const b) {
     return Vec4db(a ^ Vec4db(~b));
 }
 
 // vector operator != : xor
-static inline Vec4db operator != (Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db operator != (Vec4db const a, Vec4db const b) {
     return _mm256_xor_pd(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4db & operator ^= (Vec4db & a, Vec4db const b) noexcept {
+static inline Vec4db & operator ^= (Vec4db & a, Vec4db const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not all bits in an element are the same)
-static inline Vec4db operator ! (Vec4db const a) noexcept {
-    return Vec4db( ! Vec4qb(a));
+static inline Vec4db operator ! (Vec4db const a) {
+return Vec4db( ! Vec4qb(a));
 }
 
 // Functions for Vec8fb
 
 // andnot: a & ~ b
-static inline Vec4db andnot(Vec4db const a, Vec4db const b) noexcept {
+static inline Vec4db andnot(Vec4db const a, Vec4db const b) {
     return _mm256_andnot_pd(b, a);
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec4db const a) noexcept {
+static inline bool horizontal_and (Vec4db const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     return horizontal_and(Vec256b(_mm256_castpd_si256(a)));
 #else  // split into 128 bit vectors
@@ -550,7 +548,7 @@ static inline bool horizontal_and (Vec4db const a) noexcept {
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec4db const a) noexcept {
+static inline bool horizontal_or (Vec4db const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     return horizontal_or(Vec256b(_mm256_castpd_si256(a)));
 #else  // split into 128 bit vectors
@@ -559,7 +557,7 @@ static inline bool horizontal_or (Vec4db const a) noexcept {
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec4db const x) noexcept {
+static inline uint8_t to_bits(Vec4db const x) {
     return to_bits(Vec4qb(x));
 }
 
@@ -579,60 +577,60 @@ public:
     // Default constructor:
     Vec8f() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec8f(float f) noexcept {
+    Vec8f(float f) {
         ymm = _mm256_set1_ps(f);
     }
     // Constructor to build from all elements:
-    Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) noexcept {
+    Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) {
         ymm = _mm256_setr_ps(f0, f1, f2, f3, f4, f5, f6, f7);
     }
     // Constructor to build from two Vec4f:
-    Vec8f(Vec4f const a0, Vec4f const a1) noexcept {
+    Vec8f(Vec4f const a0, Vec4f const a1) {
         ymm = set_m128r(a0, a1);
         //ymm = _mm256_set_m128(a1, a0);
     }
     // Constructor to convert from type __m256 used in intrinsics:
-    Vec8f(__m256 const x) noexcept {
+    Vec8f(__m256 const x) {
         ymm = x;
     }
     // Assignment operator to convert from type __m256 used in intrinsics:
-    Vec8f & operator = (__m256 const x) noexcept {
+    Vec8f & operator = (__m256 const x) {
         ymm = x;
         return *this;
     }
     // Type cast operator to convert to __m256 used in intrinsics
-    operator __m256() const noexcept {
+    operator __m256() const {
         return ymm;
     }
     // Member function to load from array (unaligned)
-    Vec8f & load(float const * p) noexcept {
+    Vec8f & load(float const * p) {
         ymm = _mm256_loadu_ps(p);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address divisible by 32
-    Vec8f & load_a(float const * p) noexcept {
+    Vec8f & load_a(float const * p) {
         ymm = _mm256_load_ps(p);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(float * p) const noexcept {
+    void store(float * p) const {
         _mm256_storeu_ps(p, ymm);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address divisible by 32
-    void store_a(float * p) const noexcept {
+    void store_a(float * p) const {
         _mm256_store_ps(p, ymm);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 32
-    void store_nt(float * p) const noexcept {
+    void store_nt(float * p) const {
         _mm256_stream_ps(p, ymm);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec8f & load_partial(int n, float const * p) noexcept {
+    Vec8f & load_partial(int n, float const * p) {
 #if INSTRSET >= 10  // AVX512VL
         ymm = _mm256_maskz_loadu_ps(__mmask8((1u << n) - 1), p);
 #else
@@ -649,7 +647,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, float * p) const noexcept {
+    void store_partial(int n, float * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm256_mask_storeu_ps(p, __mmask8((1u << n) - 1), ymm);
 #else
@@ -663,7 +661,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 8-n elements are set to zero
-    Vec8f & cutoff(int n) noexcept {
+    Vec8f & cutoff(int n) {
 #if INSTRSET >= 10
         ymm = _mm256_maskz_mov_ps(__mmask8((1u << n) - 1), ymm);
 #else
@@ -677,7 +675,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec8f const insert(int index, float value) noexcept {
+    Vec8f const insert(int index, float value) {
 #if INSTRSET >= 10   // AVX512VL
         ymm = _mm256_mask_broadcastss_ps (ymm, __mmask8(1u << index), _mm_set_ss(value));
 #else
@@ -704,7 +702,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    float extract(int index) const noexcept {
+    float extract(int index) const {
 #if INSTRSET >= 10
         __m256 x = _mm256_maskz_compress_ps(__mmask8(1u << index), ymm);
         return _mm256_cvtss_f32(x);
@@ -716,14 +714,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    float operator [] (int index) const noexcept {
+    float operator [] (int index) const {
         return extract(index);
     }
     // Member functions to split into two Vec4f:
-    Vec4f get_low() const noexcept {
+    Vec4f get_low() const {
         return _mm256_castps256_ps128(ymm);
     }
-    Vec4f get_high() const noexcept {
+    Vec4f get_high() const {
         return _mm256_extractf128_ps(ymm,1);
     }
     static constexpr int size() {
@@ -743,115 +741,115 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec8f operator + (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator + (Vec8f const a, Vec8f const b) {
     return _mm256_add_ps(a, b);
 }
 
 // vector operator + : add vector and scalar
-static inline Vec8f operator + (Vec8f const a, float b) noexcept {
+static inline Vec8f operator + (Vec8f const a, float b) {
     return a + Vec8f(b);
 }
-static inline Vec8f operator + (float a, Vec8f const b) noexcept {
+static inline Vec8f operator + (float a, Vec8f const b) {
     return Vec8f(a) + b;
 }
 
 // vector operator += : add
-static inline Vec8f & operator += (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator += (Vec8f & a, Vec8f const b) {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec8f operator ++ (Vec8f & a, int) noexcept {
+static inline Vec8f operator ++ (Vec8f & a, int) {
     Vec8f a0 = a;
     a = a + 1.0f;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec8f & operator ++ (Vec8f & a) noexcept {
+static inline Vec8f & operator ++ (Vec8f & a) {
     a = a + 1.0f;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec8f operator - (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator - (Vec8f const a, Vec8f const b) {
     return _mm256_sub_ps(a, b);
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec8f operator - (Vec8f const a, float b) noexcept {
+static inline Vec8f operator - (Vec8f const a, float b) {
     return a - Vec8f(b);
 }
-static inline Vec8f operator - (float a, Vec8f const b) noexcept {
+static inline Vec8f operator - (float a, Vec8f const b) {
     return Vec8f(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec8f operator - (Vec8f const a) noexcept {
+static inline Vec8f operator - (Vec8f const a) {
     return _mm256_xor_ps(a, Vec8f(-0.0f));
 }
 
 // vector operator -= : subtract
-static inline Vec8f & operator -= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator -= (Vec8f & a, Vec8f const b) {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec8f operator -- (Vec8f & a, int) noexcept {
+static inline Vec8f operator -- (Vec8f & a, int) {
     Vec8f a0 = a;
     a = a - 1.0f;
     return a0;
 }
 
 // prefix operator --
-static inline Vec8f & operator -- (Vec8f & a) noexcept {
+static inline Vec8f & operator -- (Vec8f & a) {
     a = a - 1.0f;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec8f operator * (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator * (Vec8f const a, Vec8f const b) {
     return _mm256_mul_ps(a, b);
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec8f operator * (Vec8f const a, float b) noexcept {
+static inline Vec8f operator * (Vec8f const a, float b) {
     return a * Vec8f(b);
 }
-static inline Vec8f operator * (float a, Vec8f const b) noexcept {
+static inline Vec8f operator * (float a, Vec8f const b) {
     return Vec8f(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec8f & operator *= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator *= (Vec8f & a, Vec8f const b) {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec8f operator / (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator / (Vec8f const a, Vec8f const b) {
     return _mm256_div_ps(a, b);
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec8f operator / (Vec8f const a, float b) noexcept {
+static inline Vec8f operator / (Vec8f const a, float b) {
     return a / Vec8f(b);
 }
-static inline Vec8f operator / (float a, Vec8f const b) noexcept {
+static inline Vec8f operator / (float a, Vec8f const b) {
     return Vec8f(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec8f & operator /= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator /= (Vec8f & a, Vec8f const b) {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec8fb operator == (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator == (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 0);
 #else
@@ -860,7 +858,7 @@ static inline Vec8fb operator == (Vec8f const a, Vec8f const b) noexcept {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec8fb operator != (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator != (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 4);
 #else
@@ -869,7 +867,7 @@ static inline Vec8fb operator != (Vec8f const a, Vec8f const b) noexcept {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec8fb operator < (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator < (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 1);
 #else
@@ -878,7 +876,7 @@ static inline Vec8fb operator < (Vec8f const a, Vec8f const b) noexcept {
 }
 
 // vector operator <= : returns true for elements for which a <= b
-static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 2);
 #else
@@ -887,7 +885,7 @@ static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) noexcept {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec8fb operator > (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator > (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 6+8);
 #else
@@ -896,7 +894,7 @@ static inline Vec8fb operator > (Vec8f const a, Vec8f const b) noexcept {
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_ps_mask(a, b, 5+8);
 #else
@@ -907,52 +905,52 @@ static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) noexcept {
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec8f operator & (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator & (Vec8f const a, Vec8f const b) {
     return _mm256_and_ps(a, b);
 }
 
 // vector operator &= : bitwise and
-static inline Vec8f & operator &= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator &= (Vec8f & a, Vec8f const b) {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec8f and Vec8fb
-static inline Vec8f operator & (Vec8f const a, Vec8fb const b) noexcept {
+static inline Vec8f operator & (Vec8f const a, Vec8fb const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_maskz_mov_ps(b, a);
 #else
     return _mm256_and_ps(a, b);
 #endif
 }
-static inline Vec8f operator & (Vec8fb const a, Vec8f const b) noexcept {
+static inline Vec8f operator & (Vec8fb const a, Vec8f const b) {
     return b & a;
 }
 
 // vector operator | : bitwise or
-static inline Vec8f operator | (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator | (Vec8f const a, Vec8f const b) {
     return _mm256_or_ps(a, b);
 }
 
 // vector operator |= : bitwise or
-static inline Vec8f & operator |= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator |= (Vec8f & a, Vec8f const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8f operator ^ (Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f operator ^ (Vec8f const a, Vec8f const b) {
     return _mm256_xor_ps(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec8f & operator ^= (Vec8f & a, Vec8f const b) noexcept {
+static inline Vec8f & operator ^= (Vec8f & a, Vec8f const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec8fb operator ! (Vec8f const a) noexcept {
+static inline Vec8fb operator ! (Vec8f const a) {
     return a == Vec8f(0.0f);
 }
 
@@ -965,7 +963,7 @@ static inline Vec8fb operator ! (Vec8f const a) noexcept {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec8f select (Vec8fb const s, Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f select (Vec8fb const s, Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_mask_mov_ps(b, s, a);
 #else
@@ -974,7 +972,7 @@ static inline Vec8f select (Vec8fb const s, Vec8f const a, Vec8f const b) noexce
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec8f if_add (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f if_add (Vec8fb const f, Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10
     return _mm256_mask_add_ps (a, f, a, b);
 #else
@@ -983,7 +981,7 @@ static inline Vec8f if_add (Vec8fb const f, Vec8f const a, Vec8f const b) noexce
 }
 
 // Conditional subtract
-static inline Vec8f if_sub (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f if_sub (Vec8fb const f, Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10
     return _mm256_mask_sub_ps (a, f, a, b);
 #else
@@ -992,7 +990,7 @@ static inline Vec8f if_sub (Vec8fb const f, Vec8f const a, Vec8f const b) noexce
 }
 
 // Conditional multiply
-static inline Vec8f if_mul (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f if_mul (Vec8fb const f, Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10
     return _mm256_mask_mul_ps (a, f, a, b);
 #else
@@ -1001,7 +999,7 @@ static inline Vec8f if_mul (Vec8fb const f, Vec8f const a, Vec8f const b) noexce
 }
 
 // Conditional divide
-static inline Vec8f if_div (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f if_div (Vec8fb const f, Vec8f const a, Vec8f const b) {
 #if INSTRSET >= 10
     return _mm256_mask_div_ps (a, f, a, b);
 #else
@@ -1014,7 +1012,7 @@ static inline Vec8f if_div (Vec8fb const f, Vec8f const a, Vec8f const b) noexce
 // Function sign_bit: gives true for elements that have the sign bit set
 // even for -0.0f, -INF and -NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb sign_bit(Vec8f const a) noexcept {
+static inline Vec8fb sign_bit(Vec8f const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     Vec8i t1 = _mm256_castps_si256(a);    // reinterpret as 32-bit integer
     Vec8i t2 = t1 >> 31;                  // extend sign bit
@@ -1030,7 +1028,7 @@ static inline Vec8fb sign_bit(Vec8f const a) noexcept {
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) {
 #if INSTRSET < 10
     return a ^ (b & Vec8f(-0.0f));
 #else
@@ -1044,7 +1042,7 @@ static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) noexcept {
 // Function is_finite: gives true for elements that are normal, subnormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb is_finite(Vec8f const a) noexcept {
+static inline Vec8fb is_finite(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return __mmask8(~ _mm256_fpclass_ps_mask (a, 0x99));
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -1060,7 +1058,7 @@ static inline Vec8fb is_finite(Vec8f const a) noexcept {
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb is_inf(Vec8f const a) noexcept {
+static inline Vec8fb is_inf(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_ps_mask (a, 0x18);
 #elif INSTRSET >= 8  //  256 bit integer vectors are available, AVX2
@@ -1093,7 +1091,7 @@ static inline Vec8fb is_nan(Vec8f const a) {
     return Vec8fb(unordered);
 }
 #else
-static inline Vec8fb is_nan(Vec8f const a) noexcept {
+static inline Vec8fb is_nan(Vec8f const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_cmp_ps(a, a, 3); // compare unordered
     // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
@@ -1103,7 +1101,7 @@ static inline Vec8fb is_nan(Vec8f const a) noexcept {
 
 // Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
-static inline Vec8fb is_subnormal(Vec8f const a) noexcept {
+static inline Vec8fb is_subnormal(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_ps_mask (a, 0x20);
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -1120,7 +1118,7 @@ static inline Vec8fb is_subnormal(Vec8f const a) noexcept {
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
-static inline Vec8fb is_zero_or_subnormal(Vec8f const a) noexcept {
+static inline Vec8fb is_zero_or_subnormal(Vec8f const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_ps_mask (a, 0x26);
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2    Vec8i t = _mm256_castps_si256(a);            // reinterpret as 32-bit integer
@@ -1146,23 +1144,23 @@ inline Vec8f change_sign(Vec8f const a) {
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline float horizontal_add (Vec8f const a) noexcept {
+static inline float horizontal_add (Vec8f const a) {
     return horizontal_add(a.get_low()+a.get_high());
 }
 
 // function max: a > b ? a : b
-static inline Vec8f max(Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f max(Vec8f const a, Vec8f const b) {
     return _mm256_max_ps(a,b);
 }
 
 // function min: a < b ? a : b
-static inline Vec8f min(Vec8f const a, Vec8f const b) noexcept {
+static inline Vec8f min(Vec8f const a, Vec8f const b) {
     return _mm256_min_ps(a,b);
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
-static inline Vec8f abs(Vec8f const a) noexcept {
+static inline Vec8f abs(Vec8f const a) {
 #if INSTRSET >= 10  // AVX512VL
     return _mm256_range_ps(a, a, 8);
 #else
@@ -1172,12 +1170,12 @@ static inline Vec8f abs(Vec8f const a) noexcept {
 }
 
 // function sqrt: square root
-static inline Vec8f sqrt(Vec8f const a) noexcept {
+static inline Vec8f sqrt(Vec8f const a) {
     return _mm256_sqrt_ps(a);
 }
 
 // function square: a * a
-static inline Vec8f square(Vec8f const a) noexcept {
+static inline Vec8f square(Vec8f const a) {
     return a * a;
 }
 
@@ -1204,22 +1202,22 @@ static inline Vec8f pow(Vec8f const a, Const_int_t<n>) {
 }
 
 // function round: round to nearest integer (even). (result as float vector)
-static inline Vec8f round(Vec8f const a) noexcept {
+static inline Vec8f round(Vec8f const a) {
     return _mm256_round_ps(a, 0+8);
 }
 
 // function truncate: round towards zero. (result as float vector)
-static inline Vec8f truncate(Vec8f const a) noexcept {
+static inline Vec8f truncate(Vec8f const a) {
     return _mm256_round_ps(a, 3+8);
 }
 
 // function floor: round towards minus infinity. (result as float vector)
-static inline Vec8f floor(Vec8f const a) noexcept {
+static inline Vec8f floor(Vec8f const a) {
     return _mm256_round_ps(a, 1+8);
 }
 
 // function ceil: round towards plus infinity. (result as float vector)
-static inline Vec8f ceil(Vec8f const a) noexcept {
+static inline Vec8f ceil(Vec8f const a) {
     return _mm256_round_ps(a, 2+8);
 }
 
@@ -1259,23 +1257,23 @@ static inline Vec8f to_float(Vec8ui const a) {
 #else // no AVX2
 
 // function roundi: round to nearest integer (even). (result as integer vector)
-static inline Vec8i roundi(Vec8f const a) noexcept {
+static inline Vec8i roundi(Vec8f const a) {
     // Note: assume MXCSR control register is set to rounding
     return Vec8i(_mm_cvtps_epi32(a.get_low()), _mm_cvtps_epi32(a.get_high()));
 }
 
 // function truncatei: round towards zero. (result as integer vector)
-static inline Vec8i truncatei(Vec8f const a) noexcept {
+static inline Vec8i truncatei(Vec8f const a) {
     return Vec8i(_mm_cvttps_epi32(a.get_low()), _mm_cvttps_epi32(a.get_high()));
 }
 
 // function to_float: convert integer vector to float vector
-static inline Vec8f to_float(Vec8i const a) noexcept {
+static inline Vec8f to_float(Vec8i const a) {
     return Vec8f(_mm_cvtepi32_ps(a.get_low()), _mm_cvtepi32_ps(a.get_high()));
 }
 
 // function to_float: convert unsigned integer vector to float vector
-static inline Vec8f to_float(Vec8ui const a) noexcept {
+static inline Vec8f to_float(Vec8ui const a) {
     return Vec8f(to_float(a.get_low()), to_float(a.get_high()));
 }
 #endif // AVX2
@@ -1284,7 +1282,7 @@ static inline Vec8f to_float(Vec8ui const a) noexcept {
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
+static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
 #ifdef __FMA__
     return _mm256_fmadd_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1295,7 +1293,7 @@ static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexcep
 }
 
 // Multiply and subtract
-static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
+static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) {
 #ifdef __FMA__
     return _mm256_fmsub_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1306,7 +1304,7 @@ static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) noexcep
 }
 
 // Multiply and inverse subtract
-static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
+static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
 #ifdef __FMA__
     return _mm256_fnmadd_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1321,14 +1319,14 @@ static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexce
 // even if FMA instructions not supported, using Veltkamp-Dekker split
 // This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
-static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
+static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) {
 #ifdef __FMA__
     return _mm256_fmsub_ps(a, b, c);
 #elif defined (__FMA4__)
     return _mm256_msub_ps(a, b, c);
 #else
     // calculate a * b - c with extra precision
-    constexpr uint32_t b12 = uint32_t(-(1 << 12));   // mask to remove lower 12 bits
+    const uint32_t b12 = uint32_t(-(1 << 12));   // mask to remove lower 12 bits
     Vec8f upper_mask = constant8f<b12,b12,b12,b12,b12,b12,b12,b12>();
     Vec8f a_high = a & upper_mask;               // split into high and low parts
     Vec8f b_high = b & upper_mask;
@@ -1345,7 +1343,7 @@ static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) noexc
 // Approximate math functions
 
 // approximate reciprocal (Faster than 1.f / a. relative accuracy better than 2^-11)
-static inline Vec8f approx_recipr(Vec8f const a) noexcept {
+static inline Vec8f approx_recipr(Vec8f const a) {
 #ifdef __AVX512ER__  // AVX512ER: full precision
     // todo: if future processors have both AVX512ER and AVX512VL: _mm256_rcp28_round_ps(a, _MM_FROUND_NO_EXC);
     return _mm512_castps512_ps256(_mm512_rcp28_round_ps(_mm512_castps256_ps512(a), _MM_FROUND_NO_EXC));
@@ -1359,7 +1357,7 @@ static inline Vec8f approx_recipr(Vec8f const a) noexcept {
 }
 
 // approximate reciprocal squareroot (Faster than 1.f / sqrt(a). Relative accuracy better than 2^-11)
-static inline Vec8f approx_rsqrt(Vec8f const a) noexcept {
+static inline Vec8f approx_rsqrt(Vec8f const a) {
 // use more accurate version if available. (none of these will raise exceptions on zero)
 #ifdef __AVX512ER__  // AVX512ER: full precision
     // todo: if future processors have both AVX512ER and AVX521VL: _mm256_rsqrt28_round_ps(a, _MM_FROUND_NO_EXC);
@@ -1379,7 +1377,7 @@ static inline Vec8f approx_rsqrt(Vec8f const a) noexcept {
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0f) = 0, exponent(0.0f) = -127, exponent(INF) = +128, exponent(NAN) = +128
-static inline Vec8i exponent(Vec8f const a) noexcept {
+static inline Vec8i exponent(Vec8f const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     Vec8ui t1 = _mm256_castps_si256(a);// reinterpret as 32-bit integer
     Vec8ui t2 = t1 << 1;               // shift out sign bit
@@ -1394,7 +1392,7 @@ static inline Vec8i exponent(Vec8f const a) noexcept {
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
-static inline Vec8f fraction(Vec8f const a) noexcept {
+static inline Vec8f fraction(Vec8f const a) {
 #if INSTRSET >= 10
     return _mm256_getmant_ps(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 #elif INSTRSET >= 8 // AVX2. 256 bit integer vectors are available
@@ -1411,7 +1409,7 @@ static inline Vec8f fraction(Vec8f const a) noexcept {
 // n >=  128 gives +INF
 // n <= -127 gives 0.0f
 // This function will never produce subnormals, and never raise exceptions
-static inline Vec8f exp2(Vec8i const n) noexcept {
+static inline Vec8f exp2(Vec8i const n) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     Vec8i t1 = max(n,  -0x7F);         // limit to allowed range
     Vec8i t2 = min(t1,  0x80);
@@ -1439,62 +1437,62 @@ public:
     // Default constructor:
     Vec4d() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec4d(double d) noexcept {
+    Vec4d(double d) {
         ymm = _mm256_set1_pd(d);
     }
     // Constructor to build from all elements:
-    Vec4d(double d0, double d1, double d2, double d3) noexcept {
+    Vec4d(double d0, double d1, double d2, double d3) {
         ymm = _mm256_setr_pd(d0, d1, d2, d3);
     }
     // Constructor to build from two Vec2d:
-    Vec4d(Vec2d const a0, Vec2d const a1) noexcept {
+    Vec4d(Vec2d const a0, Vec2d const a1) {
         ymm = _mm256_castps_pd(set_m128r(_mm_castpd_ps(a0), _mm_castpd_ps(a1)));
         //ymm = _mm256_set_m128d(a1, a0);
     }
     // Constructor to convert from type __m256d used in intrinsics:
-    Vec4d(__m256d const x) noexcept {
+    Vec4d(__m256d const x) {
         ymm = x;
     }
     // Assignment operator to convert from type __m256d used in intrinsics:
-    Vec4d & operator = (__m256d const x) noexcept {
+    Vec4d & operator = (__m256d const x) {
         ymm = x;
         return *this;
     }
     // Type cast operator to convert to __m256d used in intrinsics
-    operator __m256d() const noexcept {
+    operator __m256d() const {
         return ymm;
     }
     // Member function to load from array (unaligned)
-    Vec4d & load(double const * p) noexcept {
+    Vec4d & load(double const * p) {
         ymm = _mm256_loadu_pd(p);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 32
-    Vec4d & load_a(double const * p) noexcept {
+    Vec4d & load_a(double const * p) {
         ymm = _mm256_load_pd(p);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(double * p) const noexcept {
+    void store(double * p) const {
         _mm256_storeu_pd(p, ymm);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 32
-    void store_a(double * p) const noexcept {
+    void store_a(double * p) const {
         _mm256_store_pd(p, ymm);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 32
-    void store_nt(double * p) const noexcept {
+    void store_nt(double * p) const {
         _mm256_stream_pd(p, ymm);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec4d & load_partial(int n, double const * p) noexcept {
+    Vec4d & load_partial(int n, double const * p) {
 #if INSTRSET >= 10  // AVX512VL
         ymm = _mm256_maskz_loadu_pd(__mmask8((1u << n) - 1), p);
 #else
@@ -1511,7 +1509,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, double * p) const noexcept {
+    void store_partial(int n, double * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm256_mask_storeu_pd(p, __mmask8((1u << n) - 1), ymm);
 #else
@@ -1525,7 +1523,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 4-n elements are set to zero
-    Vec4d & cutoff(int n) noexcept {
+    Vec4d & cutoff(int n) {
 #if INSTRSET >= 10
         ymm = _mm256_maskz_mov_pd(__mmask8((1u << n) - 1), ymm);
 #else
@@ -1535,7 +1533,7 @@ public:
     }
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
-    Vec4d const insert(int index, double value) noexcept {
+    Vec4d const insert(int index, double value) {
 #if INSTRSET >= 10   // AVX512VL
         ymm = _mm256_mask_broadcastsd_pd (ymm, __mmask8(1u << index), _mm_set_sd(value));
 #else
@@ -1554,7 +1552,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    double extract(int index) const noexcept {
+    double extract(int index) const {
 #if INSTRSET >= 10
         __m256d x = _mm256_maskz_compress_pd(__mmask8(1u << index), ymm);
         return _mm256_cvtsd_f64(x);
@@ -1566,14 +1564,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    double operator [] (int index) const noexcept {
+    double operator [] (int index) const {
         return extract(index);
     }
     // Member functions to split into two Vec2d:
-    Vec2d get_low() const noexcept {
+    Vec2d get_low() const {
         return _mm256_castpd256_pd128(ymm);
     }
-    Vec2d get_high() const noexcept {
+    Vec2d get_high() const {
         return _mm256_extractf128_pd(ymm,1);
     }
     static constexpr int size() {
@@ -1593,115 +1591,115 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec4d operator + (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator + (Vec4d const a, Vec4d const b) {
     return _mm256_add_pd(a, b);
 }
 
 // vector operator + : add vector and scalar
-static inline Vec4d operator + (Vec4d const a, double b) noexcept {
+static inline Vec4d operator + (Vec4d const a, double b) {
     return a + Vec4d(b);
 }
-static inline Vec4d operator + (double a, Vec4d const b) noexcept {
+static inline Vec4d operator + (double a, Vec4d const b) {
     return Vec4d(a) + b;
 }
 
 // vector operator += : add
-static inline Vec4d & operator += (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator += (Vec4d & a, Vec4d const b) {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec4d operator ++ (Vec4d & a, int) noexcept {
+static inline Vec4d operator ++ (Vec4d & a, int) {
     Vec4d a0 = a;
     a = a + 1.0;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec4d & operator ++ (Vec4d & a) noexcept {
+static inline Vec4d & operator ++ (Vec4d & a) {
     a = a + 1.0;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec4d operator - (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator - (Vec4d const a, Vec4d const b) {
     return _mm256_sub_pd(a, b);
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec4d operator - (Vec4d const a, double b) noexcept {
+static inline Vec4d operator - (Vec4d const a, double b) {
     return a - Vec4d(b);
 }
-static inline Vec4d operator - (double a, Vec4d const b) noexcept {
+static inline Vec4d operator - (double a, Vec4d const b) {
     return Vec4d(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec4d operator - (Vec4d const a) noexcept {
+static inline Vec4d operator - (Vec4d const a) {
     return _mm256_xor_pd(a, _mm256_castps_pd(constant8f<0u,0x80000000u,0u,0x80000000u,0u,0x80000000u,0u,0x80000000u> ()));
 }
 
 // vector operator -= : subtract
-static inline Vec4d & operator -= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator -= (Vec4d & a, Vec4d const b) {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec4d operator -- (Vec4d & a, int) noexcept {
+static inline Vec4d operator -- (Vec4d & a, int) {
     Vec4d a0 = a;
     a = a - 1.0;
     return a0;
 }
 
 // prefix operator --
-static inline Vec4d & operator -- (Vec4d & a) noexcept {
+static inline Vec4d & operator -- (Vec4d & a) {
     a = a - 1.0;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec4d operator * (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator * (Vec4d const a, Vec4d const b) {
     return _mm256_mul_pd(a, b);
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec4d operator * (Vec4d const a, double b) noexcept {
+static inline Vec4d operator * (Vec4d const a, double b) {
     return a * Vec4d(b);
 }
-static inline Vec4d operator * (double a, Vec4d const b) noexcept {
+static inline Vec4d operator * (double a, Vec4d const b) {
     return Vec4d(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec4d & operator *= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator *= (Vec4d & a, Vec4d const b) {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec4d operator / (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator / (Vec4d const a, Vec4d const b) {
     return _mm256_div_pd(a, b);
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec4d operator / (Vec4d const a, double b) noexcept {
+static inline Vec4d operator / (Vec4d const a, double b) {
     return a / Vec4d(b);
 }
-static inline Vec4d operator / (double a, Vec4d const b) noexcept {
+static inline Vec4d operator / (double a, Vec4d const b) {
     return Vec4d(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec4d & operator /= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator /= (Vec4d & a, Vec4d const b) {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec4db operator == (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator == (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 0);
 #else
@@ -1710,7 +1708,7 @@ static inline Vec4db operator == (Vec4d const a, Vec4d const b) noexcept {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec4db operator != (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator != (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 4);
 #else
@@ -1719,7 +1717,7 @@ static inline Vec4db operator != (Vec4d const a, Vec4d const b) noexcept {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec4db operator < (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator < (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 1);
 #else
@@ -1728,7 +1726,7 @@ static inline Vec4db operator < (Vec4d const a, Vec4d const b) noexcept {
 }
 
 // vector operator <= : returns true for elements for which a <= b
-static inline Vec4db operator <= (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator <= (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 2);
 #else
@@ -1737,7 +1735,7 @@ static inline Vec4db operator <= (Vec4d const a, Vec4d const b) noexcept {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec4db operator > (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator > (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 6+8);
 #else
@@ -1746,7 +1744,7 @@ static inline Vec4db operator > (Vec4d const a, Vec4d const b) noexcept {
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec4db operator >= (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4db operator >= (Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_cmp_pd_mask(a, b, 5+8);
 #else
@@ -1757,52 +1755,52 @@ static inline Vec4db operator >= (Vec4d const a, Vec4d const b) noexcept {
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec4d operator & (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator & (Vec4d const a, Vec4d const b) {
     return _mm256_and_pd(a, b);
 }
 
 // vector operator &= : bitwise and
-static inline Vec4d & operator &= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator &= (Vec4d & a, Vec4d const b) {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec4d and Vec4db
-static inline Vec4d operator & (Vec4d const a, Vec4db const b) noexcept {
+static inline Vec4d operator & (Vec4d const a, Vec4db const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_maskz_mov_pd(b, a);
 #else
     return _mm256_and_pd(a, b);
 #endif
 }
-static inline Vec4d operator & (Vec4db const a, Vec4d const b) noexcept {
+static inline Vec4d operator & (Vec4db const a, Vec4d const b) {
     return b & a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4d operator | (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator | (Vec4d const a, Vec4d const b) {
     return _mm256_or_pd(a, b);
 }
 
 // vector operator |= : bitwise or
-static inline Vec4d & operator |= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator |= (Vec4d & a, Vec4d const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4d operator ^ (Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d operator ^ (Vec4d const a, Vec4d const b) {
     return _mm256_xor_pd(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4d & operator ^= (Vec4d & a, Vec4d const b) noexcept {
+static inline Vec4d & operator ^= (Vec4d & a, Vec4d const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec4db operator ! (Vec4d const a) noexcept {
+static inline Vec4db operator ! (Vec4d const a) {
     return a == Vec4d(0.0);
 }
 
@@ -1815,7 +1813,7 @@ static inline Vec4db operator ! (Vec4d const a) noexcept {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 2; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec4d select (Vec4db const s, Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d select (Vec4db const s, Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_mask_mov_pd(b, s, a);
 #else
@@ -1824,7 +1822,7 @@ static inline Vec4d select (Vec4db const s, Vec4d const a, Vec4d const b) noexce
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec4d if_add (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d if_add (Vec4db const f, Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10
     return _mm256_mask_add_pd (a, f, a, b);
 #else
@@ -1833,7 +1831,7 @@ static inline Vec4d if_add (Vec4db const f, Vec4d const a, Vec4d const b) noexce
 }
 
 // Conditional subtract
-static inline Vec4d if_sub (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d if_sub (Vec4db const f, Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10
     return _mm256_mask_sub_pd (a, f, a, b);
 #else
@@ -1842,7 +1840,7 @@ static inline Vec4d if_sub (Vec4db const f, Vec4d const a, Vec4d const b) noexce
 }
 
 // Conditional multiply
-static inline Vec4d if_mul (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d if_mul (Vec4db const f, Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10
     return _mm256_mask_mul_pd (a, f, a, b);
 #else
@@ -1851,7 +1849,7 @@ static inline Vec4d if_mul (Vec4db const f, Vec4d const a, Vec4d const b) noexce
 }
 
 // Conditional divide
-static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b) {
 #if INSTRSET >= 10
     return _mm256_mask_div_pd (a, f, a, b);
 #else
@@ -1863,7 +1861,7 @@ static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b) noexce
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) {
 #if INSTRSET < 10
     return a ^ (b & Vec4d(-0.0));
 #else
@@ -1874,7 +1872,7 @@ static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) noexcept {
 
 // Function is_finite: gives true for elements that are normal, subnormal or zero,
 // false for INF and NAN
-static inline Vec4db is_finite(Vec4d const a) noexcept {
+static inline Vec4db is_finite(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return __mmask8(~ _mm256_fpclass_pd_mask (a, 0x99));
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -1892,7 +1890,7 @@ static inline Vec4db is_finite(Vec4d const a) noexcept {
 
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
-static inline Vec4db is_inf(Vec4d const a) noexcept {
+static inline Vec4db is_inf(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_pd_mask (a, 0x18);
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -1925,7 +1923,7 @@ static inline Vec4db is_nan(Vec4d const a) {
     return Vec4db(unordered);
 }
 #else
-static inline Vec4db is_nan(Vec4d const a) noexcept {
+static inline Vec4db is_nan(Vec4d const a) {
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return _mm256_cmp_pd(a, a, 3); // compare unordered
     // return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:fast compiler option
@@ -1935,7 +1933,7 @@ static inline Vec4db is_nan(Vec4d const a) noexcept {
 
 // Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
-static inline Vec4db is_subnormal(Vec4d const a) noexcept {
+static inline Vec4db is_subnormal(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_pd_mask (a, 0x20);
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
@@ -1952,7 +1950,7 @@ static inline Vec4db is_subnormal(Vec4d const a) noexcept {
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
-static inline Vec4db is_zero_or_subnormal(Vec4d const a) noexcept {
+static inline Vec4db is_zero_or_subnormal(Vec4d const a) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm256_fpclass_pd_mask (a, 0x26);
 #elif INSTRSET >= 8  // 256 bit integer vectors are available, AVX2    Vec8i t = _mm256_castps_si256(a);            // reinterpret as 32-bit integer
@@ -1967,23 +1965,23 @@ static inline Vec4db is_zero_or_subnormal(Vec4d const a) noexcept {
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline double horizontal_add (Vec4d const a) noexcept {
+static inline double horizontal_add (Vec4d const a) {
     return horizontal_add(a.get_low() + a.get_high());
 }
 
 // function max: a > b ? a : b
-static inline Vec4d max(Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d max(Vec4d const a, Vec4d const b) {
     return _mm256_max_pd(a,b);
 }
 
 // function min: a < b ? a : b
-static inline Vec4d min(Vec4d const a, Vec4d const b) noexcept {
+static inline Vec4d min(Vec4d const a, Vec4d const b) {
     return _mm256_min_pd(a,b);
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
-static inline Vec4d abs(Vec4d const a) noexcept {
+static inline Vec4d abs(Vec4d const a) {
 #if INSTRSET >= 10  // AVX512VL
     return _mm256_range_pd(a, a, 8);
 #else
@@ -1993,12 +1991,12 @@ static inline Vec4d abs(Vec4d const a) noexcept {
 }
 
 // function sqrt: square root
-static inline Vec4d sqrt(Vec4d const a) noexcept {
+static inline Vec4d sqrt(Vec4d const a) {
     return _mm256_sqrt_pd(a);
 }
 
 // function square: a * a
-static inline Vec4d square(Vec4d const a) noexcept {
+static inline Vec4d square(Vec4d const a) {
     return a * a;
 }
 
@@ -2026,33 +2024,33 @@ static inline Vec4d pow(Vec4d const a, Const_int_t<n>) {
 
 
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec4d round(Vec4d const a) noexcept {
+static inline Vec4d round(Vec4d const a) {
     return _mm256_round_pd(a, 0+8);
 }
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec4d truncate(Vec4d const a) noexcept {
+static inline Vec4d truncate(Vec4d const a) {
     return _mm256_round_pd(a, 3+8);
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec4d floor(Vec4d const a) noexcept {
+static inline Vec4d floor(Vec4d const a) {
     return _mm256_round_pd(a, 1+8);
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec4d ceil(Vec4d const a) noexcept {
+static inline Vec4d ceil(Vec4d const a) {
     return _mm256_round_pd(a, 2+8);
 }
 
 // function round_to_int32: round to nearest integer (even). (result as integer vector)
-static inline Vec4i round_to_int32(Vec4d const a) noexcept {
+static inline Vec4i round_to_int32(Vec4d const a) {
     // Note: assume MXCSR control register is set to rounding
     return _mm256_cvtpd_epi32(a);
 }
 
 // function truncate_to_int32: round towards zero. (result as integer vector)
-static inline Vec4i truncate_to_int32(Vec4d const a) noexcept {
+static inline Vec4i truncate_to_int32(Vec4d const a) {
     return _mm256_cvttpd_epi32(a);
 }
 
@@ -2102,21 +2100,21 @@ static inline Vec4d to_double(Vec4uq const a) {
 #else  // no 256 bit integer vectors
 
 // function truncatei: round towards zero. (inefficient)
-static inline Vec4q truncatei(Vec4d const a) noexcept {
+static inline Vec4q truncatei(Vec4d const a) {
     return Vec4q(truncatei(a.get_low()), truncatei(a.get_high()));
 }
 
 // function roundi: round to nearest or even. (inefficient)
-static inline Vec4q roundi(Vec4d const a) noexcept {
+static inline Vec4q roundi(Vec4d const a) {
     return Vec4q(roundi(a.get_low()), roundi(a.get_high()));
 }
 
 // function to_double: convert integer vector elements to double vector
-static inline Vec4d to_double(Vec4q const a) noexcept {
+static inline Vec4d to_double(Vec4q const a) {
     return Vec4d(to_double(a.get_low()), to_double(a.get_high()));
 }
 
-static inline Vec4d to_double(Vec4uq const a) noexcept {
+static inline Vec4d to_double(Vec4uq const a) {
     return Vec4d(to_double(a.get_low()), to_double(a.get_high()));
 }
 
@@ -2124,31 +2122,31 @@ static inline Vec4d to_double(Vec4uq const a) noexcept {
 
 
 // function to_double: convert integer vector to double vector
-static inline Vec4d to_double(Vec4i const a) noexcept {
+static inline Vec4d to_double(Vec4i const a) {
     return _mm256_cvtepi32_pd(a);
 }
 
 // function compress: convert two Vec4d to one Vec8f
-static inline Vec8f compress (Vec4d const low, Vec4d const high) noexcept {
+static inline Vec8f compress (Vec4d const low, Vec4d const high) {
     __m128 t1 = _mm256_cvtpd_ps(low);
     __m128 t2 = _mm256_cvtpd_ps(high);
     return Vec8f(t1, t2);
 }
 
 // Function extend_low : convert Vec8f vector elements 0 - 3 to Vec4d
-static inline Vec4d extend_low(Vec8f const a) noexcept {
+static inline Vec4d extend_low(Vec8f const a) {
     return _mm256_cvtps_pd(_mm256_castps256_ps128(a));
 }
 
 // Function extend_high : convert Vec8f vector elements 4 - 7 to Vec4d
-static inline Vec4d extend_high (Vec8f const a) noexcept {
+static inline Vec4d extend_high (Vec8f const a) {
     return _mm256_cvtps_pd(_mm256_extractf128_ps(a,1));
 }
 
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
+static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
 #ifdef __FMA__
     return _mm256_fmadd_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2160,7 +2158,7 @@ static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexcep
 }
 
 // Multiply and subtract
-static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
+static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) {
 #ifdef __FMA__
     return _mm256_fmsub_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2171,7 +2169,7 @@ static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) noexcep
 }
 
 // Multiply and inverse subtract
-static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
+static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
 #ifdef __FMA__
     return _mm256_fnmadd_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2185,7 +2183,7 @@ static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexce
 // even if FMA instructions not supported, using Veltkamp-Dekker split.
 // This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
-static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
+static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) {
 #ifdef __FMA__
     return _mm256_fmsub_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2211,7 +2209,7 @@ static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) noexc
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0) = 0, exponent(0.0) = -1023, exponent(INF) = +1024, exponent(NAN) = +1024
-static inline Vec4q exponent(Vec4d const a) noexcept {
+static inline Vec4q exponent(Vec4d const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available
     Vec4uq t1 = _mm256_castpd_si256(a);// reinterpret as 64-bit integer
     Vec4uq t2 = t1 << 1;               // shift out sign bit
@@ -2226,7 +2224,7 @@ static inline Vec4q exponent(Vec4d const a) noexcept {
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0) = 1.0, fraction(5.0) = 1.25
-static inline Vec4d fraction(Vec4d const a) noexcept {
+static inline Vec4d fraction(Vec4d const a) {
 #if INSTRSET >= 10
     return _mm256_getmant_pd(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 #elif INSTRSET >= 8 // AVX2. 256 bit integer vectors are available
@@ -2243,7 +2241,7 @@ static inline Vec4d fraction(Vec4d const a) noexcept {
 // n >=  1024 gives +INF
 // n <= -1023 gives 0.0
 // This function will never produce subnormals, and never raise exceptions
-static inline Vec4d exp2(Vec4q const n) noexcept {
+static inline Vec4d exp2(Vec4q const n) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available
     Vec4q t1 = max(n,  -0x3FF);        // limit to allowed range
     Vec4q t2 = min(t1,  0x400);
@@ -2262,7 +2260,7 @@ static inline Vec4d exp2(Vec4q const n) noexcept {
 // Function sign_bit: gives true for elements that have the sign bit set
 // even for -0.0, -INF and -NAN
 // Note that sign_bit(Vec4d(-0.0)) gives true, while Vec4d(-0.0) < Vec4d(0.0) gives false
-static inline Vec4db sign_bit(Vec4d const a) noexcept {
+static inline Vec4db sign_bit(Vec4d const a) {
 #if INSTRSET >= 8  // 256 bit integer vectors are available, AVX2
     Vec4q t1 = _mm256_castpd_si256(a);    // reinterpret as 64-bit integer
     Vec4q t2 = t1 >> 63;                  // extend sign bit
@@ -2343,41 +2341,41 @@ static inline __m256d reinterpret_d (__m256d const x) {
 // ABI version 4 or later needed on Gcc for correct mangling of 256-bit intrinsic vectors.
 // If necessary, compile with -fabi-version=0 to get the latest abi version
 
-static inline Vec256b reinterpret_i (__m256  const x) noexcept {
+static inline Vec256b reinterpret_i (__m256  const x) {
     Vec8f xx(x);
     return Vec256b(reinterpret_i(xx.get_low()), reinterpret_i(xx.get_high()));
 }
 
-static inline Vec256b reinterpret_i (__m256d const x) noexcept {
+static inline Vec256b reinterpret_i (__m256d const x) {
     Vec4d xx(x);
     return Vec256b(reinterpret_i(xx.get_low()), reinterpret_i(xx.get_high()));
 }
 
-static inline __m256  reinterpret_f (__m256  const x) noexcept {
+static inline __m256  reinterpret_f (__m256  const x) {
     return x;
 }
 
-static inline __m256  reinterpret_f (__m256d const x) noexcept {
+static inline __m256  reinterpret_f (__m256d const x) {
     return _mm256_castpd_ps(x);
 }
 
-static inline __m256d reinterpret_d (__m256  const x) noexcept {
+static inline __m256d reinterpret_d (__m256  const x) {
     return _mm256_castps_pd(x);
 }
 
-static inline __m256d reinterpret_d (__m256d const x) noexcept {
+static inline __m256d reinterpret_d (__m256d const x) {
     return x;
 }
 
-static inline Vec256b reinterpret_i (Vec256b const x) noexcept {
+static inline Vec256b reinterpret_i (Vec256b const x) {
     return x;
 }
 
-static inline __m256  reinterpret_f (Vec256b const x) noexcept {
+static inline __m256  reinterpret_f (Vec256b const x) {
     return Vec8f(Vec4f(reinterpret_f(x.get_low())), Vec4f(reinterpret_f(x.get_high())));
 }
 
-static inline __m256d reinterpret_d (Vec256b const x) noexcept {
+static inline __m256d reinterpret_d (Vec256b const x) {
     return Vec4d(Vec2d(reinterpret_d(x.get_low())), Vec2d(reinterpret_d(x.get_high())));
 }
 
@@ -2405,19 +2403,19 @@ static inline Vec4db extend_z(Vec2db a) {
 #endif // INSTRSET < 10 
 #else
 
-static inline Vec8f extend_z(Vec4f a) noexcept {
+static inline Vec8f extend_z(Vec4f a) {
     return _mm256_zextps128_ps256(a);
 }
-static inline Vec4d extend_z(Vec2d a) noexcept {
+static inline Vec4d extend_z(Vec2d a) {
     return _mm256_zextpd128_pd256(a);
 }
 
 #if INSTRSET < 10  // broad boolean vectors
 
-static inline Vec8fb extend_z(Vec4fb a) noexcept {
+static inline Vec8fb extend_z(Vec4fb a) {
     return _mm256_zextps128_ps256(a);
 }
-static inline Vec4db extend_z(Vec2db a) noexcept {
+static inline Vec4db extend_z(Vec2db a) {
     return _mm256_zextpd128_pd256(a);
 }
 
@@ -2425,23 +2423,23 @@ static inline Vec4db extend_z(Vec2db a) noexcept {
 #endif // __GNUC__
 
 // Function infinite4f: returns a vector where all elements are +INF
-static inline Vec8f infinite8f() noexcept {
+static inline Vec8f infinite8f() {
     return reinterpret_f(Vec8i(0x7F800000));
 }
 
 // Function nan8f: returns a vector where all elements are +NAN (quiet)
-static inline Vec8f nan8f(int n = 0x10) noexcept {
-    return nan_vec<Vec8f>(static_cast<uint32_t>(n));
+static inline Vec8f nan8f(uint32_t n = 0x10) {
+    return nan_vec<Vec8f>(n);
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
-static inline Vec4d infinite4d() noexcept {
+static inline Vec4d infinite4d() {
     return reinterpret_d(Vec4q(0x7FF0000000000000));
 }
 
 // Function nan4d: returns a vector where all elements are +NAN (quiet)
-static inline Vec4d nan4d(int n = 0x10) noexcept {
-    return nan_vec<Vec4d>(static_cast<uint32_t>(n));
+static inline Vec4d nan4d(uint32_t n = 0x10) {
+    return nan_vec<Vec4d>(n);
 }
 
 
@@ -2809,7 +2807,7 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
 *
 *****************************************************************************/
 
-static inline Vec8f lookup8(Vec8i const index, Vec8f const table) noexcept {
+static inline Vec8f lookup8(Vec8i const index, Vec8f const table) {
 #if INSTRSET >= 8  // AVX2
     return _mm256_permutevar8x32_ps(table, index);
 
@@ -2831,7 +2829,7 @@ static inline Vec8f lookup8(Vec8i const index, Vec8f const table) noexcept {
 }
 
 template <int n>
-static inline Vec8f lookup(Vec8i const index, float const * table) noexcept {
+static inline Vec8f lookup(Vec8i const index, float const * table) {
     if constexpr (n <= 0) return 0;
     if constexpr (n <= 4) {
         Vec4f table1 = Vec4f().load(table);
@@ -2865,7 +2863,7 @@ static inline Vec8f lookup(Vec8i const index, float const * table) noexcept {
 #endif
 }
 
-static inline Vec4d lookup4(Vec4q const index, Vec4d const table) noexcept {
+static inline Vec4d lookup4(Vec4q const index, Vec4d const table) {
 #if INSTRSET >= 10  // AVX512VL
     return _mm256_permutexvar_pd(index, table);
 
@@ -2898,7 +2896,7 @@ static inline Vec4d lookup4(Vec4q const index, Vec4d const table) noexcept {
 
 
 template <int n>
-static inline Vec4d lookup(Vec4q const index, double const * table) noexcept {
+static inline Vec4d lookup(Vec4q const index, double const * table) {
     if constexpr (n <= 0) return 0;
     if constexpr (n <= 2) {
         Vec2d table1 = Vec2d().load(table);
@@ -3010,7 +3008,7 @@ static inline void scatter(Vec4d const data, double * array) {
 *
 *****************************************************************************/
 
-static inline void scatter(Vec8i const index, uint32_t limit, Vec8f const data, float * destination) noexcept {
+static inline void scatter(Vec8i const index, uint32_t limit, Vec8f const data, float * destination) {
 #if INSTRSET >= 10 //  __AVX512VL__
     __mmask8 mask = _mm256_cmplt_epu32_mask(index, Vec8ui(limit));
     _mm256_mask_i32scatter_ps(destination, mask, index, data, 4);
@@ -3024,7 +3022,7 @@ static inline void scatter(Vec8i const index, uint32_t limit, Vec8f const data, 
 #endif
 }
 
-static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, double * destination) noexcept {
+static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, double * destination) {
 #if INSTRSET >= 10 //  __AVX512VL__
     __mmask8 mask = _mm256_cmplt_epu64_mask(index, Vec4uq(uint64_t(limit)));
     _mm256_mask_i64scatter_pd(destination, mask, index, data, 8);
@@ -3038,7 +3036,7 @@ static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, 
 #endif
 }
 
-static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, double * destination) noexcept {
+static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, double * destination) {
 #if INSTRSET >= 10   //  __AVX512VL__
     __mmask8 mask = _mm_cmplt_epu32_mask(index, Vec4ui(limit));
     _mm256_mask_i32scatter_pd(destination, mask, index, data, 8);

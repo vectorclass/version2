@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -51,7 +51,7 @@ namespace VCL_NAMESPACE {
 // The implementation depends on the instruction set:
 // If SSE4.1 is supported then only bit 31 in each dword of s is checked,
 // otherwise all bits in s are used.
-static inline __m128 selectf(__m128 const s, __m128 const a, __m128 const b) noexcept {
+static inline __m128 selectf(__m128 const s, __m128 const a, __m128 const b) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_blendv_ps(b, a, s);
 #else
@@ -69,7 +69,7 @@ static inline __m128 selectf(__m128 const s, __m128 const a, __m128 const b) noe
 // The implementation depends on the instruction set:
 // If SSE4.1 is supported then only bit 63 in each dword of s is checked,
 // otherwise all bits in s are used.
-static inline __m128d selectd(__m128d const s, __m128d const a, __m128d const b) noexcept {
+static inline __m128d selectd(__m128d const s, __m128d const a, __m128d const b) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_blendv_pd(b, a, s);
 #else
@@ -95,38 +95,38 @@ public:
     // Default constructor:
     Vec4fb() = default;
     // Constructor to build from all elements:
-    Vec4fb(bool b0, bool b1, bool b2, bool b3) noexcept {
+    Vec4fb(bool b0, bool b1, bool b2, bool b3) {
         xmm = _mm_castsi128_ps(_mm_setr_epi32(-(int)b0, -(int)b1, -(int)b2, -(int)b3));
     }
     // Constructor to convert from type __m128 used in intrinsics:
-    Vec4fb(__m128 const x) noexcept {
+    Vec4fb(__m128 const x) {
         xmm = x;
     }
     // Assignment operator to convert from type __m128 used in intrinsics:
-    Vec4fb & operator = (__m128 const x) noexcept {
+    Vec4fb & operator = (__m128 const x) {
         xmm = x;
         return *this;
     }
     // Constructor to broadcast scalar value:
-    Vec4fb(bool b) noexcept {
+    Vec4fb(bool b) {
         xmm = _mm_castsi128_ps(_mm_set1_epi32(-int32_t(b)));
     }
     // Assignment operator to broadcast scalar value:
-    Vec4fb & operator = (bool b) noexcept {
+    Vec4fb & operator = (bool b) {
         *this = Vec4fb(b);
         return *this;
     }
     // Constructor to convert from type Vec4ib used as Boolean for integer vectors
-    Vec4fb(Vec4ib const x) noexcept {
+    Vec4fb(Vec4ib const x) {
         xmm = _mm_castsi128_ps(x);
     }
     // Assignment operator to convert from type Vec4ib used as Boolean for integer vectors
-    Vec4fb & operator = (Vec4ib const x)noexcept {
+    Vec4fb & operator = (Vec4ib const x) {
         xmm = _mm_castsi128_ps(x);
         return *this;
     }
     // Type cast operator to convert to __m128 used in intrinsics
-    operator __m128() const noexcept {
+    operator __m128() const {
         return xmm;
     }
     /* Clang problem:
@@ -144,12 +144,12 @@ public:
     */
 #ifndef FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
     // Type cast operator to convert to type Vec4ib used as Boolean for integer vectors
-    operator Vec4ib() const noexcept {
+    operator Vec4ib() const {
         return _mm_castps_si128(xmm);
     }
 #endif
     // Member function to change a single element in vector
-    Vec4fb const insert(int index, bool value) noexcept {
+    Vec4fb const insert(int index, bool value) {
         const int32_t maskl[8] = { 0,0,0,0,-1,0,0,0 };
         __m128 mask = _mm_loadu_ps((float const*)(maskl + 4 - (index & 3))); // mask with FFFFFFFF at index position
         if (value) {
@@ -161,11 +161,11 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const noexcept {
+    bool extract(int index) const {
         return Vec4ib(_mm_castps_si128(xmm)).extract(index);
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const noexcept {
+    bool operator [] (int index) const {
         return extract(index);
     }
 
@@ -202,80 +202,80 @@ typedef Vec4b Vec4fb;  // compact boolean vector
 #if INSTRSET < 10 // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec4fb operator & (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator & (Vec4fb const a, Vec4fb const b) {
     return _mm_and_ps(a, b);
 }
-static inline Vec4fb operator && (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator && (Vec4fb const a, Vec4fb const b) {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec4fb & operator &= (Vec4fb & a, Vec4fb const b) noexcept {
+static inline Vec4fb & operator &= (Vec4fb & a, Vec4fb const b) {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4fb operator | (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator | (Vec4fb const a, Vec4fb const b) {
     return _mm_or_ps(a, b);
 }
-static inline Vec4fb operator || (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator || (Vec4fb const a, Vec4fb const b) {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec4fb & operator |= (Vec4fb & a, Vec4fb const b) noexcept {
+static inline Vec4fb & operator |= (Vec4fb & a, Vec4fb const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4fb operator ~ (Vec4fb const a) noexcept {
+static inline Vec4fb operator ~ (Vec4fb const a) {
     return _mm_xor_ps(a, _mm_castsi128_ps(_mm_set1_epi32(-1)));
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4fb operator ^ (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator ^ (Vec4fb const a, Vec4fb const b) {
     return _mm_xor_ps(a, b);
 }
 
 // vector operator == : xnor
-static inline Vec4fb operator == (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator == (Vec4fb const a, Vec4fb const b) {
     return Vec4fb(a ^ Vec4fb(~b));
 }
 
 // vector operator != : xor
-static inline Vec4fb operator != (Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb operator != (Vec4fb const a, Vec4fb const b) {
     return Vec4fb(a ^ b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4fb & operator ^= (Vec4fb & a, Vec4fb const b) noexcept {
+static inline Vec4fb & operator ^= (Vec4fb & a, Vec4fb const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not all bits in an element are the same)
-static inline Vec4fb operator ! (Vec4fb const a) noexcept {
+static inline Vec4fb operator ! (Vec4fb const a) {
     return Vec4fb(!Vec4ib(a));
 }
 
 // Functions for Vec4fb
 
 // andnot: a & ~ b
-static inline Vec4fb andnot(Vec4fb const a, Vec4fb const b) noexcept {
+static inline Vec4fb andnot(Vec4fb const a, Vec4fb const b) {
     return _mm_andnot_ps(b, a);
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and(Vec4fb const a) noexcept {
+static inline bool horizontal_and(Vec4fb const a) {
     return _mm_movemask_ps(a) == 0x0F;
     //return horizontal_and(Vec128b(_mm_castps_si128(a)));
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or(Vec4fb const a) noexcept {
+static inline bool horizontal_or(Vec4fb const a) {
     return _mm_movemask_ps(a) != 0;
     //return horizontal_or(Vec128b(_mm_castps_si128(a)));
 }
@@ -298,53 +298,51 @@ public:
     // Default constructor:
     Vec2db() = default;
     // Constructor to broadcast scalar value:
-    Vec2db(bool b) noexcept {
+    Vec2db(bool b) {
         xmm = _mm_castsi128_pd(_mm_set1_epi32(-int32_t(b)));
     }
     // Constructor to build from all elements:
-    Vec2db(bool b0, bool b1) noexcept {
+    Vec2db(bool b0, bool b1) {
         xmm = _mm_castsi128_pd(_mm_setr_epi32(-(int)b0, -(int)b0, -(int)b1, -(int)b1));
     }
     // Constructor to convert from type __m128d used in intrinsics:
-    Vec2db(__m128d const x) noexcept {
+    Vec2db(__m128d const x) {
         xmm = x;
     }
     // Assignment operator to convert from type __m128d used in intrinsics:
-    Vec2db & operator = (__m128d const x) noexcept {
+    Vec2db & operator = (__m128d const x) {
         xmm = x;
         return *this;
     }
     // Assignment operator to broadcast scalar value:
-    Vec2db & operator = (bool b) noexcept {
+    Vec2db & operator = (bool b) {
         *this = Vec2db(b);
         return *this;
     }
     // Constructor to convert from type Vec2qb used as Boolean for integer vectors
-    Vec2db(Vec2qb const x) noexcept {
+    Vec2db(Vec2qb const x) {
         xmm = _mm_castsi128_pd(x);
     }
     // Assignment operator to convert from type Vec2qb used as Boolean for integer vectors
-    Vec2db & operator = (Vec2qb const x) noexcept {
+    Vec2db & operator = (Vec2qb const x) {
         xmm = _mm_castsi128_pd(x);
         return *this;
     }
     // Type cast operator to convert to __m128d used in intrinsics
-    operator __m128d() const noexcept {
+    operator __m128d() const {
         return xmm;
     }
 #ifndef FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
     // Type cast operator to convert to type Vec2qb used as Boolean for integer vectors
-    operator Vec2qb() const noexcept {
+    operator Vec2qb() const {
         return _mm_castpd_si128(xmm);
     }
 #endif
     // Member function to change a single element in vector
-    Vec2db const insert(int index, bool value) noexcept {
-        // mask with FFFFFFFFFFFFFFFF at index position
-        const auto index_position = (index & 1) * 2;
+    Vec2db const insert(int index, bool value) {
         const int32_t maskl[8] = { 0,0,0,0,-1,-1,0,0 };
-        const auto A = maskl + 4 - index_position;
-        __m128 mask = _mm_loadu_ps((float const*)A);
+        const size_t two = 2;  // avoid silly warning from MS compiler
+        __m128 mask = _mm_loadu_ps((float const*)(maskl + 4 - (index & 1) * two)); // mask with FFFFFFFFFFFFFFFF at index position
         if (value) {
             xmm = _mm_or_pd(xmm, _mm_castps_pd(mask));
         }
@@ -354,11 +352,11 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const noexcept {
+    bool extract(int index) const {
         return Vec2qb(_mm_castpd_si128(xmm)).extract(index);
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const noexcept {
+    bool operator [] (int index) const {
         return extract(index);
     }
     // Member function to change a bitfield to a boolean vector
@@ -394,80 +392,80 @@ typedef Vec2b Vec2db;  // compact boolean vector
 #if INSTRSET < 10 // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec2db operator & (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator & (Vec2db const a, Vec2db const b) {
     return _mm_and_pd(a, b);
 }
-static inline Vec2db operator && (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator && (Vec2db const a, Vec2db const b) {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec2db & operator &= (Vec2db & a, Vec2db const b) noexcept {
+static inline Vec2db & operator &= (Vec2db & a, Vec2db const b) {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec2db operator | (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator | (Vec2db const a, Vec2db const b) {
     return _mm_or_pd(a, b);
 }
-static inline Vec2db operator || (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator || (Vec2db const a, Vec2db const b) {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec2db & operator |= (Vec2db & a, Vec2db const b) noexcept {
+static inline Vec2db & operator |= (Vec2db & a, Vec2db const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec2db operator ~ (Vec2db const a) noexcept {
+static inline Vec2db operator ~ (Vec2db const a) {
     return _mm_xor_pd(a, _mm_castsi128_pd(_mm_set1_epi32(-1)));
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec2db operator ^ (Vec2db const a, Vec2db const b)noexcept {
+static inline Vec2db operator ^ (Vec2db const a, Vec2db const b) {
     return _mm_xor_pd(a, b);
 }
 
 // vector operator == : xnor
-static inline Vec2db operator == (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator == (Vec2db const a, Vec2db const b) {
     return Vec2db(a ^ Vec2db(~b));
 }
 
 // vector operator != : xor
-static inline Vec2db operator != (Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db operator != (Vec2db const a, Vec2db const b) {
     return Vec2db(a ^ b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec2db & operator ^= (Vec2db & a, Vec2db const b) noexcept {
+static inline Vec2db & operator ^= (Vec2db & a, Vec2db const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not all bits in an element are the same)
-static inline Vec2db operator ! (Vec2db const a) noexcept {
+static inline Vec2db operator ! (Vec2db const a) {
     return Vec2db(!Vec2qb(a));
 }
 
 // Functions for Vec2db
 
 // andnot: a & ~ b
-static inline Vec2db andnot(Vec2db const a, Vec2db const b) noexcept {
+static inline Vec2db andnot(Vec2db const a, Vec2db const b) {
     return _mm_andnot_pd(b, a);
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and(Vec2db const a) noexcept {
+static inline bool horizontal_and(Vec2db const a) {
     return _mm_movemask_pd(a) == 3;
     //return horizontal_and(Vec128b(_mm_castpd_si128(a)));
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or(Vec2db const a) noexcept {
+static inline bool horizontal_or(Vec2db const a) {
     return _mm_movemask_pd(a) != 0;
     //return horizontal_or(Vec128b(_mm_castpd_si128(a)));
 }
@@ -488,28 +486,28 @@ public:
     // Default constructor:
     Vec4f() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec4f(float f) noexcept {
+    Vec4f(float f) {
         xmm = _mm_set1_ps(f);
     }
     // Constructor to build from all elements:
-    Vec4f(float f0, float f1, float f2, float f3) noexcept {
+    Vec4f(float f0, float f1, float f2, float f3) {
         xmm = _mm_setr_ps(f0, f1, f2, f3);
     }
     // Constructor to convert from type __m128 used in intrinsics:
-    Vec4f(__m128 const x) noexcept {
+    Vec4f(__m128 const x) {
         xmm = x;
     }
     // Assignment operator to convert from type __m128 used in intrinsics:
-    Vec4f & operator = (__m128 const x) noexcept {
+    Vec4f & operator = (__m128 const x) {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128 used in intrinsics
-    operator __m128() const noexcept {
+    operator __m128() const {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec4f & load(float const * p) noexcept {
+    Vec4f & load(float const * p) {
         xmm = _mm_loadu_ps(p);
         return *this;
     }
@@ -518,12 +516,12 @@ public:
     // Merom, Wolfdale) and Atom, but not on other processors from Intel, AMD or VIA.
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 16.
-    Vec4f & load_a(float const * p) noexcept {
+    Vec4f & load_a(float const * p) {
         xmm = _mm_load_ps(p);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(float * p) const noexcept {
+    void store(float * p) const {
         _mm_storeu_ps(p, xmm);
     }
     // Member function storing into array, aligned by 16
@@ -531,18 +529,18 @@ public:
     // Merom, Wolfdale) and Atom, but not on other processors from Intel, AMD or VIA.
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 16.
-    void store_a(float * p) const noexcept {
+    void store_a(float * p) const {
         _mm_store_ps(p, xmm);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 16
-    void store_nt(float * p) const noexcept {
+    void store_nt(float * p) const {
         _mm_stream_ps(p, xmm);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec4f & load_partial(int n, float const * p) noexcept {
+    Vec4f & load_partial(int n, float const * p) {
 #if INSTRSET >= 10  // AVX512VL
         xmm = _mm_maskz_loadu_ps(__mmask8((1u << n) - 1), p);
 #else
@@ -564,7 +562,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, float * p) const noexcept {
+    void store_partial(int n, float * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm_mask_storeu_ps(p, __mmask8((1u << n) - 1), xmm);
 #else   // storing in bigger blocks may unsafe unless compiler option -fno-strict-aliasing is specified,
@@ -578,7 +576,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 4-n elements are set to zero
-    Vec4f & cutoff(int n) noexcept {
+    Vec4f & cutoff(int n) {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_ps(__mmask8((1u << n) - 1), xmm);
 #else
@@ -592,7 +590,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec4f const insert(int index, float value) noexcept {
+    Vec4f const insert(int index, float value) {
 #if INSTRSET >= 10   // AVX512VL
         xmm = _mm_mask_broadcastss_ps(xmm, __mmask8(1u << index), _mm_set_ss(value));
 #elif INSTRSET >= 5   // SSE4.1
@@ -615,7 +613,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    float extract(int index) const noexcept {
+    float extract(int index) const {
 #if INSTRSET >= 10
         __m128 x = _mm_maskz_compress_ps(__mmask8(1u << index), xmm);
         return _mm_cvtss_f32(x);
@@ -627,7 +625,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    float operator [] (int index) const noexcept {
+    float operator [] (int index) const {
         return extract(index);
     }
     static constexpr int size() {
@@ -647,115 +645,115 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec4f operator + (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator + (Vec4f const a, Vec4f const b) {
     return _mm_add_ps(a, b);
 }
 
 // vector operator + : add vector and scalar
-static inline Vec4f operator + (Vec4f const a, float b) noexcept {
+static inline Vec4f operator + (Vec4f const a, float b) {
     return a + Vec4f(b);
 }
-static inline Vec4f operator + (float a, Vec4f const b) noexcept {
+static inline Vec4f operator + (float a, Vec4f const b) {
     return Vec4f(a) + b;
 }
 
 // vector operator += : add
-static inline Vec4f & operator += (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator += (Vec4f & a, Vec4f const b) {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec4f operator ++ (Vec4f & a, int) noexcept {
+static inline Vec4f operator ++ (Vec4f & a, int) {
     Vec4f a0 = a;
     a = a + 1.0f;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec4f & operator ++ (Vec4f & a) noexcept {
+static inline Vec4f & operator ++ (Vec4f & a) {
     a = a + 1.0f;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec4f operator - (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator - (Vec4f const a, Vec4f const b) {
     return _mm_sub_ps(a, b);
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec4f operator - (Vec4f const a, float b) noexcept {
+static inline Vec4f operator - (Vec4f const a, float b) {
     return a - Vec4f(b);
 }
-static inline Vec4f operator - (float a, Vec4f const b) noexcept {
+static inline Vec4f operator - (float a, Vec4f const b) {
     return Vec4f(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec4f operator - (Vec4f const a) noexcept {
+static inline Vec4f operator - (Vec4f const a) {
     return _mm_xor_ps(a, _mm_castsi128_ps(_mm_set1_epi32(0x80000000)));
 }
 
 // vector operator -= : subtract
-static inline Vec4f & operator -= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator -= (Vec4f & a, Vec4f const b) {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec4f operator -- (Vec4f & a, int) noexcept {
+static inline Vec4f operator -- (Vec4f & a, int) {
     Vec4f a0 = a;
     a = a - 1.0f;
     return a0;
 }
 
 // prefix operator --
-static inline Vec4f & operator -- (Vec4f & a) noexcept {
+static inline Vec4f & operator -- (Vec4f & a) {
     a = a - 1.0f;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec4f operator * (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator * (Vec4f const a, Vec4f const b) {
     return _mm_mul_ps(a, b);
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec4f operator * (Vec4f const a, float b) noexcept {
+static inline Vec4f operator * (Vec4f const a, float b) {
     return a * Vec4f(b);
 }
-static inline Vec4f operator * (float a, Vec4f const b) noexcept {
+static inline Vec4f operator * (float a, Vec4f const b) {
     return Vec4f(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec4f & operator *= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator *= (Vec4f & a, Vec4f const b) {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec4f operator / (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator / (Vec4f const a, Vec4f const b) {
     return _mm_div_ps(a, b);
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec4f operator / (Vec4f const a, float b) noexcept {
+static inline Vec4f operator / (Vec4f const a, float b) {
     return a / Vec4f(b);
 }
-static inline Vec4f operator / (float a, Vec4f const b) noexcept {
+static inline Vec4f operator / (float a, Vec4f const b) {
     return Vec4f(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec4f & operator /= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator /= (Vec4f & a, Vec4f const b) {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec4fb operator == (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator == (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 0);
 #else
@@ -764,7 +762,7 @@ static inline Vec4fb operator == (Vec4f const a, Vec4f const b) noexcept {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec4fb operator != (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator != (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 4);
 #else
@@ -773,7 +771,7 @@ static inline Vec4fb operator != (Vec4f const a, Vec4f const b) noexcept {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec4fb operator < (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator < (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 1);
 #else
@@ -782,7 +780,7 @@ static inline Vec4fb operator < (Vec4f const a, Vec4f const b) noexcept {
 }
 
 // vector operator <= : returns true for elements for which a <= b
-static inline Vec4fb operator <= (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator <= (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 2);
 #else
@@ -791,7 +789,7 @@ static inline Vec4fb operator <= (Vec4f const a, Vec4f const b) noexcept {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec4fb operator > (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator > (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 6+8);
 #else
@@ -800,7 +798,7 @@ static inline Vec4fb operator > (Vec4f const a, Vec4f const b) noexcept {
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec4fb operator >= (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4fb operator >= (Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_ps_mask(a, b, 5+8);
 #else
@@ -811,52 +809,52 @@ static inline Vec4fb operator >= (Vec4f const a, Vec4f const b) noexcept {
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec4f operator & (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator & (Vec4f const a, Vec4f const b) {
     return _mm_and_ps(a, b);
 }
 
 // vector operator &= : bitwise and
-static inline Vec4f & operator &= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator &= (Vec4f & a, Vec4f const b) {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec4f and Vec4fb
-static inline Vec4f operator & (Vec4f const a, Vec4fb const b) noexcept {
+static inline Vec4f operator & (Vec4f const a, Vec4fb const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_maskz_mov_ps(b, a);
 #else
     return _mm_and_ps(a, b);
 #endif
 }
-static inline Vec4f operator & (Vec4fb const a, Vec4f const b) noexcept {
+static inline Vec4f operator & (Vec4fb const a, Vec4f const b) {
     return b & a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4f operator | (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator | (Vec4f const a, Vec4f const b) {
     return _mm_or_ps(a, b);
 }
 
 // vector operator |= : bitwise or
-static inline Vec4f & operator |= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator |= (Vec4f & a, Vec4f const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4f operator ^ (Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f operator ^ (Vec4f const a, Vec4f const b) {
     return _mm_xor_ps(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4f & operator ^= (Vec4f & a, Vec4f const b) noexcept {
+static inline Vec4f & operator ^= (Vec4f & a, Vec4f const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec4fb operator ! (Vec4f const a) noexcept {
+static inline Vec4fb operator ! (Vec4f const a) {
     return a == Vec4f(0.0f);
 }
 
@@ -869,7 +867,7 @@ static inline Vec4fb operator ! (Vec4f const a) noexcept {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 4; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec4f select(Vec4fb const s, Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f select(Vec4fb const s, Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_ps(b, s, a);
 #else
@@ -878,7 +876,7 @@ static inline Vec4f select(Vec4fb const s, Vec4f const a, Vec4f const b) noexcep
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec4f if_add(Vec4fb const f, Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f if_add(Vec4fb const f, Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10
     return _mm_mask_add_ps (a, f, a, b);
 #else
@@ -887,7 +885,7 @@ static inline Vec4f if_add(Vec4fb const f, Vec4f const a, Vec4f const b) noexcep
 }
 
 // Conditional subtract: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec4f if_sub(Vec4fb const f, Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f if_sub(Vec4fb const f, Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10
     return _mm_mask_sub_ps (a, f, a, b);
 #else
@@ -896,7 +894,7 @@ static inline Vec4f if_sub(Vec4fb const f, Vec4f const a, Vec4f const b) noexcep
 }
 
 // Conditional multiply: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec4f if_mul(Vec4fb const f, Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f if_mul(Vec4fb const f, Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10
     return _mm_mask_mul_ps (a, f, a, b);
 #else
@@ -905,7 +903,7 @@ static inline Vec4f if_mul(Vec4fb const f, Vec4f const a, Vec4f const b) noexcep
 }
 
 // Conditional divide: For all vector elements i: result[i] = f[i] ? (a[i] / b[i]) : a[i]
-static inline Vec4f if_div(Vec4fb const f, Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f if_div(Vec4fb const f, Vec4f const a, Vec4f const b) {
 #if INSTRSET >= 10
     return _mm_mask_div_ps (a, f, a, b);
 #else
@@ -919,7 +917,7 @@ static inline Vec4f if_div(Vec4fb const f, Vec4f const a, Vec4f const b) noexcep
 // even for -0.0f, -INF and -NAN
 // Note that sign_bit(Vec4f(-0.0f)) gives true, while Vec4f(-0.0f) < Vec4f(0.0f) gives false
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec4fb sign_bit(Vec4f const a) noexcept {
+static inline Vec4fb sign_bit(Vec4f const a) {
     Vec4i t1 = _mm_castps_si128(a);    // reinterpret as 32-bit integer
     Vec4i t2 = t1 >> 31;               // extend sign bit
 #if INSTRSET >= 10
@@ -931,7 +929,7 @@ static inline Vec4fb sign_bit(Vec4f const a) noexcept {
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec4f sign_combine(Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f sign_combine(Vec4f const a, Vec4f const b) {
 #if INSTRSET < 10
     return a ^ (b & Vec4f(-0.0f));
 #else
@@ -945,7 +943,7 @@ static inline Vec4f sign_combine(Vec4f const a, Vec4f const b) noexcept {
 // Function is_finite: gives true for elements that are normal, subnormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec4fb is_finite(Vec4f const a) noexcept {
+static inline Vec4fb is_finite(Vec4f const a) {
 #if INSTRSET >= 10
     return __mmask8(_mm_fpclass_ps_mask(a, 0x99) ^ 0x0F);
 #else
@@ -959,7 +957,7 @@ static inline Vec4fb is_finite(Vec4f const a) noexcept {
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec4fb is_inf(Vec4f const a) noexcept {
+static inline Vec4fb is_inf(Vec4f const a) {
 #if INSTRSET >= 10
     return __mmask8(_mm_fpclass_ps_mask(a, 0x18));
 #else
@@ -972,7 +970,7 @@ static inline Vec4fb is_inf(Vec4f const a) noexcept {
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec4fb is_nan(Vec4f const a) noexcept {
+static inline Vec4fb is_nan(Vec4f const a) {
 #if INSTRSET >= 10
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return Vec4fb(_mm_fpclass_ps_mask(a, 0x81));
@@ -1002,7 +1000,7 @@ return a != a; // This is not safe with -ffinite-math-only, -ffast-math, or /fp:
 
 // Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
-static inline Vec4fb is_subnormal(Vec4f const a) noexcept {
+static inline Vec4fb is_subnormal(Vec4f const a) {
 #if INSTRSET >= 10
     return Vec4fb(_mm_fpclass_ps_mask(a, 0x20));
 #else
@@ -1017,7 +1015,7 @@ static inline Vec4fb is_subnormal(Vec4f const a) noexcept {
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
-static inline Vec4fb is_zero_or_subnormal(Vec4f const a) noexcept {
+static inline Vec4fb is_zero_or_subnormal(Vec4f const a) {
 #if INSTRSET >= 10
     return Vec4fb(_mm_fpclass_ps_mask(a, 0x26));
 #else
@@ -1028,19 +1026,19 @@ static inline Vec4fb is_zero_or_subnormal(Vec4f const a) noexcept {
 }
 
 // Function infinite4f: returns a vector where all elements are +INF
-static inline Vec4f infinite4f() noexcept {
+static inline Vec4f infinite4f() {
     return _mm_castsi128_ps(_mm_set1_epi32(0x7F800000));
 }
 
 // Function nan4f: returns a vector where all elements are NAN (quiet)
-static inline Vec4f nan4f(int n = 0x10) noexcept {
-    return nan_vec<Vec4f>(static_cast<uint32_t>(n));
+static inline Vec4f nan4f(uint32_t n = 0x10) {
+    return nan_vec<Vec4f>(n);
 }
 
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline float horizontal_add(Vec4f const a) noexcept {
+static inline float horizontal_add(Vec4f const a) {
 #if  INSTRSET >= 3 && false // SSE3
     // The hadd instruction is inefficient, and may be split into two instructions for faster decoding
     __m128 t1 = _mm_hadd_ps(a, a);
@@ -1056,18 +1054,18 @@ static inline float horizontal_add(Vec4f const a) noexcept {
 }
 
 // function max: a > b ? a : b
-static inline Vec4f max(Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f max(Vec4f const a, Vec4f const b) {
     return _mm_max_ps(a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec4f min(Vec4f const a, Vec4f const b) noexcept {
+static inline Vec4f min(Vec4f const a, Vec4f const b) {
     return _mm_min_ps(a, b);
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
-static inline Vec4f abs(Vec4f const a) noexcept {
+static inline Vec4f abs(Vec4f const a) {
 #if INSTRSET >= 10  // AVX512VL
     return _mm_range_ps(a, a, 8);
 #else
@@ -1077,12 +1075,12 @@ static inline Vec4f abs(Vec4f const a) noexcept {
 }
 
 // function sqrt: square root
-static inline Vec4f sqrt(Vec4f const a) noexcept {
+static inline Vec4f sqrt(Vec4f const a) {
     return _mm_sqrt_ps(a);
 }
 
 // function square: a * a
-static inline Vec4f square(Vec4f const a) noexcept {
+static inline Vec4f square(Vec4f const a) {
     return a * a;
 }
 
@@ -1188,7 +1186,7 @@ static inline Vec4f pow(Vec4f const a, Const_int_t<n>) {
 #define pow_const(x,n) pow(x,Const_int_t<n>())
 #endif
 
-static inline Vec4f round(Vec4f const a) noexcept {
+static inline Vec4f round(Vec4f const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_ps(a, 8);
 #else  // SSE2
@@ -1202,7 +1200,7 @@ static inline Vec4f round(Vec4f const a) noexcept {
 }
 
 // function truncate: round towards zero. (result as float vector)
-static inline Vec4f truncate(Vec4f const a) noexcept {
+static inline Vec4f truncate(Vec4f const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_ps(a, 3 + 8);
 #else  // SSE2
@@ -1216,7 +1214,7 @@ static inline Vec4f truncate(Vec4f const a) noexcept {
 }
 
 // function floor: round towards minus infinity. (result as float vector)
-static inline Vec4f floor(Vec4f const a) noexcept {
+static inline Vec4f floor(Vec4f const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_ps(a, 1 + 8);
 #else  // SSE2
@@ -1230,7 +1228,7 @@ static inline Vec4f floor(Vec4f const a) noexcept {
 }
 
 // function ceil: round towards plus infinity. (result as float vector)
-static inline Vec4f ceil(Vec4f const a) noexcept {
+static inline Vec4f ceil(Vec4f const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_ps(a, 2 + 8);
 #else  // SSE2
@@ -1244,25 +1242,25 @@ static inline Vec4f ceil(Vec4f const a) noexcept {
 }
 
 // function roundi: round to nearest integer (even). (result as integer vector)
-static inline Vec4i roundi(Vec4f const a) noexcept {
+static inline Vec4i roundi(Vec4f const a) {
     // Note: assume MXCSR control register is set to rounding
     return _mm_cvtps_epi32(a);
 }
 //static inline Vec4i round_to_int(Vec4f const a) { return roundi(a); } // deprecated
 
 // function truncatei: round towards zero. (result as integer vector)
-static inline Vec4i truncatei(Vec4f const a) noexcept {
+static inline Vec4i truncatei(Vec4f const a) {
     return _mm_cvttps_epi32(a);
 }
 //static inline Vec4i truncate_to_int(Vec4f const a) { return truncatei(a); } // deprecated
 
 // function to_float: convert integer vector to float vector
-static inline Vec4f to_float(Vec4i const a) noexcept {
+static inline Vec4f to_float(Vec4i const a) {
     return _mm_cvtepi32_ps(a);
 }
 
 // function to_float: convert unsigned integer vector to float vector
-static inline Vec4f to_float(Vec4ui const a) noexcept {
+static inline Vec4f to_float(Vec4ui const a) {
 #if INSTRSET >= 10 && (!defined(_MSC_VER) || defined(__INTEL_COMPILER)) // _mm_cvtepu32_ps missing in MS VS2019
     return _mm_cvtepu32_ps(a);
 #elif INSTRSET >= 9  // __AVX512F__
@@ -1278,7 +1276,7 @@ static inline Vec4f to_float(Vec4ui const a) noexcept {
 // Approximate math functions
 
 // approximate reciprocal (Faster than 1.f / a. relative accuracy better than 2^-11)
-static inline Vec4f approx_recipr(Vec4f const a) noexcept {
+static inline Vec4f approx_recipr(Vec4f const a) {
 #ifdef __AVX512ER__  // AVX512ER: full precision
     // todo: if future processors have both AVX512ER and AVX512VL: _mm128_rcp28_round_ps(a, _MM_FROUND_NO_EXC);
     return _mm512_castps512_ps128(_mm512_rcp28_round_ps(_mm512_castps128_ps512(a), _MM_FROUND_NO_EXC));
@@ -1292,7 +1290,7 @@ static inline Vec4f approx_recipr(Vec4f const a) noexcept {
 }
 
 // approximate reciprocal squareroot (Faster than 1.f / sqrt(a). Relative accuracy better than 2^-11)
-static inline Vec4f approx_rsqrt(Vec4f const a) noexcept {
+static inline Vec4f approx_rsqrt(Vec4f const a) {
     // use more accurate version if available. (none of these will raise exceptions on zero)
 #ifdef __AVX512ER__  // AVX512ER: full precision
     // todo: if future processors have both AVX512ER and AVX521VL: _mm128_rsqrt28_round_ps(a, _MM_FROUND_NO_EXC);
@@ -1309,7 +1307,7 @@ static inline Vec4f approx_rsqrt(Vec4f const a) noexcept {
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec4f mul_add(Vec4f const a, Vec4f const b, Vec4f const c) noexcept {
+static inline Vec4f mul_add(Vec4f const a, Vec4f const b, Vec4f const c) {
 #ifdef __FMA__
     return _mm_fmadd_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1320,7 +1318,7 @@ static inline Vec4f mul_add(Vec4f const a, Vec4f const b, Vec4f const c) noexcep
 }
 
 // Multiply and subtract
-static inline Vec4f mul_sub(Vec4f const a, Vec4f const b, Vec4f const c) noexcept {
+static inline Vec4f mul_sub(Vec4f const a, Vec4f const b, Vec4f const c) {
 #ifdef __FMA__
     return _mm_fmsub_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1331,7 +1329,7 @@ static inline Vec4f mul_sub(Vec4f const a, Vec4f const b, Vec4f const c) noexcep
 }
 
 // Multiply and inverse subtract
-static inline Vec4f nmul_add(Vec4f const a, Vec4f const b, Vec4f const c) noexcept {
+static inline Vec4f nmul_add(Vec4f const a, Vec4f const b, Vec4f const c) {
 #ifdef __FMA__
     return _mm_fnmadd_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1345,7 +1343,7 @@ static inline Vec4f nmul_add(Vec4f const a, Vec4f const b, Vec4f const c) noexce
 // even if FMA instructions not supported, using Veltkamp-Dekker split.
 // This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
-static inline Vec4f mul_sub_x(Vec4f const a, Vec4f const b, Vec4f const c) noexcept {
+static inline Vec4f mul_sub_x(Vec4f const a, Vec4f const b, Vec4f const c) {
 #ifdef __FMA__
     return _mm_fmsub_ps(a, b, c);
 #elif defined (__FMA4__)
@@ -1369,7 +1367,7 @@ static inline Vec4f mul_sub_x(Vec4f const a, Vec4f const b, Vec4f const c) noexc
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0f) = 0, exponent(0.0f) = -127, exponent(INF) = +128, exponent(NAN) = +128
-static inline Vec4i exponent(Vec4f const a) noexcept {
+static inline Vec4i exponent(Vec4f const a) {
     Vec4ui t1 = _mm_castps_si128(a);   // reinterpret as 32-bit integer
     Vec4ui t2 = t1 << 1;               // shift out sign bit
     Vec4ui t3 = t2 >> 24;              // shift down logical to position 0
@@ -1381,7 +1379,7 @@ static inline Vec4i exponent(Vec4f const a) noexcept {
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
 // NOTE: The name fraction clashes with an ENUM in MAC XCode CarbonCore script.h !
-static inline Vec4f fraction(Vec4f const a) noexcept {
+static inline Vec4f fraction(Vec4f const a) {
 #if INSTRSET >= 10
     return _mm_getmant_ps(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 #else
@@ -1396,7 +1394,7 @@ static inline Vec4f fraction(Vec4f const a) noexcept {
 // n >=  128 gives +INF
 // n <= -127 gives 0.0f
 // This function will never produce subnormals, and never raise exceptions
-static inline Vec4f exp2(Vec4i const n) noexcept {
+static inline Vec4f exp2(Vec4i const n) {
     Vec4i t1 = max(n, -0x7F);         // limit to allowed range
     Vec4i t2 = min(t1, 0x80);
     Vec4i t3 = t2 + 0x7F;              // add bias
@@ -1431,20 +1429,20 @@ static inline Vec4f exp2(Vec4i const n) noexcept {
 
 // Function get_control_word:
 // Read the MXCSR control word
-static inline uint32_t get_control_word() noexcept {
+static inline uint32_t get_control_word() {
     return _mm_getcsr();
 }
 
 // Function set_control_word:
 // Write the MXCSR control word
-static inline void set_control_word(uint32_t w) noexcept {
+static inline void set_control_word(uint32_t w) {
     _mm_setcsr(w);
 }
 
 // Function no_subnormals:
 // Set "Denormals Are Zeros" and "Flush to Zero" mode to avoid the extremely
 // time-consuming subnormals in case of underflow
-static inline void no_subnormals() noexcept {
+static inline void no_subnormals() {
     uint32_t t1 = get_control_word();
     t1 |= (1 << 6) | (1 << 15);     // set bit 6 and 15 in MXCSR
     set_control_word(t1);
@@ -1454,7 +1452,7 @@ static inline void no_subnormals() noexcept {
 // Set the MXCSR control word to the default value 0x1F80.
 // This will mask floating point exceptions, set rounding mode to nearest (or even),
 // and allow subnormals.
-static inline void reset_control_word() noexcept {
+static inline void reset_control_word() {
     set_control_word(0x1F80);
 }
 
@@ -1482,28 +1480,28 @@ public:
     // Default constructor:
     Vec2d() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec2d(double d) noexcept {
+    Vec2d(double d) {
         xmm = _mm_set1_pd(d);
     }
     // Constructor to build from all elements:
-    Vec2d(double d0, double d1) noexcept {
+    Vec2d(double d0, double d1) {
         xmm = _mm_setr_pd(d0, d1);
     }
     // Constructor to convert from type __m128d used in intrinsics:
-    Vec2d(__m128d const x) noexcept {
+    Vec2d(__m128d const x) {
         xmm = x;
     }
     // Assignment operator to convert from type __m128d used in intrinsics:
-    Vec2d & operator = (__m128d const x) noexcept {
+    Vec2d & operator = (__m128d const x) {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128d used in intrinsics
-    operator __m128d() const noexcept {
+    operator __m128d() const {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec2d & load(double const * p) noexcept {
+    Vec2d & load(double const * p) {
         xmm = _mm_loadu_pd(p);
         return *this;
     }
@@ -1512,12 +1510,12 @@ public:
     // Merom, Wolfdale) and Atom, but not on other processors from Intel, AMD or VIA.
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 16.
-    Vec2d const load_a(double const * p) noexcept {
+    Vec2d const load_a(double const * p) {
         xmm = _mm_load_pd(p);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(double * p) const noexcept {
+    void store(double * p) const {
         _mm_storeu_pd(p, xmm);
     }
     // Member function storing into array, aligned by 16
@@ -1525,18 +1523,18 @@ public:
     // Merom, Wolfdale) and Atom, but not on other processors from Intel, AMD or VIA.
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 16.
-    void store_a(double * p) const noexcept {
+    void store_a(double * p) const {
         _mm_store_pd(p, xmm);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 16
-    void store_nt(double * p) const noexcept {
+    void store_nt(double * p) const {
         _mm_stream_pd(p, xmm);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec2d & load_partial(int n, double const * p) noexcept {
+    Vec2d & load_partial(int n, double const * p) {
 #if INSTRSET >= 10   // AVX512VL
         xmm = _mm_maskz_loadu_pd(__mmask8((1u << n) - 1), p);
 #else
@@ -1553,7 +1551,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, double * p) const noexcept {
+    void store_partial(int n, double * p) const {
 #if INSTRSET >= 10  // AVX512VL
         _mm_mask_storeu_pd(p, __mmask8((1u << n) - 1), xmm);
 #else
@@ -1566,7 +1564,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 4-n elements are set to zero
-    Vec2d & cutoff(int n) noexcept {
+    Vec2d & cutoff(int n) {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_pd(__mmask8((1u << n) - 1), xmm);
 #else
@@ -1576,7 +1574,7 @@ public:
     }
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
-    Vec2d const insert(int index, double value) noexcept {
+    Vec2d const insert(int index, double value) {
 #if INSTRSET >= 10   // AVX512VL
         xmm = _mm_mask_movedup_pd(xmm, __mmask8(1u << index), _mm_set_sd(value));
 #else
@@ -1591,7 +1589,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    double extract(int index) const noexcept {
+    double extract(int index) const {
 #if INSTRSET >= 10   // AVX512VL
         __m128d x = _mm_mask_unpackhi_pd(xmm, __mmask8(index), xmm, xmm);
         return _mm_cvtsd_f64(x);
@@ -1603,7 +1601,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    double operator [] (int index) const noexcept {
+    double operator [] (int index) const {
         return extract(index);
     }
     static constexpr int size() {
@@ -1623,115 +1621,115 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec2d operator + (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator + (Vec2d const a, Vec2d const b) {
     return _mm_add_pd(a, b);
 }
 
 // vector operator + : add vector and scalar
-static inline Vec2d operator + (Vec2d const a, double b) noexcept {
+static inline Vec2d operator + (Vec2d const a, double b) {
     return a + Vec2d(b);
 }
-static inline Vec2d operator + (double a, Vec2d const b) noexcept {
+static inline Vec2d operator + (double a, Vec2d const b) {
     return Vec2d(a) + b;
 }
 
 // vector operator += : add
-static inline Vec2d & operator += (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator += (Vec2d & a, Vec2d const b) {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec2d operator ++ (Vec2d & a, int) noexcept {
+static inline Vec2d operator ++ (Vec2d & a, int) {
     Vec2d a0 = a;
     a = a + 1.0;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec2d & operator ++ (Vec2d & a) noexcept {
+static inline Vec2d & operator ++ (Vec2d & a) {
     a = a + 1.0;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec2d operator - (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator - (Vec2d const a, Vec2d const b) {
     return _mm_sub_pd(a, b);
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec2d operator - (Vec2d const a, double b) noexcept {
+static inline Vec2d operator - (Vec2d const a, double b) {
     return a - Vec2d(b);
 }
-static inline Vec2d operator - (double a, Vec2d const b) noexcept {
+static inline Vec2d operator - (double a, Vec2d const b) {
     return Vec2d(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec2d operator - (Vec2d const a) noexcept {
+static inline Vec2d operator - (Vec2d const a) {
     return _mm_xor_pd(a, _mm_castsi128_pd(_mm_setr_epi32(0, 0x80000000, 0, 0x80000000)));
 }
 
 // vector operator -= : subtract
-static inline Vec2d & operator -= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator -= (Vec2d & a, Vec2d const b) {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec2d operator -- (Vec2d & a, int) noexcept {
+static inline Vec2d operator -- (Vec2d & a, int) {
     Vec2d a0 = a;
     a = a - 1.0;
     return a0;
 }
 
 // prefix operator --
-static inline Vec2d & operator -- (Vec2d & a) noexcept {
+static inline Vec2d & operator -- (Vec2d & a) {
     a = a - 1.0;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec2d operator * (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator * (Vec2d const a, Vec2d const b) {
     return _mm_mul_pd(a, b);
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec2d operator * (Vec2d const a, double b) noexcept {
+static inline Vec2d operator * (Vec2d const a, double b) {
     return a * Vec2d(b);
 }
-static inline Vec2d operator * (double a, Vec2d const b) noexcept {
+static inline Vec2d operator * (double a, Vec2d const b) {
     return Vec2d(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec2d & operator *= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator *= (Vec2d & a, Vec2d const b) {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec2d operator / (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator / (Vec2d const a, Vec2d const b) {
     return _mm_div_pd(a, b);
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec2d operator / (Vec2d const a, double b) noexcept {
+static inline Vec2d operator / (Vec2d const a, double b) {
     return a / Vec2d(b);
 }
-static inline Vec2d operator / (double a, Vec2d const b) noexcept {
+static inline Vec2d operator / (double a, Vec2d const b) {
     return Vec2d(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec2d & operator /= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator /= (Vec2d & a, Vec2d const b) {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec2db operator == (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator == (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 0);
 #else
@@ -1740,7 +1738,7 @@ static inline Vec2db operator == (Vec2d const a, Vec2d const b) noexcept {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec2db operator != (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator != (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 4);
 #else
@@ -1749,7 +1747,7 @@ static inline Vec2db operator != (Vec2d const a, Vec2d const b) noexcept {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec2db operator < (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator < (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 1);
 #else
@@ -1758,7 +1756,7 @@ static inline Vec2db operator < (Vec2d const a, Vec2d const b) noexcept {
 }
 
 // vector operator <= : returns true for elements for which a <= b
-static inline Vec2db operator <= (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator <= (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 2);
 #else
@@ -1767,7 +1765,7 @@ static inline Vec2db operator <= (Vec2d const a, Vec2d const b) noexcept {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec2db operator > (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator > (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 6+8);
 #else
@@ -1776,7 +1774,7 @@ static inline Vec2db operator > (Vec2d const a, Vec2d const b) noexcept {
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec2db operator >= (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2db operator >= (Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_pd_mask(a, b, 5+8);
 #else
@@ -1787,52 +1785,52 @@ static inline Vec2db operator >= (Vec2d const a, Vec2d const b) noexcept {
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec2d operator & (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator & (Vec2d const a, Vec2d const b) {
     return _mm_and_pd(a, b);
 }
 
 // vector operator &= : bitwise and
-static inline Vec2d & operator &= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator &= (Vec2d & a, Vec2d const b) {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec2d and Vec2db
-static inline Vec2d operator & (Vec2d const a, Vec2db const b) noexcept {
+static inline Vec2d operator & (Vec2d const a, Vec2db const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_maskz_mov_pd(b, a);
 #else
     return _mm_and_pd(a, b);
 #endif
 }
-static inline Vec2d operator & (Vec2db const a, Vec2d const b) noexcept {
+static inline Vec2d operator & (Vec2db const a, Vec2d const b) {
     return b & a;
 }
 
 // vector operator | : bitwise or
-static inline Vec2d operator | (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator | (Vec2d const a, Vec2d const b) {
     return _mm_or_pd(a, b);
 }
 
 // vector operator |= : bitwise or
-static inline Vec2d & operator |= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator |= (Vec2d & a, Vec2d const b) {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec2d operator ^ (Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d operator ^ (Vec2d const a, Vec2d const b) {
     return _mm_xor_pd(a, b);
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec2d & operator ^= (Vec2d & a, Vec2d const b) noexcept {
+static inline Vec2d & operator ^= (Vec2d & a, Vec2d const b) {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec2db operator ! (Vec2d const a) noexcept {
+static inline Vec2db operator ! (Vec2d const a) {
     return a == Vec2d(0.0);
 }
 
@@ -1847,7 +1845,7 @@ static inline Vec2db operator ! (Vec2d const a) noexcept {
 // for (int i = 0; i < 2; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or 0xFFFFFFFFFFFFFFFF (true).
 // No other values are allowed.
-static inline Vec2d select(Vec2db const s, Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d select(Vec2db const s, Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_pd(b, s, a);
 #else
@@ -1856,7 +1854,7 @@ static inline Vec2d select(Vec2db const s, Vec2d const a, Vec2d const b) noexcep
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec2d if_add(Vec2db const f, Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d if_add(Vec2db const f, Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10
     return _mm_mask_add_pd (a, f, a, b);
 #else
@@ -1865,7 +1863,7 @@ static inline Vec2d if_add(Vec2db const f, Vec2d const a, Vec2d const b) noexcep
 }
 
 // Conditional subtract
-static inline Vec2d if_sub(Vec2db const f, Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d if_sub(Vec2db const f, Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10
     return _mm_mask_sub_pd (a, f, a, b);
 #else
@@ -1874,7 +1872,7 @@ static inline Vec2d if_sub(Vec2db const f, Vec2d const a, Vec2d const b) noexcep
 }
 
 // Conditional multiply
-static inline Vec2d if_mul(Vec2db const f, Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d if_mul(Vec2db const f, Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10
     return _mm_mask_mul_pd (a, f, a, b);
 #else
@@ -1883,7 +1881,7 @@ static inline Vec2d if_mul(Vec2db const f, Vec2d const a, Vec2d const b) noexcep
 }
 
 // Conditional divide
-static inline Vec2d if_div(Vec2db const f, Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d if_div(Vec2db const f, Vec2d const a, Vec2d const b) {
 #if INSTRSET >= 10
     return _mm_mask_div_pd (a, f, a, b);
 #else
@@ -1905,7 +1903,7 @@ static inline Vec2d change_sign(Vec2d const a) {
 // Function sign_bit: gives true for elements that have the sign bit set
 // even for -0.0, -INF and -NAN
 // Note that sign_bit(Vec2d(-0.0)) gives true, while Vec2d(-0.0) < Vec2d(0.0) gives false
-static inline Vec2db sign_bit(Vec2d const a) noexcept {
+static inline Vec2db sign_bit(Vec2d const a) {
     Vec2q t1 = _mm_castpd_si128(a);    // reinterpret as 64-bit integer
     Vec2q t2 = t1 >> 63;               // extend sign bit
 #if INSTRSET >= 10
@@ -1917,7 +1915,7 @@ static inline Vec2db sign_bit(Vec2d const a) noexcept {
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec2d sign_combine(Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d sign_combine(Vec2d const a, Vec2d const b) {
 #if INSTRSET < 10
     return a ^ (b & Vec2d(-0.0));
 #else
@@ -1930,7 +1928,7 @@ static inline Vec2d sign_combine(Vec2d const a, Vec2d const b) noexcept {
 
 // Function is_finite: gives true for elements that are normal, subnormal or zero,
 // false for INF and NAN
-static inline Vec2db is_finite(Vec2d const a) noexcept {
+static inline Vec2db is_finite(Vec2d const a) {
 #if INSTRSET >= 10
     return __mmask8(_mm_fpclass_pd_mask(a, 0x99) ^ 0x03);
 #else
@@ -1944,7 +1942,7 @@ static inline Vec2db is_finite(Vec2d const a) noexcept {
 
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
-static inline Vec2db is_inf(Vec2d const a) noexcept {
+static inline Vec2db is_inf(Vec2d const a) {
 #if INSTRSET >= 10
     return _mm_fpclass_pd_mask(a, 0x18);
 #else
@@ -1958,7 +1956,7 @@ static inline Vec2db is_inf(Vec2d const a) noexcept {
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec2db is_nan(Vec2d const a) noexcept {
+static inline Vec2db is_nan(Vec2d const a) {
 #if INSTRSET >= 10
     // assume that compiler does not optimize this away with -ffinite-math-only:
     return Vec2db(_mm_fpclass_pd_mask(a, 0x81));
@@ -1988,7 +1986,7 @@ static inline Vec2db is_nan(Vec2d const a) noexcept {
 
 // Function is_subnormal: gives true for elements that are subnormal
 // false for finite numbers, zero, NAN and INF
-static inline Vec2db is_subnormal(Vec2d const a) noexcept {
+static inline Vec2db is_subnormal(Vec2d const a) {
 #if INSTRSET >= 10
     return _mm_fpclass_pd_mask(a, 0x20);
 #else
@@ -2003,7 +2001,7 @@ static inline Vec2db is_subnormal(Vec2d const a) noexcept {
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal
 // false for finite numbers, NAN and INF
-static inline Vec2db is_zero_or_subnormal(Vec2d const a) noexcept {
+static inline Vec2db is_zero_or_subnormal(Vec2d const a) {
 #if INSTRSET >= 10
     return _mm_fpclass_pd_mask(a, 0x26);
 #else
@@ -2016,7 +2014,7 @@ static inline Vec2db is_zero_or_subnormal(Vec2d const a) noexcept {
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline double horizontal_add(Vec2d const a) noexcept {
+static inline double horizontal_add(Vec2d const a) {
 
 #if false &&  INSTRSET >= 3  // SSE3
     // This version causes errors in Clang version 9.0 (https://bugs.llvm.org/show_bug.cgi?id=44111)
@@ -2041,18 +2039,18 @@ static inline double horizontal_add(Vec2d const a) noexcept {
 }
 
 // function max: a > b ? a : b
-static inline Vec2d max(Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d max(Vec2d const a, Vec2d const b) {
     return _mm_max_pd(a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec2d min(Vec2d const a, Vec2d const b) noexcept {
+static inline Vec2d min(Vec2d const a, Vec2d const b) {
     return _mm_min_pd(a, b);
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
-static inline Vec2d abs(Vec2d const a) noexcept {
+static inline Vec2d abs(Vec2d const a) {
 #if INSTRSET >= 10  // AVX512VL
     return _mm_range_pd(a, a, 8);
 #else
@@ -2062,12 +2060,12 @@ static inline Vec2d abs(Vec2d const a) noexcept {
 }
 
 // function sqrt: square root
-static inline Vec2d sqrt(Vec2d const a) noexcept {
+static inline Vec2d sqrt(Vec2d const a) {
     return _mm_sqrt_pd(a);
 }
 
 // function square: a * a
-static inline Vec2d square(Vec2d const a) noexcept {
+static inline Vec2d square(Vec2d const a) {
     return a * a;
 }
 
@@ -2096,7 +2094,7 @@ static inline Vec2d pow(Vec2d const a, Const_int_t<n>) {
 
 // function round: round to nearest integer (even). (result as double vector)
 #if INSTRSET >= 5   // SSE4.1 supported
-static inline Vec2d round(Vec2d const a) noexcept {
+static inline Vec2d round(Vec2d const a) {
     return _mm_round_pd(a, 0 + 8);
 }
 #else
@@ -2111,7 +2109,7 @@ static inline Vec2d round(Vec2d const a) __attribute__((optnone));
 #pragma float_control(precise,on)
 #endif
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec2d round(Vec2d const a) noexcept {
+static inline Vec2d round(Vec2d const a) {
     // Note: assume MXCSR control register is set to rounding
     // (don't use conversion to int, it will limit the value to +/- 2^31)
     Vec2d signmask = _mm_castsi128_pd(constant4ui<0, 0x80000000, 0, 0x80000000>()); // -0.0
@@ -2130,7 +2128,7 @@ static inline Vec2d round(Vec2d const a) noexcept {
 #endif
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec2d truncate(Vec2d const a) noexcept {
+static inline Vec2d truncate(Vec2d const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 3 + 8);
 #else  // SSE2
@@ -2143,7 +2141,7 @@ static inline Vec2d truncate(Vec2d const a) noexcept {
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec2d floor(Vec2d const a) noexcept {
+static inline Vec2d floor(Vec2d const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 1 + 8);
 #else  // SSE2
@@ -2157,7 +2155,7 @@ static inline Vec2d floor(Vec2d const a) noexcept {
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec2d ceil(Vec2d const a) noexcept {
+static inline Vec2d ceil(Vec2d const a) {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_round_pd(a, 2 + 8);
 #else  // SSE2
@@ -2171,7 +2169,7 @@ static inline Vec2d ceil(Vec2d const a) noexcept {
 }
 
 // function truncate_to_int32: round towards zero.
-static inline Vec4i truncate_to_int32(Vec2d const a, Vec2d const b) noexcept {
+static inline Vec4i truncate_to_int32(Vec2d const a, Vec2d const b) {
     Vec4i t1 = _mm_cvttpd_epi32(a);
     Vec4i t2 = _mm_cvttpd_epi32(b);
     return _mm_unpacklo_epi64(t1,t2);
@@ -2180,14 +2178,14 @@ static inline Vec4i truncate_to_int32(Vec2d const a, Vec2d const b) noexcept {
 //    return truncate_to_int32(a, b);}
 
 // function truncate_to_int32: round towards zero.
-static inline Vec4i truncate_to_int32(Vec2d const a) noexcept {
+static inline Vec4i truncate_to_int32(Vec2d const a) {
     return _mm_cvttpd_epi32(a);
 }
 //static inline Vec4i truncate_to_int(Vec2d const a) { // deprecated
 //    return truncate_to_int32(a);}
 
 // function truncatei: round towards zero. (inefficient for lower instruction sets)
-static inline Vec2q truncatei(Vec2d const a) noexcept {
+static inline Vec2q truncatei(Vec2d const a) {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     //return _mm_maskz_cvttpd_epi64( __mmask8(0xFF), a);
     return _mm_cvttpd_epi64(a);
@@ -2201,7 +2199,7 @@ static inline Vec2q truncatei(Vec2d const a) noexcept {
 
 // function round_to_int: round to nearest integer (even).
 // result as 32-bit integer vector
-static inline Vec4i round_to_int32(Vec2d const a, Vec2d const b) noexcept {
+static inline Vec4i round_to_int32(Vec2d const a, Vec2d const b) {
     // Note: assume MXCSR control register is set to rounding
     Vec4i t1 = _mm_cvtpd_epi32(a);
     Vec4i t2 = _mm_cvtpd_epi32(b);
@@ -2212,14 +2210,14 @@ static inline Vec4i round_to_int32(Vec2d const a, Vec2d const b) noexcept {
 
 // function round_to_int: round to nearest integer (even).
 // result as 32-bit integer vector. Upper two values of result are 0
-static inline Vec4i round_to_int32(Vec2d const a) noexcept {
+static inline Vec4i round_to_int32(Vec2d const a) {
     Vec4i t1 = _mm_cvtpd_epi32(a);
     return t1;
 }
 //static inline Vec4i round_to_int(Vec2d const a) { return round_to_int32(a); }  // deprecated
 
 // function round_to_int64: round to nearest or even. (inefficient for lower instruction sets)
-static inline Vec2q roundi(Vec2d const a) noexcept {
+static inline Vec2q roundi(Vec2d const a) {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     return _mm_cvtpd_epi64(a);
 #else
@@ -2229,7 +2227,7 @@ static inline Vec2q roundi(Vec2d const a) noexcept {
 //static inline Vec2q round_to_int64(Vec2d const a) { return roundi(a); } // deprecated
 
 // function to_double: convert integer vector elements to double vector (inefficient for lower instruction sets)
-static inline Vec2d to_double(Vec2q const a) noexcept {
+static inline Vec2d to_double(Vec2q const a) {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     return _mm_maskz_cvtepi64_pd(__mmask8(0xFF), a);
 #else
@@ -2239,7 +2237,7 @@ static inline Vec2d to_double(Vec2q const a) noexcept {
 #endif
 }
 
-static inline Vec2d to_double(Vec2uq const a) noexcept {
+static inline Vec2d to_double(Vec2uq const a) {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     return _mm_cvtepu64_pd(a);
 #else
@@ -2250,36 +2248,36 @@ static inline Vec2d to_double(Vec2uq const a) noexcept {
 }
 
 // function to_double_low: convert integer vector elements [0] and [1] to double vector
-static inline Vec2d to_double_low(Vec4i const a) noexcept {
+static inline Vec2d to_double_low(Vec4i const a) {
     return _mm_cvtepi32_pd(a);
 }
 
 // function to_double_high: convert integer vector elements [2] and [3] to double vector
-static inline Vec2d to_double_high(Vec4i const a) noexcept {
+static inline Vec2d to_double_high(Vec4i const a) {
     return to_double_low(_mm_srli_si128(a, 8));
 }
 
 // function compress: convert two Vec2d to one Vec4f
-static inline Vec4f compress(Vec2d const low, Vec2d const high) noexcept {
+static inline Vec4f compress(Vec2d const low, Vec2d const high) {
     Vec4f t1 = _mm_cvtpd_ps(low);
     Vec4f t2 = _mm_cvtpd_ps(high);
     return _mm_shuffle_ps(t1, t2, 0x44);
 }
 
 // Function extend_low : convert Vec4f vector elements [0] and [1] to Vec2d
-static inline Vec2d extend_low(Vec4f const a) noexcept {
+static inline Vec2d extend_low(Vec4f const a) {
     return _mm_cvtps_pd(a);
 }
 
 // Function extend_high : convert Vec4f vector elements [2] and [3] to Vec2d
-static inline Vec2d extend_high(Vec4f const a) noexcept {
+static inline Vec2d extend_high(Vec4f const a) {
     return _mm_cvtps_pd(_mm_movehl_ps(a, a));
 }
 
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec2d mul_add(Vec2d const a, Vec2d const b, Vec2d const c) noexcept {
+static inline Vec2d mul_add(Vec2d const a, Vec2d const b, Vec2d const c) {
 #ifdef __FMA__
     return _mm_fmadd_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2290,7 +2288,7 @@ static inline Vec2d mul_add(Vec2d const a, Vec2d const b, Vec2d const c) noexcep
 }
 
 // Multiply and subtract
-static inline Vec2d mul_sub(Vec2d const a, Vec2d const b, Vec2d const c) noexcept {
+static inline Vec2d mul_sub(Vec2d const a, Vec2d const b, Vec2d const c) {
 #ifdef __FMA__
     return _mm_fmsub_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2301,7 +2299,7 @@ static inline Vec2d mul_sub(Vec2d const a, Vec2d const b, Vec2d const c) noexcep
 }
 
 // Multiply and inverse subtract
-static inline Vec2d nmul_add(Vec2d const a, Vec2d const b, Vec2d const c) noexcept {
+static inline Vec2d nmul_add(Vec2d const a, Vec2d const b, Vec2d const c) {
 #ifdef __FMA__
     return _mm_fnmadd_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2316,7 +2314,7 @@ static inline Vec2d nmul_add(Vec2d const a, Vec2d const b, Vec2d const c) noexce
 // even if FMA instructions not supported, using Veltkamp-Dekker split.
 // This is used in mathematical functions. Do not use it in general code
 // because it is inaccurate in certain cases
-static inline Vec2d mul_sub_x(Vec2d const a, Vec2d const b, Vec2d const c) noexcept {
+static inline Vec2d mul_sub_x(Vec2d const a, Vec2d const b, Vec2d const c) {
 #ifdef __FMA__
     return _mm_fmsub_pd(a, b, c);
 #elif defined (__FMA4__)
@@ -2340,7 +2338,7 @@ static inline Vec2d mul_sub_x(Vec2d const a, Vec2d const b, Vec2d const c) noexc
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0) = 0, exponent(0.0) = -1023, exponent(INF) = +1024, exponent(NAN) = +1024
-static inline Vec2q exponent(Vec2d const a) noexcept {
+static inline Vec2q exponent(Vec2d const a) {
     Vec2uq t1 = _mm_castpd_si128(a);   // reinterpret as 64-bit integer
     Vec2uq t2 = t1 << 1;               // shift out sign bit
     Vec2uq t3 = t2 >> 53;              // shift down logical to position 0
@@ -2352,7 +2350,7 @@ static inline Vec2q exponent(Vec2d const a) noexcept {
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0) = 1.0, fraction(5.0) = 1.25
 // NOTE: The name fraction clashes with an ENUM in MAC XCode CarbonCore script.h !
-static inline Vec2d fraction(Vec2d const a) noexcept {
+static inline Vec2d fraction(Vec2d const a) {
 #if INSTRSET >= 10
     return _mm_getmant_pd(a, _MM_MANT_NORM_1_2, _MM_MANT_SIGN_zero);
 #else
@@ -2367,7 +2365,7 @@ static inline Vec2d fraction(Vec2d const a) noexcept {
 // n >=  1024 gives +INF
 // n <= -1023 gives 0.0
 // This function will never produce subnormals, and never raise exceptions
-static inline Vec2d exp2(Vec2q const n) noexcept {
+static inline Vec2d exp2(Vec2q const n) {
     Vec2q t1 = max(n, -0x3FF);        // limit to allowed range
     Vec2q t2 = min(t1, 0x400);
     Vec2q t3 = t2 + 0x3FF;             // add bias
@@ -2383,50 +2381,50 @@ static inline Vec2d exp2(Vec2q const n) noexcept {
 *
 *****************************************************************************/
 
-static inline __m128i reinterpret_i(__m128i const x) noexcept {
+static inline __m128i reinterpret_i(__m128i const x) {
     return x;
 }
 
-static inline __m128i reinterpret_i(__m128  const x) noexcept {
+static inline __m128i reinterpret_i(__m128  const x) {
     return _mm_castps_si128(x);
 }
 
-static inline __m128i reinterpret_i(__m128d const x) noexcept {
+static inline __m128i reinterpret_i(__m128d const x) {
     return _mm_castpd_si128(x);
 }
 
-static inline __m128  reinterpret_f(__m128i const x) noexcept {
+static inline __m128  reinterpret_f(__m128i const x) {
     return _mm_castsi128_ps(x);
 }
 
-static inline __m128  reinterpret_f(__m128  const x) noexcept {
+static inline __m128  reinterpret_f(__m128  const x) {
     return x;
 }
 
-static inline __m128  reinterpret_f(__m128d const x) noexcept {
+static inline __m128  reinterpret_f(__m128d const x) {
     return _mm_castpd_ps(x);
 }
 
-static inline __m128d reinterpret_d(__m128i const x) noexcept {
+static inline __m128d reinterpret_d(__m128i const x) {
     return _mm_castsi128_pd(x);
 }
 
-static inline __m128d reinterpret_d(__m128  const x) noexcept {
+static inline __m128d reinterpret_d(__m128  const x) {
     return _mm_castps_pd(x);
 }
 
-static inline __m128d reinterpret_d(__m128d const x) noexcept {
+static inline __m128d reinterpret_d(__m128d const x) {
     return x;
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
-static inline Vec2d infinite2d() noexcept {
+static inline Vec2d infinite2d() {
     return reinterpret_d(Vec2q(0x7FF0000000000000));
 }
 
 // Function nan2d: returns a vector where all elements are +NAN (quiet)
-static inline Vec2d nan2d(int n = 0x10) noexcept {
-    return nan_vec<Vec2d>(static_cast<uint32_t>(n));
+static inline Vec2d nan2d(uint32_t n = 0x10) {
+    return nan_vec<Vec2d>(n);
 }
 
 
@@ -2750,7 +2748,7 @@ static inline Vec4f blend4(Vec4f const a, Vec4f const b) {
 *
 *****************************************************************************/
 
-static inline Vec4f lookup4(Vec4i const index, Vec4f const table) noexcept {
+static inline Vec4f lookup4(Vec4i const index, Vec4f const table) {
 #if INSTRSET >= 7  // AVX
     return _mm_permutevar_ps(table, index);
 #else
@@ -2763,7 +2761,7 @@ static inline Vec4f lookup4(Vec4i const index, Vec4f const table) noexcept {
 #endif
 }
 
-static inline Vec4f lookup8(Vec4i const index, Vec4f const table0, Vec4f const table1) noexcept {
+static inline Vec4f lookup8(Vec4i const index, Vec4f const table0, Vec4f const table1) {
 #if INSTRSET >= 8  // AVX2
     __m256 tt = _mm256_insertf128_ps(_mm256_castps128_ps256(table0), table1, 1); // combine tables
     __m128 r  = _mm256_castps256_ps128(_mm256_permutevar8x32_ps(tt, _mm256_castsi128_si256(index)));
@@ -2823,7 +2821,7 @@ static inline Vec4f lookup(Vec4i const index, float const * table) {
 #endif
 }
 
-static inline Vec2d lookup2(Vec2q const index, Vec2d const table) noexcept {
+static inline Vec2d lookup2(Vec2q const index, Vec2d const table) {
 #if INSTRSET >= 7  // AVX
     return _mm_permutevar_pd(table, index + index);
 #else
@@ -2834,7 +2832,7 @@ static inline Vec2d lookup2(Vec2q const index, Vec2d const table) noexcept {
 #endif
 }
 
-static inline Vec2d lookup4(Vec2q const index, Vec2d const table0, Vec2d const table1) noexcept {
+static inline Vec2d lookup4(Vec2q const index, Vec2d const table0, Vec2d const table1) {
 #if INSTRSET >= 7  // AVX
     Vec2q index2 = index + index;          // index << 1
     __m128d r0 = _mm_permutevar_pd(table0, index2);
@@ -2944,7 +2942,7 @@ static inline void scatter(Vec2d const data, double * destination) {
 *
 *****************************************************************************/
 
-static inline void scatter(Vec4i const index, uint32_t limit, Vec4f const data, float * destination) noexcept {
+static inline void scatter(Vec4i const index, uint32_t limit, Vec4f const data, float * destination) {
 #if INSTRSET >= 10 //  __AVX512VL__
     __mmask8 mask = _mm_cmplt_epu32_mask(index, Vec4ui(limit));
     _mm_mask_i32scatter_ps(destination, mask, index, data, 4);
@@ -2955,7 +2953,7 @@ static inline void scatter(Vec4i const index, uint32_t limit, Vec4f const data, 
 #endif
 }
 
-static inline void scatter(Vec2q const index, uint32_t limit, Vec2d const data, double * destination) noexcept {
+static inline void scatter(Vec2q const index, uint32_t limit, Vec2d const data, double * destination) {
     if (uint64_t(index[0]) < uint64_t(limit)) destination[index[0]] = data[0];
     if (uint64_t(index[1]) < uint64_t(limit)) destination[index[1]] = data[1];
 }
@@ -2964,12 +2962,12 @@ static inline void scatter(Vec2q const index, uint32_t limit, Vec2d const data, 
 #if INSTRSET < 10  // these are defined in vectori128.h for compact boolean vectors
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec4fb const x) noexcept {
+static inline uint8_t to_bits(Vec4fb const x) {
     return to_bits(Vec4ib(x));
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec2db const x) noexcept {
+static inline uint8_t to_bits(Vec2db const x) {
     return to_bits(Vec2qb(x));
 }
 

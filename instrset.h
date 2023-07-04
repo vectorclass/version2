@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -105,6 +105,7 @@
 // Header files for non-vector intrinsic functions including _BitScanReverse(int), __cpuid(int[4],int), _xgetbv(int)
 #ifdef _MSC_VER                        // Microsoft compiler or compatible Intel compiler
 #include <intrin.h>
+#pragma warning(disable: 6323 4514 4710 4711) // Diasble annoying warnings
 #else
 #include <x86intrin.h>                 // Gcc or Clang compiler
 #endif
@@ -213,7 +214,7 @@ constexpr int V_DC = -256;
 // Define interface to cpuid instruction.
 // input:  functionnumber = leaf (eax), ecxleaf = subleaf(ecx)
 // output: output[0] = eax, output[1] = ebx, output[2] = ecx, output[3] = edx
-static inline void cpuid(int output[4], int functionnumber, int ecxleaf = 0) noexcept {
+static inline void cpuid(int output[4], int functionnumber, int ecxleaf = 0) {
 #if defined(__GNUC__) || defined(__clang__)           // use inline assembly, Gnu/AT&T syntax
     int a, b, c, d;
     __asm("cpuid" : "=a"(a), "=b"(b), "=c"(c), "=d"(d) : "a"(functionnumber), "c"(ecxleaf) : );
@@ -244,11 +245,11 @@ static inline void cpuid(int output[4], int functionnumber, int ecxleaf = 0) noe
 #if INSTRSET >= 6   // SSE4.2
 // The popcnt instruction is not officially part of the SSE4.2 instruction set,
 // but available in all known processors with SSE4.2
-static inline uint32_t vml_popcnt(uint32_t a) noexcept {
+static inline uint32_t vml_popcnt(uint32_t a) {
     return (uint32_t)_mm_popcnt_u32(a);  // Intel intrinsic. Supported by gcc and clang
 }
 #ifdef __x86_64__
-static inline int64_t vml_popcnt(uint64_t a) noexcept {
+static inline int64_t vml_popcnt(uint64_t a) {
     return _mm_popcnt_u64(a);            // Intel intrinsic.
 }
 #else   // 32 bit mode
@@ -257,16 +258,16 @@ static inline int64_t vml_popcnt(uint64_t a) {
 }
 #endif
 #else  // no SSE4.2
-static inline uint32_t vml_popcnt(uint32_t a) noexcept {
+static inline uint32_t vml_popcnt(uint32_t a) {
     // popcnt instruction not available
-    const uint32_t b = a - ((a >> 1) & 0x55555555);
-    const uint32_t c = (b & 0x33333333) + ((b >> 2) & 0x33333333);
-    const uint32_t d = (c + (c >> 4)) & 0x0F0F0F0F;
-    const uint32_t e = d * 0x01010101;
+    uint32_t b = a - ((a >> 1) & 0x55555555);
+    uint32_t c = (b & 0x33333333) + ((b >> 2) & 0x33333333);
+    uint32_t d = (c + (c >> 4)) & 0x0F0F0F0F;
+    uint32_t e = d * 0x01010101;
     return   e >> 24;
 }
-static inline int32_t vml_popcnt(uint64_t a) noexcept {
-    return static_cast<int32_t>(vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a)));
+static inline int32_t vml_popcnt(uint64_t a) {
+    return (int32_t)(vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a)));
 }
 #endif
 
@@ -292,13 +293,13 @@ static inline uint32_t bit_scan_forward(uint64_t a) {
     return bit_scan_forward(hi) + 32;
 }
 #else  // MS compatible compilers under Windows
-static inline uint32_t bit_scan_forward(uint32_t a) noexcept {
+static inline uint32_t bit_scan_forward(uint32_t a) {
     unsigned long r;
     _BitScanForward(&r, a);            // defined in intrin.h for MS and Intel compilers
     return r;
 }
 #ifdef __x86_64__
-static inline uint32_t bit_scan_forward(uint64_t a) noexcept {
+static inline uint32_t bit_scan_forward(uint64_t a) {
     unsigned long r;
     _BitScanForward64(&r, a);          // defined in intrin.h for MS and Intel compilers
     return (uint32_t)r;
@@ -340,13 +341,13 @@ static inline uint32_t bit_scan_reverse(uint64_t a) {
 }
 #endif
 #else  // MS compatible compilers under Windows
-static inline uint32_t bit_scan_reverse(uint32_t a) noexcept {
+static inline uint32_t bit_scan_reverse(uint32_t a) {
     unsigned long r;
     _BitScanReverse(&r, a);            // defined in intrin.h for MS compatible compilers
     return r;
 }
 #ifdef __x86_64__
-static inline uint32_t bit_scan_reverse(uint64_t a) noexcept {
+static inline uint32_t bit_scan_reverse(uint64_t a) {
     unsigned long r;
     _BitScanReverse64(&r, a);          // defined in intrin.h for MS compatible compilers
     return r;
@@ -391,7 +392,7 @@ template <uint32_t n> class Const_uint_t {};     // represent compile-time unsig
 
 // template for producing quiet NAN
 template <class VTYPE>
-static inline VTYPE nan_vec(uint32_t payload = 0x100) noexcept {
+static inline VTYPE nan_vec(uint32_t payload = 0x100) {
     if constexpr (VTYPE::elementtype() == 17) {  // double
         union {
             uint64_t q;
@@ -462,7 +463,7 @@ struct EList {
 // of vector class V with the value -1
 template <typename V>
 constexpr auto get_inttype() {
-    constexpr int elementsize = sizeof(V) / V::size();  // size of vector elements
+    constexpr int elementsize = int(sizeof(V) / V::size());  // size of vector elements
 
     if constexpr (elementsize >= 8) {
         return -int64_t(1);
@@ -580,28 +581,28 @@ constexpr auto perm_mask_broad(int const (&A)[V::size()]) {
 
 // perm_flags: returns information about how a permute can be implemented.
 // The return value is composed of these flag bits:
-constexpr int perm_zeroing             = 1;  // needs zeroing
-constexpr int perm_perm                = 2;  // permutation needed
-constexpr int perm_allzero             = 4;  // all is zero or don't care
-constexpr int perm_largeblock          = 8;  // fits permute with a larger block size (e.g permute Vec2q instead of Vec4i)
-constexpr int perm_addz             = 0x10;  // additional zeroing needed after permute with larger block size or shift
-constexpr int perm_addz2            = 0x20;  // additional zeroing needed after perm_zext, perm_compress, or perm_expand
-constexpr int perm_cross_lane       = 0x40;  // permutation crossing 128-bit lanes
-constexpr int perm_same_pattern     = 0x80;  // same permute pattern in all 128-bit lanes
-constexpr int perm_punpckh         = 0x100;  // permutation pattern fits punpckh instruction
-constexpr int perm_punpckl         = 0x200;  // permutation pattern fits punpckl instruction
-constexpr int perm_rotate          = 0x400;  // permutation pattern fits 128-bit rotation within lanes. 4 bit byte count returned in bit perm_rot_count
-constexpr int perm_swap            = 0x800;  // permutation pattern fits swap of adjacent vector elements
-constexpr int perm_shright        = 0x1000;  // permutation pattern fits shift right within lanes. 4 bit count returned in bit perm_rot_count
-constexpr int perm_shleft         = 0x2000;  // permutation pattern fits shift left within lanes. negative count returned in bit perm_rot_count
-constexpr int perm_rotate_big     = 0x4000;  // permutation pattern fits rotation across lanes. 6 bit count returned in bit perm_rot_count
-constexpr int perm_broadcast      = 0x8000;  // permutation pattern fits broadcast of a single element.
-constexpr int perm_zext          = 0x10000;  // permutation pattern fits zero extension
-constexpr int perm_compress      = 0x20000;  // permutation pattern fits vpcompress instruction
-constexpr int perm_expand        = 0x40000;  // permutation pattern fits vpexpand instruction
-constexpr int perm_outofrange = 0x10000000;  // index out of range
-constexpr int perm_rot_count          = 32;  // rotate or shift count is in bits perm_rot_count to perm_rot_count+3
-constexpr int perm_ipattern           = 40;  // pattern for pshufd is in bit perm_ipattern to perm_ipattern + 7 if perm_same_pattern and elementsize >= 4
+const int perm_zeroing             = 1;  // needs zeroing
+const int perm_perm                = 2;  // permutation needed
+const int perm_allzero             = 4;  // all is zero or don't care
+const int perm_largeblock          = 8;  // fits permute with a larger block size (e.g permute Vec2q instead of Vec4i)
+const int perm_addz             = 0x10;  // additional zeroing needed after permute with larger block size or shift
+const int perm_addz2            = 0x20;  // additional zeroing needed after perm_zext, perm_compress, or perm_expand
+const int perm_cross_lane       = 0x40;  // permutation crossing 128-bit lanes
+const int perm_same_pattern     = 0x80;  // same permute pattern in all 128-bit lanes
+const int perm_punpckh         = 0x100;  // permutation pattern fits punpckh instruction
+const int perm_punpckl         = 0x200;  // permutation pattern fits punpckl instruction
+const int perm_rotate          = 0x400;  // permutation pattern fits 128-bit rotation within lanes. 4 bit byte count returned in bit perm_rot_count
+const int perm_swap            = 0x800;  // permutation pattern fits swap of adjacent vector elements
+const int perm_shright        = 0x1000;  // permutation pattern fits shift right within lanes. 4 bit count returned in bit perm_rot_count
+const int perm_shleft         = 0x2000;  // permutation pattern fits shift left within lanes. negative count returned in bit perm_rot_count
+const int perm_rotate_big     = 0x4000;  // permutation pattern fits rotation across lanes. 6 bit count returned in bit perm_rot_count
+const int perm_broadcast      = 0x8000;  // permutation pattern fits broadcast of a single element.
+const int perm_zext          = 0x10000;  // permutation pattern fits zero extension
+const int perm_compress      = 0x20000;  // permutation pattern fits vpcompress instruction
+const int perm_expand        = 0x40000;  // permutation pattern fits vpexpand instruction
+const int perm_outofrange = 0x10000000;  // index out of range
+const int perm_rot_count          = 32;  // rotate or shift count is in bits perm_rot_count to perm_rot_count+3
+const int perm_ipattern           = 40;  // pattern for pshufd is in bit perm_ipattern to perm_ipattern + 7 if perm_same_pattern and elementsize >= 4
 
 template <typename V>
 constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
@@ -663,8 +664,8 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         // check if same pattern in all lanes
         if (lane != 0 && ix >= 0) {                        // not first lane
-            int j1  = i - int(lane * lanesize);            // index into lanepattern
-            int jx = ix - int(lane * lanesize);            // pattern within lane
+            int j1 = int(i - int(lane * lanesize));        // index into lanepattern
+            int jx = int(ix - int(lane * lanesize));       // pattern within lane
             if (jx < 0 || jx >= (int)lanesize) r &= ~perm_same_pattern; // source is in another lane
             if (lanepattern[j1] < 0) {
                 lanepattern[j1] = jx;                      // pattern not known from previous lane
@@ -681,7 +682,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             // check if pattern fits compress (perm_compress)
             if (ix > compresslasti && ix - compresslasti >= (int)i - compresslastp) {
                 if ((int)i - compresslastp > 1) addz2 |= 2;// perm_compress may need additional zeroing
-                compresslasti = ix;  compresslastp = i;
+                compresslasti = ix;  compresslastp = int(i);
             }
             else {
                 patfail |= 2;                              // does not fit perm_compress
@@ -689,7 +690,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             // check if pattern fits expand (perm_expand)
             if (ix > expandlasti && ix - expandlasti <= (int)i - expandlastp) {
                 if (ix - expandlasti > 1) addz2 |= 4;      // perm_expand may need additional zeroing
-                expandlasti = ix;  expandlastp = i;
+                expandlasti = ix;  expandlastp = int(i);
             }
             else {
                 patfail |= 4;                              // does not fit perm_compress
@@ -788,7 +789,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         if (fit) r |= perm_punpckl;
         // fit pshufd
         if constexpr (elementsize >= 4) {
-            uint64_t p = 0;
+            uint32_t p = 0;
             for (i = 0; i < lanesize; i++) {
                 if constexpr (lanesize == 4) {
                     p |= (lanepattern[i] & 3) << 2 * i;
@@ -797,7 +798,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
                     p |= ((lanepattern[i] & 1) * 10 + 4) << 4 * i;
                 }
             }
-            r |= p << perm_ipattern;
+            r |= (uint64_t)p << perm_ipattern;
         }
     }
 #if INSTRSET >= 7
@@ -901,7 +902,7 @@ constexpr uint64_t perm16_flags(int const (&a)[V::size()]) {
         }
         else if (ix >= 0) {                                // not first lane
             uint32_t j = i - lane * lanesize;              // index into lanepattern
-            int jx = ix - lane * lanesize;                 // pattern within lane
+            int jx = int(ix - lane * lanesize);            // pattern within lane
             if (lanepattern[j] < 0) {
                 lanepattern[j] = jx;                       // pattern not known from previous lane
             }
@@ -949,7 +950,7 @@ constexpr auto pshufb_mask(int const (&A)[V::size()]) {
     // Parameter a is a reference to a constexpr array of permutation indexes
     // V is a vector class
     // oppos = 1 for data from the opposite 128-bit lane in 256-bit vectors
-    constexpr uint32_t N = V::size();                      // number of vector elements
+    constexpr uint32_t N = uint32_t(V::size());            // number of vector elements
     constexpr uint32_t elementsize = sizeof(V) / N;        // size of each vector element
     constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128 bit lanes in vector
     constexpr uint32_t elements_per_lane = N / nlanes;     // number of vector elements per lane
@@ -972,10 +973,10 @@ constexpr auto pshufb_mask(int const (&A)[V::size()]) {
             }
             ix -= int(lane * elements_per_lane);           // index relative to lane
             if (ix >= 0 && ix < (int)elements_per_lane) {  // index points to desired lane
-                p = ix * elementsize;
+                p = int8_t(ix * elementsize);
             }
             for (j = 0; j < elementsize; j++) {            // loop through bytes in element
-                u.a[k++] = p < 0 ? -1 : p + j;             // store byte permutation index
+                u.a[k++] = int8_t(p < 0 ? -1 : p + j);     // store byte permutation index
             }
             m++;
         }
@@ -1029,28 +1030,28 @@ constexpr EList<int, N/2> largeblock_perm(int const (&a)[N]) {
 
 // blend_flags: returns information about how a blend function can be implemented
 // The return value is composed of these flag bits:
-constexpr int blend_zeroing            = 1;  // needs zeroing
-constexpr int blend_allzero            = 2;  // all is zero or don't care
-constexpr int blend_largeblock         = 4;  // fits blend with a larger block size (e.g permute Vec2q instead of Vec4i)
-constexpr int blend_addz               = 8;  // additional zeroing needed after blend with larger block size or shift
-constexpr int blend_a               = 0x10;  // has data from a
-constexpr int blend_b               = 0x20;  // has data from b
-constexpr int blend_perma           = 0x40;  // permutation of a needed
-constexpr int blend_permb           = 0x80;  // permutation of b needed
-constexpr int blend_cross_lane     = 0x100;  // permutation crossing 128-bit lanes
-constexpr int blend_same_pattern   = 0x200;  // same permute/blend pattern in all 128-bit lanes
-constexpr int blend_punpckhab     = 0x1000;  // pattern fits punpckh(a,b)
-constexpr int blend_punpckhba     = 0x2000;  // pattern fits punpckh(b,a)
-constexpr int blend_punpcklab     = 0x4000;  // pattern fits punpckl(a,b)
-constexpr int blend_punpcklba     = 0x8000;  // pattern fits punpckl(b,a)
-constexpr int blend_rotateab     = 0x10000;  // pattern fits palignr(a,b)
-constexpr int blend_rotateba     = 0x20000;  // pattern fits palignr(b,a)
-constexpr int blend_shufab       = 0x40000;  // pattern fits shufps/shufpd(a,b)
-constexpr int blend_shufba       = 0x80000;  // pattern fits shufps/shufpd(b,a)
-constexpr int blend_rotate_big  = 0x100000;  // pattern fits rotation across lanes. count returned in bits blend_rotpattern
-constexpr int blend_outofrange= 0x10000000;  // index out of range
-constexpr int blend_shufpattern       = 32;  // pattern for shufps/shufpd is in bit blend_shufpattern to blend_shufpattern + 7
-constexpr int blend_rotpattern        = 40;  // pattern for palignr is in bit blend_rotpattern to blend_rotpattern + 7
+const int blend_zeroing            = 1;  // needs zeroing
+const int blend_allzero            = 2;  // all is zero or don't care
+const int blend_largeblock         = 4;  // fits blend with a larger block size (e.g permute Vec2q instead of Vec4i)
+const int blend_addz               = 8;  // additional zeroing needed after blend with larger block size or shift
+const int blend_a               = 0x10;  // has data from a
+const int blend_b               = 0x20;  // has data from b
+const int blend_perma           = 0x40;  // permutation of a needed
+const int blend_permb           = 0x80;  // permutation of b needed
+const int blend_cross_lane     = 0x100;  // permutation crossing 128-bit lanes
+const int blend_same_pattern   = 0x200;  // same permute/blend pattern in all 128-bit lanes
+const int blend_punpckhab     = 0x1000;  // pattern fits punpckh(a,b)
+const int blend_punpckhba     = 0x2000;  // pattern fits punpckh(b,a)
+const int blend_punpcklab     = 0x4000;  // pattern fits punpckl(a,b)
+const int blend_punpcklba     = 0x8000;  // pattern fits punpckl(b,a)
+const int blend_rotateab     = 0x10000;  // pattern fits palignr(a,b)
+const int blend_rotateba     = 0x20000;  // pattern fits palignr(b,a)
+const int blend_shufab       = 0x40000;  // pattern fits shufps/shufpd(a,b)
+const int blend_shufba       = 0x80000;  // pattern fits shufps/shufpd(b,a)
+const int blend_rotate_big  = 0x100000;  // pattern fits rotation across lanes. count returned in bits blend_rotpattern
+const int blend_outofrange= 0x10000000;  // index out of range
+const int blend_shufpattern       = 32;  // pattern for shufps/shufpd is in bit blend_shufpattern to blend_shufpattern + 7
+const int blend_rotpattern        = 40;  // pattern for palignr is in bit blend_rotpattern to blend_rotpattern + 7
 
 template <typename V>
 constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
@@ -1061,12 +1062,12 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     uint32_t iu = 0;                                       // loop counter
     int32_t ii = 0;                                        // loop counter
     int ix = 0;                                            // index number i
-    const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
-    const uint32_t lanesize = N / nlanes;                  // elements per lane
+    constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128-bit lanes
+    constexpr uint32_t lanesize = N / nlanes;              // elements per lane
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int lanepattern[lanesize] = {0};                       // pattern in each lane
-    if (lanesize == 2 && N <= 8) {
+    if constexpr (lanesize == 2 && N <= 8) {
         r |= blend_shufab | blend_shufba;                  // check if it fits shufpd
     }
 
@@ -1112,7 +1113,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             if (lanei != lane) {
                 r |= blend_cross_lane;                     // crossing lane
             }
-            if (lanesize == 2) {   // check if it fits pshufd
+            if constexpr (lanesize == 2) {   // check if it fits pshufd
                 if (lanei != lane) r &= ~(blend_shufab | blend_shufba);
                 if ((((ix & N) != 0) ^ ii) & 1) r &= ~blend_shufab;
                 else r &= ~blend_shufba;
@@ -1152,7 +1153,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         for (iu = 0; iu < lanesize; iu++) {
             ix = lanepattern[iu];
             if (ix >= 0) {
-                uint32_t t = ix & ~N;
+                uint32_t t = uint32_t(ix & ~N);
                 if (ix & N) t += lanesize;
                 uint32_t tb = (t + 2*lanesize - iu) % (lanesize * 2);
                 if (rot == 999) {
@@ -1174,7 +1175,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             r |= uint64_t((rot & (lanesize - 1)) * elementsize) << blend_rotpattern;
         }
 #endif
-        if (lanesize == 4) {
+        if constexpr (lanesize == 4) {
             // check if it fits shufps
             r |= blend_shufab | blend_shufba;
             for (ii = 0; ii < 2; ii++) {
@@ -1200,12 +1201,12 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             }
         }
     }
-    else if  (nlanes > 1) {  // not same pattern in all lanes
+    else if constexpr (nlanes > 1) {  // not same pattern in all lanes
         rot = 999;                                         // check if it fits big rotate
         for (ii = 0; ii < N; ii++) {
             ix = a[ii];
             if (ix >= 0) {
-                uint32_t rot2 = (ix + 2 * N - ii) % (2 * N);// rotate count
+                uint32_t rot2 = uint32_t((ix + 2 * N - ii) % (2 * N));// rotate count
                 if (rot == 999) {
                     rot = rot2;                            // save rotate count
                 }
@@ -1241,7 +1242,7 @@ constexpr EList<int, 2*N> blend_perm_indexes(int const (&a)[N]) {
     for (j = 0; j < N; j++) {          // loop through indexes
         int ix = a[j];                 // current index
         if (ix < 0) {                  // zero or don't care
-            if (dozero == 2) {
+            if constexpr (dozero == 2) {
                 // list.a[j] = list.a[j + N] = ix;  // fails in gcc in complicated cases
                 list.a[j] = ix;
                 list.a[j + N] = ix;

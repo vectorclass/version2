@@ -1,8 +1,8 @@
 /****************************  vectorfp16.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining half precision floating point vector classes
@@ -473,7 +473,7 @@ Vec8h nan_vec<Vec8h>(uint32_t payload) {
 } 
 
 // Function nan8h: returns a vector where all elements are NAN (quiet)
-static inline Vec8h nan8h(int n = 0x10) {
+static inline Vec8h nan8h(uint32_t n = 0x10) {
     return nan_vec<Vec8h>(n);
 }
 
@@ -1233,7 +1233,7 @@ Vec16h nan_vec<Vec16h>(uint32_t payload) {
 } 
 
 // Function nan16h: returns a vector where all elements are NAN (quiet)
-static inline Vec16h nan16h(int n = 0x10) {
+static inline Vec16h nan16h(uint32_t n = 0x10) {
     return nan_vec<Vec16h>(n);
 }
 
@@ -1989,7 +1989,7 @@ Vec32h nan_vec<Vec32h>(uint32_t payload) {
 } 
 
 // Function nan32h: returns a vector where all elements are NAN (quiet)
-static inline Vec32h nan32h(int n = 0x10) {
+static inline Vec32h nan32h(uint32_t n = 0x10) {
     return nan_vec<Vec32h>(n);
 }
 
