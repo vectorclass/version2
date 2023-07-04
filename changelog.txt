@@ -1,5 +1,9 @@
 Change log for Vector class library
 -----------------------------------
+
+2023-07-04 version 2.02.02
+  * remove various MS compiler warnings
+
 2022-06-03 version 2.02.01
   * minor bug fixes and updates
 
