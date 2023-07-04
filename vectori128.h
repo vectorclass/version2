@@ -263,7 +263,8 @@ public:
 
 // Members of Vec16b that refer to Vec8b:
 inline Vec16b::Vec16b(Vec8b const x0, Vec8b const x1) {
-    mm = uint8_t(x0) | uint16_t(x1) << 8;
+    const auto mm_ = uint8_t(x0) | uint16_t(x1) << 8;
+    mm = static_cast<__mmask16>(mm_);
 }
 #if INSTRSET >= 10
 inline Vec8b Vec16b::get_low() const {
@@ -748,20 +749,20 @@ public:
     // Default constructor:
     Vec128b() = default;
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec128b(__m128i const x) {
+    Vec128b(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec128b & operator = (__m128i const x) {
+    Vec128b & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128i used in intrinsics
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec128b & load(void const * p) {
+    Vec128b & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
@@ -770,11 +771,11 @@ public:
     // Merom, Wolfdale, and Atom), but not on other processors from Intel, AMD or VIA.
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 16.
-    void load_a(void const * p) {
+    void load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
     }
     // Member function to store into array (unaligned)
-    void store(void * p) const {
+    void store(void * p) const noexcept {
         _mm_storeu_si128((__m128i*)p, xmm);
     }
     // Member function storing into array, aligned by 16
@@ -782,14 +783,14 @@ public:
     // Merom, Wolfdale, and Atom), but not on other processors from Intel, AMD or VIA.
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 16.
-    void store_a(void * p) const {
+    void store_a(void * p) const noexcept {
         _mm_store_si128((__m128i*)p, xmm);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 16
-    void store_nt(void * p) const {
+    void store_nt(void * p) const noexcept {
         _mm_stream_si128((__m128i*)p, xmm);
     }
     static constexpr int size() {
@@ -804,45 +805,45 @@ public:
 // Define operators for this class
 
 // vector operator & : bitwise and
-static inline Vec128b operator & (Vec128b const a, Vec128b const b) {
+static inline Vec128b operator & (Vec128b const a, Vec128b const b) noexcept {
     return _mm_and_si128(a, b);
 }
-static inline Vec128b operator && (Vec128b const a, Vec128b const b) {
+static inline Vec128b operator && (Vec128b const a, Vec128b const b) noexcept {
     return a & b;
 }
 
 // vector operator | : bitwise or
-static inline Vec128b operator | (Vec128b const a, Vec128b const b) {
+static inline Vec128b operator | (Vec128b const a, Vec128b const b) noexcept {
     return _mm_or_si128(a, b);
 }
-static inline Vec128b operator || (Vec128b const a, Vec128b const b) {
+static inline Vec128b operator || (Vec128b const a, Vec128b const b) noexcept {
     return a | b;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec128b operator ^ (Vec128b const a, Vec128b const b) {
+static inline Vec128b operator ^ (Vec128b const a, Vec128b const b) noexcept {
     return _mm_xor_si128(a, b);
 }
 
 // vector operator ~ : bitwise not
-static inline Vec128b operator ~ (Vec128b const a) {
+static inline Vec128b operator ~ (Vec128b const a) noexcept {
     return _mm_xor_si128(a, _mm_set1_epi32(-1));
 }
 
 // vector operator &= : bitwise and
-static inline Vec128b & operator &= (Vec128b & a, Vec128b const b) {
+static inline Vec128b & operator &= (Vec128b & a, Vec128b const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator |= : bitwise or
-static inline Vec128b & operator |= (Vec128b & a, Vec128b const b) {
+static inline Vec128b & operator |= (Vec128b & a, Vec128b const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec128b & operator ^= (Vec128b & a, Vec128b const b) {
+static inline Vec128b & operator ^= (Vec128b & a, Vec128b const b) noexcept {
     a = a ^ b;
     return a;
 }
@@ -850,7 +851,7 @@ static inline Vec128b & operator ^= (Vec128b & a, Vec128b const b) {
 // Define functions for this class
 
 // function andnot: a & ~ b
-static inline Vec128b andnot(Vec128b const a, Vec128b const b) {
+static inline Vec128b andnot(Vec128b const a, Vec128b const b) noexcept {
     return _mm_andnot_si128(b, a);
 }
 
@@ -868,7 +869,7 @@ static inline Vec128b andnot(Vec128b const a, Vec128b const b) {
 // The implementation depends on the instruction set:
 // If SSE4.1 is supported then only bit 7 in each byte of s is checked,
 // otherwise all bits in s are used.
-static inline __m128i selectb(__m128i const s, __m128i const a, __m128i const b) {
+static inline __m128i selectb(__m128i const s, __m128i const a, __m128i const b) noexcept {
 #if INSTRSET >= 5    // SSE4.1
     return _mm_blendv_epi8(b, a, s);
 #else
@@ -883,7 +884,7 @@ static inline __m128i selectb(__m128i const s, __m128i const a, __m128i const b)
 *
 *****************************************************************************/
 
-static inline bool horizontal_and(Vec128b const a) {
+static inline bool horizontal_and(Vec128b const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1. Use PTEST
     return _mm_testc_si128(a, _mm_set1_epi32(-1)) != 0;
 #else
@@ -902,7 +903,7 @@ static inline bool horizontal_and(Vec128b const a) {
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or(Vec128b const a) {
+static inline bool horizontal_or(Vec128b const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1. Use PTEST
     return !_mm_testz_si128(a, a);
 #else
@@ -932,39 +933,39 @@ public:
     // Default constructor:
     Vec16c() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec16c(int i) {
+    Vec16c(int i) noexcept {
         xmm = _mm_set1_epi8((char)i);
     }
     // Constructor to build from all elements:
     Vec16c(int8_t i0, int8_t i1, int8_t i2, int8_t i3, int8_t i4, int8_t i5, int8_t i6, int8_t i7,
-        int8_t i8, int8_t i9, int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15) {
+        int8_t i8, int8_t i9, int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15) noexcept {
         xmm = _mm_setr_epi8(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec16c(__m128i const x) {
+    Vec16c(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec16c & operator = (__m128i const x) {
+    Vec16c & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128i used in intrinsics
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec16c & load(void const * p) {
+    Vec16c & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec16c & load_a(void const * p) {
+    Vec16c & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec16c & load_partial(int n, void const * p) {
+    Vec16c & load_partial(int n, void const * p) noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         xmm = _mm_maskz_loadu_epi8(__mmask16((1u << n) - 1), p);
 #else
@@ -986,7 +987,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi8(p, __mmask16((1u << n) - 1), xmm);
 #else   // storing in bigger blocks may be unsafe unless compiler option -fno-strict-aliasing is specified,
@@ -1000,7 +1001,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 16-n elements are set to zero
-    Vec16c & cutoff(int n) {
+    Vec16c & cutoff(int n) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi8(__mmask16((1u << n) - 1), xmm);
 #else
@@ -1012,7 +1013,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec16c const insert(int index, int8_t value) {
+    Vec16c const insert(int index, int8_t value) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_mask_set1_epi8(xmm, __mmask16(1u << index), value);
 #else
@@ -1030,7 +1031,7 @@ public:
     This would go nuts if a.size() is 2.
     */
     // Member function extract a single element from vector
-    int8_t extract(int index) const {
+    int8_t extract(int index) const noexcept {
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m128i x = _mm_maskz_compress_epi8(__mmask16(1u << index), xmm);
         return (int8_t)_mm_cvtsi128_si32(x);
@@ -1042,7 +1043,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int8_t operator [] (int index) const {
+    int8_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int size() {
@@ -1066,29 +1067,29 @@ public:
     Vec16cb() = default;
     // Constructor to build from all elements:
     Vec16cb(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7,
-        bool x8, bool x9, bool x10, bool x11, bool x12, bool x13, bool x14, bool x15) {
+        bool x8, bool x9, bool x10, bool x11, bool x12, bool x13, bool x14, bool x15) noexcept {
         xmm = Vec16c(-int8_t(x0), -int8_t(x1), -int8_t(x2), -int8_t(x3), -int8_t(x4), -int8_t(x5), -int8_t(x6), -int8_t(x7),
             -int8_t(x8), -int8_t(x9), -int8_t(x10), -int8_t(x11), -int8_t(x12), -int8_t(x13), -int8_t(x14), -int8_t(x15));
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec16cb(__m128i const x) {
+    Vec16cb(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec16cb & operator = (__m128i const x) {
+    Vec16cb & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Constructor to broadcast scalar value:
-    Vec16cb(bool b) : Vec16c(-int8_t(b)) {
+    Vec16cb(bool b) noexcept : Vec16c(-int8_t(b)) {
     }
     // Assignment operator to broadcast scalar value:
-    Vec16cb & operator = (bool b) {
+    Vec16cb & operator = (bool b) noexcept {
         *this = Vec16cb(b);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec16cb & insert(int index, bool a) {
+    Vec16cb & insert(int index, bool a) noexcept {
         Vec16c::insert(index, -(int)a);
         return *this;
     }
@@ -1114,12 +1115,12 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         return Vec16c::extract(index) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int elementtype() {
@@ -1144,73 +1145,73 @@ typedef Vec16b Vec16cb;  // compact boolean vector
 #if INSTRSET < 10   // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec16cb operator & (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator & (Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(Vec128b(a) & Vec128b(b));
 }
-static inline Vec16cb operator && (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator && (Vec16cb const a, Vec16cb const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec16cb & operator &= (Vec16cb & a, Vec16cb const b) {
+static inline Vec16cb & operator &= (Vec16cb & a, Vec16cb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec16cb operator | (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator | (Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(Vec128b(a) | Vec128b(b));
 }
-static inline Vec16cb operator || (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator || (Vec16cb const a, Vec16cb const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec16cb & operator |= (Vec16cb & a, Vec16cb const b) {
+static inline Vec16cb & operator |= (Vec16cb & a, Vec16cb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec16cb operator ^ (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator ^ (Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec16cb & operator ^= (Vec16cb & a, Vec16cb const b) {
+static inline Vec16cb & operator ^= (Vec16cb & a, Vec16cb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec16cb operator == (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator == (Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(a ^ (~b));
 }
 
 // vector operator != : xor
-static inline Vec16cb operator != (Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb operator != (Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(a ^ b);
 }
 
 // vector operator ~ : bitwise not
-static inline Vec16cb operator ~ (Vec16cb const a) {
+static inline Vec16cb operator ~ (Vec16cb const a) noexcept {
     return Vec16cb(~Vec128b(a));
 }
 
 // vector operator ! : element not
-static inline Vec16cb operator ! (Vec16cb const a) {
+static inline Vec16cb operator ! (Vec16cb const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec16cb andnot(Vec16cb const a, Vec16cb const b) {
+static inline Vec16cb andnot(Vec16cb const a, Vec16cb const b) noexcept {
     return Vec16cb(andnot(Vec128b(a), Vec128b(b)));
 }
 
 // horizontal_and. Returns true if all elements are true
-static inline bool horizontal_and(Vec16cb const a) {
+static inline bool horizontal_and(Vec16cb const a) noexcept {
     return _mm_movemask_epi8(a) == 0xFFFF;
 }
 
 // horizontal_or. Returns true if at least one element is true
-static inline bool horizontal_or(Vec16cb const a) {
+static inline bool horizontal_or(Vec16cb const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1. Use PTEST
     return !_mm_testz_si128(a, a);
 #else
@@ -1227,57 +1228,57 @@ static inline bool horizontal_or(Vec16cb const a) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec16c operator + (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator + (Vec16c const a, Vec16c const b) noexcept {
     return _mm_add_epi8(a, b);
 }
 // vector operator += : add
-static inline Vec16c & operator += (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator += (Vec16c & a, Vec16c const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec16c operator ++ (Vec16c & a, int) {
+static inline Vec16c operator ++ (Vec16c & a, int) noexcept {
     Vec16c a0 = a;
     a = a + 1;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec16c & operator ++ (Vec16c & a) {
+static inline Vec16c & operator ++ (Vec16c & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec16c operator - (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator - (Vec16c const a, Vec16c const b) noexcept {
     return _mm_sub_epi8(a, b);
 }
 // vector operator - : unary minus
-static inline Vec16c operator - (Vec16c const a) {
+static inline Vec16c operator - (Vec16c const a) noexcept {
     return _mm_sub_epi8(_mm_setzero_si128(), a);
 }
 // vector operator -= : add
-static inline Vec16c & operator -= (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator -= (Vec16c & a, Vec16c const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec16c operator -- (Vec16c & a, int) {
+static inline Vec16c operator -- (Vec16c & a, int) noexcept {
     Vec16c a0 = a;
     a = a - 1;
     return a0;
 }
 
 // prefix operator --
-static inline Vec16c & operator -- (Vec16c & a) {
+static inline Vec16c & operator -- (Vec16c & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec16c operator * (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator * (Vec16c const a, Vec16c const b) noexcept {
     // There is no 8-bit multiply in SSE2. Split into two 16-bit multiplies
     __m128i aodd = _mm_srli_epi16(a, 8);         // odd numbered elements of a
     __m128i bodd = _mm_srli_epi16(b, 8);         // odd numbered elements of b
@@ -1293,26 +1294,26 @@ static inline Vec16c operator * (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator *= : multiply
-static inline Vec16c & operator *= (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator *= (Vec16c & a, Vec16c const b) noexcept {
     a = a * b;
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec16c operator << (Vec16c const a, int b) {
+static inline Vec16c operator << (Vec16c const a, int b) noexcept {
     uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;         // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));// remove bits that will overflow
     __m128i res = _mm_sll_epi16(am, _mm_cvtsi32_si128(b));// 16-bit shifts
     return res;
 }
 // vector operator <<= : shift left
-static inline Vec16c & operator <<= (Vec16c & a, int b) {
+static inline Vec16c & operator <<= (Vec16c & a, int b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic all elements
-static inline Vec16c operator >> (Vec16c const a, int b) {
+static inline Vec16c operator >> (Vec16c const a, int b) noexcept {
     __m128i aeven = _mm_slli_epi16(a, 8);                  // even numbered elements of a. get sign bit in position
     aeven = _mm_sra_epi16(aeven, _mm_cvtsi32_si128(b + 8));// shift arithmetic, back to position
     __m128i aodd = _mm_sra_epi16(a, _mm_cvtsi32_si128(b)); // shift odd numbered elements arithmetic
@@ -1325,13 +1326,13 @@ static inline Vec16c operator >> (Vec16c const a, int b) {
 #endif
 }
 // vector operator >>= : shift right arithmetic
-static inline Vec16c & operator >>= (Vec16c & a, int b) {
+static inline Vec16c & operator >>= (Vec16c & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec16cb operator == (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator == (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 0);
 #else
@@ -1340,7 +1341,7 @@ static inline Vec16cb operator == (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec16cb operator != (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator != (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 4);
 #else
@@ -1349,7 +1350,7 @@ static inline Vec16cb operator != (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator > : returns true for elements for which a > b (signed)
-static inline Vec16cb operator > (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator > (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 6);
 #else
@@ -1358,7 +1359,7 @@ static inline Vec16cb operator > (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator < : returns true for elements for which a < b (signed)
-static inline Vec16cb operator < (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator < (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 1);
 #else
@@ -1367,7 +1368,7 @@ static inline Vec16cb operator < (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec16cb operator >= (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator >= (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 5);
 #else
@@ -1376,7 +1377,7 @@ static inline Vec16cb operator >= (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec16cb operator <= (Vec16c const a, Vec16c const b) {
+static inline Vec16cb operator <= (Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, b, 2);
 #else
@@ -1385,48 +1386,48 @@ static inline Vec16cb operator <= (Vec16c const a, Vec16c const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec16c operator & (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator & (Vec16c const a, Vec16c const b) noexcept {
     return Vec16c(Vec128b(a) & Vec128b(b));
 }
-static inline Vec16c operator && (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator && (Vec16c const a, Vec16c const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec16c & operator &= (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator &= (Vec16c & a, Vec16c const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec16c operator | (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator | (Vec16c const a, Vec16c const b) noexcept {
     return Vec16c(Vec128b(a) | Vec128b(b));
 }
-static inline Vec16c operator || (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator || (Vec16c const a, Vec16c const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec16c & operator |= (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator |= (Vec16c & a, Vec16c const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec16c operator ^ (Vec16c const a, Vec16c const b) {
+static inline Vec16c operator ^ (Vec16c const a, Vec16c const b) noexcept {
     return Vec16c(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec16c & operator ^= (Vec16c & a, Vec16c const b) {
+static inline Vec16c & operator ^= (Vec16c & a, Vec16c const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec16c operator ~ (Vec16c const a) {
+static inline Vec16c operator ~ (Vec16c const a) noexcept {
     return Vec16c(~Vec128b(a));
 }
 
 // vector operator ! : logical not, returns true for elements == 0
-static inline Vec16cb operator ! (Vec16c const a) {
+static inline Vec16cb operator ! (Vec16c const a) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi8_mask(a, _mm_setzero_si128(), 0);
 #else
@@ -1439,7 +1440,7 @@ static inline Vec16cb operator ! (Vec16c const a) {
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or -1 (true). No other values are allowed.
-static inline Vec16c select(Vec16cb const s, Vec16c const a, Vec16c const b) {
+static inline Vec16c select(Vec16cb const s, Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi8(b, s, a);
 #else
@@ -1448,7 +1449,7 @@ static inline Vec16c select(Vec16cb const s, Vec16c const a, Vec16c const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec16c if_add(Vec16cb const f, Vec16c const a, Vec16c const b) {
+static inline Vec16c if_add(Vec16cb const f, Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi8(a, f, a, b);
 #else
@@ -1457,7 +1458,7 @@ static inline Vec16c if_add(Vec16cb const f, Vec16c const a, Vec16c const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec16c if_sub(Vec16cb const f, Vec16c const a, Vec16c const b) {
+static inline Vec16c if_sub(Vec16cb const f, Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi8(a, f, a, b);
 #else
@@ -1466,12 +1467,12 @@ static inline Vec16c if_sub(Vec16cb const f, Vec16c const a, Vec16c const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec16c if_mul(Vec16cb const f, Vec16c const a, Vec16c const b) {
+static inline Vec16c if_mul(Vec16cb const f, Vec16c const a, Vec16c const b) noexcept {
     return select(f, a * b, a);
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int32_t horizontal_add(Vec16c const a) {
+static inline int32_t horizontal_add(Vec16c const a) noexcept {
     __m128i sum1 = _mm_sad_epu8(a, _mm_setzero_si128());
     __m128i sum2 = _mm_unpackhi_epi64(sum1, sum1);
     __m128i sum3 = _mm_add_epi16(sum1, sum2);
@@ -1481,7 +1482,7 @@ static inline int32_t horizontal_add(Vec16c const a) {
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Each element is sign-extended before addition to avoid overflow
-static inline int32_t horizontal_add_x(Vec16c const a) {
+static inline int32_t horizontal_add_x(Vec16c const a) noexcept {
 #ifdef __XOP__       // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epi8(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -1509,17 +1510,17 @@ static inline int32_t horizontal_add_x(Vec16c const a) {
 
 
 // function add_saturated: add element by element, signed with saturation
-static inline Vec16c add_saturated(Vec16c const a, Vec16c const b) {
+static inline Vec16c add_saturated(Vec16c const a, Vec16c const b) noexcept {
     return _mm_adds_epi8(a, b);
 }
 
 // function sub_saturated: subtract element by element, signed with saturation
-static inline Vec16c sub_saturated(Vec16c const a, Vec16c const b) {
+static inline Vec16c sub_saturated(Vec16c const a, Vec16c const b) noexcept {
     return _mm_subs_epi8(a, b);
 }
 
 // function max: a > b ? a : b
-static inline Vec16c max(Vec16c const a, Vec16c const b) {
+static inline Vec16c max(Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_max_epi8(a, b);
 #else  // SSE2
@@ -1532,7 +1533,7 @@ static inline Vec16c max(Vec16c const a, Vec16c const b) {
 }
 
 // function min: a < b ? a : b
-static inline Vec16c min(Vec16c const a, Vec16c const b) {
+static inline Vec16c min(Vec16c const a, Vec16c const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_min_epi8(a, b);
 #else  // SSE2
@@ -1545,7 +1546,7 @@ static inline Vec16c min(Vec16c const a, Vec16c const b) {
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec16c abs(Vec16c const a) {
+static inline Vec16c abs(Vec16c const a) noexcept {
 #if INSTRSET >= 4     // SSSE3 supported
     return _mm_abs_epi8(a);
 #else                 // SSE2
@@ -1555,7 +1556,7 @@ static inline Vec16c abs(Vec16c const a) {
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec16c abs_saturated(Vec16c const a) {
+static inline Vec16c abs_saturated(Vec16c const a) noexcept {
     __m128i absa = abs(a);                                 // abs(a)
 #if INSTRSET >= 10
     return _mm_min_epu8(absa, Vec16c(0x7F));
@@ -1567,11 +1568,11 @@ static inline Vec16c abs_saturated(Vec16c const a) {
 
 // function rotate_left: rotate each element left by b bits
 // Use negative count to rotate right
-static inline Vec16c rotate_left(Vec16c const a, int b) {
+static inline Vec16c rotate_left(Vec16c const a, int b) noexcept {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec16c)_mm_rot_epi8(a, _mm_set1_epi8(b));
 #else  // SSE2 instruction set
-    uint8_t mask = 0xFFu << b;                             // mask off overflow bits
+    const auto mask = static_cast<char>(0xFFu << b);  // mask off overflow bits
     __m128i m = _mm_set1_epi8(mask);
     __m128i bb = _mm_cvtsi32_si128(b & 7);                 // b modulo 8
     __m128i mbb = _mm_cvtsi32_si128((-b) & 7);             // 8-b modulo 8
@@ -1595,46 +1596,46 @@ public:
     // Default constructor:
     Vec16uc() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec16uc(uint32_t i) {
+    Vec16uc(uint32_t i) noexcept {
         xmm = _mm_set1_epi8((char)i);
     }
     // Constructor to build from all elements:
     Vec16uc(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7,
-        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15) {
+        uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15) noexcept {
         xmm = _mm_setr_epi8((int8_t)i0, (int8_t)i1, (int8_t)i2, (int8_t)i3, (int8_t)i4, (int8_t)i5, (int8_t)i6,
             (int8_t)i7, (int8_t)i8, (int8_t)i9, (int8_t)i10, (int8_t)i11, (int8_t)i12, (int8_t)i13, (int8_t)i14, (int8_t)i15);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec16uc(__m128i const x) {
+    Vec16uc(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec16uc & operator = (__m128i const x) {
+    Vec16uc & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec16uc & load(void const * p) {
+    Vec16uc & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec16uc & load_a(void const * p) {
+    Vec16uc & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec16uc const insert(int index, uint8_t value) {
+    Vec16uc const insert(int index, uint8_t value) noexcept {
         Vec16c::insert(index, (int8_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint8_t extract(int index) const {
+    uint8_t extract(int index) const noexcept {
         return uint8_t(Vec16c::extract(index));
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint8_t operator [] (int index) const {
+    uint8_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int elementtype() {
@@ -1645,7 +1646,7 @@ public:
 // Define operators for this class
 
 // vector operator << : shift left all elements
-static inline Vec16uc operator << (Vec16uc const a, uint32_t b) {
+static inline Vec16uc operator << (Vec16uc const a, uint32_t b) noexcept {
     uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;               // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));  // remove bits that will overflow
     __m128i res = _mm_sll_epi16(am, _mm_cvtsi32_si128((int)b)); // 16-bit shifts
@@ -1653,12 +1654,12 @@ static inline Vec16uc operator << (Vec16uc const a, uint32_t b) {
 }
 
 // vector operator << : shift left all elements
-static inline Vec16uc operator << (Vec16uc const a, int32_t b) {
+static inline Vec16uc operator << (Vec16uc const a, int32_t b) noexcept {
     return a << (uint32_t)b;
 }
 
 // vector operator >> : shift right logical all elements
-static inline Vec16uc operator >> (Vec16uc const a, uint32_t b) {
+static inline Vec16uc operator >> (Vec16uc const a, uint32_t b) noexcept {
     uint32_t mask = (uint32_t)0xFF << (uint32_t)b;               // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));  // remove bits that will overflow
     __m128i res = _mm_srl_epi16(am, _mm_cvtsi32_si128((int)b)); // 16-bit shifts
@@ -1666,18 +1667,18 @@ static inline Vec16uc operator >> (Vec16uc const a, uint32_t b) {
 }
 
 // vector operator >> : shift right logical all elements
-static inline Vec16uc operator >> (Vec16uc const a, int32_t b) {
+static inline Vec16uc operator >> (Vec16uc const a, int32_t b) noexcept {
     return a >> (uint32_t)b;
 }
 
 // vector operator >>= : shift right logical
-static inline Vec16uc & operator >>= (Vec16uc & a, int b) {
+static inline Vec16uc & operator >>= (Vec16uc & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec16cb operator >= (Vec16uc const a, Vec16uc const b) {
+static inline Vec16cb operator >= (Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu8_mask(a, b, 5);
 #else
@@ -1686,7 +1687,7 @@ static inline Vec16cb operator >= (Vec16uc const a, Vec16uc const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec16cb operator <= (Vec16uc const a, Vec16uc const b) {
+static inline Vec16cb operator <= (Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu8_mask(a, b, 2);
 #else
@@ -1695,7 +1696,7 @@ static inline Vec16cb operator <= (Vec16uc const a, Vec16uc const b) {
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec16cb operator > (Vec16uc const a, Vec16uc const b) {
+static inline Vec16cb operator > (Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu8_mask(a, b, 6);
 #else
@@ -1704,7 +1705,7 @@ static inline Vec16cb operator > (Vec16uc const a, Vec16uc const b) {
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec16cb operator < (Vec16uc const a, Vec16uc const b) {
+static inline Vec16cb operator < (Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu8_mask(a, b, 1);
 #else
@@ -1713,43 +1714,43 @@ static inline Vec16cb operator < (Vec16uc const a, Vec16uc const b) {
 }
 
 // vector operator + : add
-static inline Vec16uc operator + (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator + (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec16c(a) + Vec16c(b));
 }
 
 // vector operator - : subtract
-static inline Vec16uc operator - (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator - (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec16c(a) - Vec16c(b));
 }
 
 // vector operator * : multiply
-static inline Vec16uc operator * (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator * (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec16c(a) * Vec16c(b));
 }
 
 // vector operator & : bitwise and
-static inline Vec16uc operator & (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator & (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec128b(a) & Vec128b(b));
 }
-static inline Vec16uc operator && (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator && (Vec16uc const a, Vec16uc const b) noexcept {
     return a & b;
 }
 
 // vector operator | : bitwise or
-static inline Vec16uc operator | (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator | (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec128b(a) | Vec128b(b));
 }
-static inline Vec16uc operator || (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator || (Vec16uc const a, Vec16uc const b) noexcept {
     return a | b;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec16uc operator ^ (Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc operator ^ (Vec16uc const a, Vec16uc const b) noexcept {
     return Vec16uc(Vec128b(a) ^ Vec128b(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec16uc operator ~ (Vec16uc const a) {
+static inline Vec16uc operator ~ (Vec16uc const a) noexcept {
     return Vec16uc(~Vec128b(a));
 }
 
@@ -1757,7 +1758,7 @@ static inline Vec16uc operator ~ (Vec16uc const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec16uc select(Vec16cb const s, Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc select(Vec16cb const s, Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi8(b, s, a);
 #else
@@ -1766,7 +1767,7 @@ static inline Vec16uc select(Vec16cb const s, Vec16uc const a, Vec16uc const b) 
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec16uc if_add(Vec16cb const f, Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc if_add(Vec16cb const f, Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi8(a, f, a, b);
 #else
@@ -1775,7 +1776,7 @@ static inline Vec16uc if_add(Vec16cb const f, Vec16uc const a, Vec16uc const b) 
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec16uc if_sub(Vec16cb const f, Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc if_sub(Vec16cb const f, Vec16uc const a, Vec16uc const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi8(a, f, a, b);
 #else
@@ -1784,13 +1785,13 @@ static inline Vec16uc if_sub(Vec16cb const f, Vec16uc const a, Vec16uc const b) 
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec16uc if_mul(Vec16cb const f, Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc if_mul(Vec16cb const f, Vec16uc const a, Vec16uc const b) noexcept {
     return select(f, a * b, a);
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
 // (Note: horizontal_add_x(Vec16uc) is slightly faster)
-static inline uint32_t horizontal_add(Vec16uc const a) {
+static inline uint32_t horizontal_add(Vec16uc const a) noexcept {
     __m128i sum1 = _mm_sad_epu8(a, _mm_setzero_si128());
     __m128i sum2 = _mm_unpackhi_epi64(sum1, sum1);
     __m128i sum3 = _mm_add_epi16(sum1, sum2);
@@ -1800,7 +1801,7 @@ static inline uint32_t horizontal_add(Vec16uc const a) {
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Each element is zero-extended before addition to avoid overflow
-static inline uint32_t horizontal_add_x(Vec16uc const a) {
+static inline uint32_t horizontal_add_x(Vec16uc const a) noexcept {
     __m128i sum1 = _mm_sad_epu8(a, _mm_setzero_si128());
     __m128i sum2 = _mm_unpackhi_epi64(sum1, sum1);
     __m128i sum3 = _mm_add_epi16(sum1, sum2);
@@ -1808,22 +1809,22 @@ static inline uint32_t horizontal_add_x(Vec16uc const a) {
 }
 
 // function add_saturated: add element by element, unsigned with saturation
-static inline Vec16uc add_saturated(Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc add_saturated(Vec16uc const a, Vec16uc const b) noexcept {
     return _mm_adds_epu8(a, b);
 }
 
 // function sub_saturated: subtract element by element, unsigned with saturation
-static inline Vec16uc sub_saturated(Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc sub_saturated(Vec16uc const a, Vec16uc const b) noexcept {
     return _mm_subs_epu8(a, b);
 }
 
 // function max: a > b ? a : b
-static inline Vec16uc max(Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc max(Vec16uc const a, Vec16uc const b) noexcept {
     return _mm_max_epu8(a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec16uc min(Vec16uc const a, Vec16uc const b) {
+static inline Vec16uc min(Vec16uc const a, Vec16uc const b) noexcept {
     return _mm_min_epu8(a, b);
 }
 
@@ -1840,38 +1841,38 @@ public:
     // Default constructor:
     Vec8s() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec8s(int i) {
+    Vec8s(int i) noexcept {
         xmm = _mm_set1_epi16((int16_t)i);
     }
     // Constructor to build from all elements:
-    Vec8s(int16_t i0, int16_t i1, int16_t i2, int16_t i3, int16_t i4, int16_t i5, int16_t i6, int16_t i7) {
+    Vec8s(int16_t i0, int16_t i1, int16_t i2, int16_t i3, int16_t i4, int16_t i5, int16_t i6, int16_t i7) noexcept {
         xmm = _mm_setr_epi16(i0, i1, i2, i3, i4, i5, i6, i7);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec8s(__m128i const x) {
+    Vec8s(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec8s & operator = (__m128i const x) {
+    Vec8s & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128i used in intrinsics
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec8s & load(void const * p) {
+    Vec8s & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec8s & load_a(void const * p) {
+    Vec8s & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec8s & load_partial(int n, void const * p) {
+    Vec8s & load_partial(int n, void const * p) noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         xmm = _mm_maskz_loadu_epi16(__mmask8((1u << n) - 1), p);
 #else
@@ -1892,7 +1893,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi16(p, __mmask8((1u << n) - 1), xmm);
 #else
@@ -1905,7 +1906,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 8-n elements are set to zero
-    Vec8s & cutoff(int n) {
+    Vec8s & cutoff(int n) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi16(__mmask8((1u << n) - 1), xmm);
 #else
@@ -1914,7 +1915,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec8s const insert(int index, int16_t value) {
+    Vec8s const insert(int index, int16_t value) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_mask_set1_epi16(xmm, __mmask8(1u << index), value);
 #else
@@ -1940,7 +1941,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    int16_t extract(int index) const {
+    int16_t extract(int index) const noexcept {
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m128i x = _mm_maskz_compress_epi16(__mmask8(1u << index), xmm);
         return (int16_t)_mm_cvtsi128_si32(x);
@@ -1968,7 +1969,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int16_t operator [] (int index) const {
+    int16_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int size() {
@@ -1989,40 +1990,40 @@ public:
 class Vec8sb : public Vec8s {
 public:
     // Constructor to build from all elements:
-    Vec8sb(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7) {
+    Vec8sb(bool x0, bool x1, bool x2, bool x3, bool x4, bool x5, bool x6, bool x7) noexcept {
         xmm = Vec8s(-int16_t(x0), -int16_t(x1), -int16_t(x2), -int16_t(x3), -int16_t(x4), -int16_t(x5), -int16_t(x6), -int16_t(x7));
     }
     // Default constructor:
     Vec8sb() = default;
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec8sb(__m128i const x) {
+    Vec8sb(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec8sb & operator = (__m128i const x) {
+    Vec8sb & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Constructor to broadcast scalar value:
-    Vec8sb(bool b) : Vec8s(-int16_t(b)) {
+    Vec8sb(bool b) noexcept : Vec8s(-int16_t(b)) {
     }
     // Assignment operator to broadcast scalar value:
-    Vec8sb & operator = (bool b) {
+    Vec8sb & operator = (bool b) noexcept {
         *this = Vec8sb(b);
         return *this;
     }
-    Vec8sb & insert(int index, bool a) {
+    Vec8sb & insert(int index, bool a) noexcept {
         Vec8s::insert(index, -(int16_t)a);
         return *this;
     }
     // Member function extract a single element from vector
     // Note: This function is inefficient. Use store function if extracting more than one element
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         return Vec8s::extract(index) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member function to change a bitfield to a boolean vector
@@ -2053,73 +2054,73 @@ typedef Vec8b Vec8sb;
 #if INSTRSET < 10   // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec8sb operator & (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator & (Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(Vec128b(a) & Vec128b(b));
 }
-static inline Vec8sb operator && (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator && (Vec8sb const a, Vec8sb const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec8sb & operator &= (Vec8sb & a, Vec8sb const b) {
+static inline Vec8sb & operator &= (Vec8sb & a, Vec8sb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec8sb operator | (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator | (Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(Vec128b(a) | Vec128b(b));
 }
-static inline Vec8sb operator || (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator || (Vec8sb const a, Vec8sb const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec8sb & operator |= (Vec8sb & a, Vec8sb const b) {
+static inline Vec8sb & operator |= (Vec8sb & a, Vec8sb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8sb operator ^ (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator ^ (Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec8sb & operator ^= (Vec8sb & a, Vec8sb const b) {
+static inline Vec8sb & operator ^= (Vec8sb & a, Vec8sb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec8sb operator == (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator == (Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(a ^ (~b));
 }
 
 // vector operator != : xor
-static inline Vec8sb operator != (Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb operator != (Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(a ^ b);
 }
 
 // vector operator ~ : bitwise not
-static inline Vec8sb operator ~ (Vec8sb const a) {
+static inline Vec8sb operator ~ (Vec8sb const a) noexcept {
     return Vec8sb(~Vec128b(a));
 }
 
 // vector operator ! : element not
-static inline Vec8sb operator ! (Vec8sb const a) {
+static inline Vec8sb operator ! (Vec8sb const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec8sb andnot(Vec8sb const a, Vec8sb const b) {
+static inline Vec8sb andnot(Vec8sb const a, Vec8sb const b) noexcept {
     return Vec8sb(andnot(Vec128b(a), Vec128b(b)));
 }
 
 // horizontal_and. Returns true if all elements are true
-static inline bool horizontal_and(Vec8sb const a) {
+static inline bool horizontal_and(Vec8sb const a) noexcept {
     return _mm_movemask_epi8(a) == 0xFFFF;
 }
 
 // horizontal_or. Returns true if at least one element is true
-static inline bool horizontal_or(Vec8sb const a) {
+static inline bool horizontal_or(Vec8sb const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1. Use PTEST
     return !_mm_testz_si128(a, a);
 #else
@@ -2136,60 +2137,60 @@ static inline bool horizontal_or(Vec8sb const a) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec8s operator + (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator + (Vec8s const a, Vec8s const b) noexcept {
     return _mm_add_epi16(a, b);
 }
 // vector operator += : add
-static inline Vec8s & operator += (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator += (Vec8s & a, Vec8s const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec8s operator ++ (Vec8s & a, int) {
+static inline Vec8s operator ++ (Vec8s & a, int) noexcept {
     Vec8s a0 = a;
     a = a + 1;
     return a0;
 }
 // prefix operator ++
-static inline Vec8s & operator ++ (Vec8s & a) {
+static inline Vec8s & operator ++ (Vec8s & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec8s operator - (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator - (Vec8s const a, Vec8s const b) noexcept {
     return _mm_sub_epi16(a, b);
 }
 // vector operator - : unary minus
-static inline Vec8s operator - (Vec8s const a) {
+static inline Vec8s operator - (Vec8s const a) noexcept {
     return _mm_sub_epi16(_mm_setzero_si128(), a);
 }
 // vector operator -= : subtract
-static inline Vec8s & operator -= (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator -= (Vec8s & a, Vec8s const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec8s operator -- (Vec8s & a, int) {
+static inline Vec8s operator -- (Vec8s & a, int) noexcept {
     Vec8s a0 = a;
     a = a - 1;
     return a0;
 }
 // prefix operator --
-static inline Vec8s & operator -- (Vec8s & a) {
+static inline Vec8s & operator -- (Vec8s & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec8s operator * (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator * (Vec8s const a, Vec8s const b) noexcept {
     return _mm_mullo_epi16(a, b);
 }
 
 // vector operator *= : multiply
-static inline Vec8s & operator *= (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator *= (Vec8s & a, Vec8s const b) noexcept {
     a = a * b;
     return a;
 }
@@ -2197,29 +2198,29 @@ static inline Vec8s & operator *= (Vec8s & a, Vec8s const b) {
 // vector operator / : divide all elements by same integer. See bottom of file
 
 // vector operator << : shift left
-static inline Vec8s operator << (Vec8s const a, int b) {
+static inline Vec8s operator << (Vec8s const a, int b) noexcept {
     return _mm_sll_epi16(a, _mm_cvtsi32_si128(b));
 }
 
 // vector operator <<= : shift left
-static inline Vec8s & operator <<= (Vec8s & a, int b) {
+static inline Vec8s & operator <<= (Vec8s & a, int b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic
-static inline Vec8s operator >> (Vec8s const a, int b) {
+static inline Vec8s operator >> (Vec8s const a, int b) noexcept {
     return _mm_sra_epi16(a, _mm_cvtsi32_si128(b));
 }
 
 // vector operator >>= : shift right arithmetic
-static inline Vec8s & operator >>= (Vec8s & a, int b) {
+static inline Vec8s & operator >>= (Vec8s & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec8sb operator == (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator == (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10   // compact boolean vectors
     return _mm_cmpeq_epi16_mask(a, b);
 #else
@@ -2228,7 +2229,7 @@ static inline Vec8sb operator == (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec8sb operator != (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator != (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10   // compact boolean vectors
     return _mm_cmpneq_epi16_mask(a, b);
 #else
@@ -2237,7 +2238,7 @@ static inline Vec8sb operator != (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec8sb operator > (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator > (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10   // compact boolean vectors
     return  _mm_cmp_epi16_mask(a, b, 6);
 #else
@@ -2246,7 +2247,7 @@ static inline Vec8sb operator > (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec8sb operator < (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator < (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi16_mask(a, b, 1);
 #else
@@ -2255,7 +2256,7 @@ static inline Vec8sb operator < (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec8sb operator >= (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator >= (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10   // compact boolean vectors
     return  _mm_cmp_epi16_mask(a, b, 5);
 #else
@@ -2264,7 +2265,7 @@ static inline Vec8sb operator >= (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec8sb operator <= (Vec8s const a, Vec8s const b) {
+static inline Vec8sb operator <= (Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi16_mask(a, b, 2);
 #else
@@ -2273,43 +2274,43 @@ static inline Vec8sb operator <= (Vec8s const a, Vec8s const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec8s operator & (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator & (Vec8s const a, Vec8s const b) noexcept {
     return Vec8s(Vec128b(a) & Vec128b(b));
 }
-static inline Vec8s operator && (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator && (Vec8s const a, Vec8s const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec8s & operator &= (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator &= (Vec8s & a, Vec8s const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec8s operator | (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator | (Vec8s const a, Vec8s const b) noexcept {
     return Vec8s(Vec128b(a) | Vec128b(b));
 }
-static inline Vec8s operator || (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator || (Vec8s const a, Vec8s const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec8s & operator |= (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator |= (Vec8s & a, Vec8s const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8s operator ^ (Vec8s const a, Vec8s const b) {
+static inline Vec8s operator ^ (Vec8s const a, Vec8s const b) noexcept {
     return Vec8s(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec8s & operator ^= (Vec8s & a, Vec8s const b) {
+static inline Vec8s & operator ^= (Vec8s & a, Vec8s const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec8s operator ~ (Vec8s const a) {
+static inline Vec8s operator ~ (Vec8s const a) noexcept {
     return Vec8s(~Vec128b(a));
 }
 
@@ -2317,7 +2318,7 @@ static inline Vec8s operator ~ (Vec8s const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec8s select(Vec8sb const s, Vec8s const a, Vec8s const b) {
+static inline Vec8s select(Vec8sb const s, Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi16(b, s, a);
 #else
@@ -2326,7 +2327,7 @@ static inline Vec8s select(Vec8sb const s, Vec8s const a, Vec8s const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec8s if_add(Vec8sb const f, Vec8s const a, Vec8s const b) {
+static inline Vec8s if_add(Vec8sb const f, Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi16(a, f, a, b);
 #else
@@ -2335,7 +2336,7 @@ static inline Vec8s if_add(Vec8sb const f, Vec8s const a, Vec8s const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec8s if_sub(Vec8sb const f, Vec8s const a, Vec8s const b) {
+static inline Vec8s if_sub(Vec8sb const f, Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi16(a, f, a, b);
 #else
@@ -2344,7 +2345,7 @@ static inline Vec8s if_sub(Vec8sb const f, Vec8s const a, Vec8s const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec8s if_mul(Vec8sb const f, Vec8s const a, Vec8s const b) {
+static inline Vec8s if_mul(Vec8sb const f, Vec8s const a, Vec8s const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi16(a, f, a, b);
 #else
@@ -2353,7 +2354,7 @@ static inline Vec8s if_mul(Vec8sb const f, Vec8s const a, Vec8s const b) {
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int16_t horizontal_add(Vec8s const a) {
+static inline int16_t horizontal_add(Vec8s const a) noexcept {
 #ifdef __XOP__       // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epi16(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -2381,7 +2382,7 @@ static inline int16_t horizontal_add(Vec8s const a) {
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Elements are sign extended before adding to avoid overflow
-static inline int32_t horizontal_add_x(Vec8s const a) {
+static inline int32_t horizontal_add_x(Vec8s const a) noexcept {
 #ifdef __XOP__       // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epi16(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -2408,27 +2409,27 @@ static inline int32_t horizontal_add_x(Vec8s const a) {
 }
 
 // function add_saturated: add element by element, signed with saturation
-static inline Vec8s add_saturated(Vec8s const a, Vec8s const b) {
+static inline Vec8s add_saturated(Vec8s const a, Vec8s const b) noexcept {
     return _mm_adds_epi16(a, b);
 }
 
 // function sub_saturated: subtract element by element, signed with saturation
-static inline Vec8s sub_saturated(Vec8s const a, Vec8s const b) {
+static inline Vec8s sub_saturated(Vec8s const a, Vec8s const b) noexcept {
     return _mm_subs_epi16(a, b);
 }
 
 // function max: a > b ? a : b
-static inline Vec8s max(Vec8s const a, Vec8s const b) {
+static inline Vec8s max(Vec8s const a, Vec8s const b) noexcept {
     return _mm_max_epi16(a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec8s min(Vec8s const a, Vec8s const b) {
+static inline Vec8s min(Vec8s const a, Vec8s const b) noexcept {
     return _mm_min_epi16(a, b);
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec8s abs(Vec8s const a) {
+static inline Vec8s abs(Vec8s const a) noexcept {
 #if INSTRSET >= 4     // SSSE3 supported
     return _mm_abs_epi16(a);
 #else                 // SSE2
@@ -2438,7 +2439,7 @@ static inline Vec8s abs(Vec8s const a) {
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec8s abs_saturated(Vec8s const a) {
+static inline Vec8s abs_saturated(Vec8s const a) noexcept {
 #if INSTRSET >= 10
     return _mm_min_epu16(abs(a), Vec8s(0x7FFF));
 #else
@@ -2450,7 +2451,7 @@ static inline Vec8s abs_saturated(Vec8s const a) {
 
 // function rotate_left all elements
 // Use negative count to rotate right
-static inline Vec8s rotate_left(Vec8s const a, int b) {
+static inline Vec8s rotate_left(Vec8s const a, int b) noexcept {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec8s)_mm_rot_epi16(a, _mm_set1_epi16(b));
 #else  // SSE2 instruction set
@@ -2473,45 +2474,45 @@ public:
     // Default constructor:
     Vec8us() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec8us(uint32_t i) {
+    Vec8us(uint32_t i) noexcept {
         xmm = _mm_set1_epi16((int16_t)i);
     }
     // Constructor to build from all elements:
-    Vec8us(uint16_t i0, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4, uint16_t i5, uint16_t i6, uint16_t i7) {
+    Vec8us(uint16_t i0, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4, uint16_t i5, uint16_t i6, uint16_t i7) noexcept {
         xmm = _mm_setr_epi16((int16_t)i0, (int16_t)i1, (int16_t)i2, (int16_t)i3, (int16_t)i4, (int16_t)i5, (int16_t)i6, (int16_t)i7);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec8us(__m128i const x) {
+    Vec8us(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec8us & operator = (__m128i const x) {
+    Vec8us & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec8us & load(void const * p) {
+    Vec8us & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec8us & load_a(void const * p) {
+    Vec8us & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
-    Vec8us const insert(int index, uint16_t value) {
+    Vec8us const insert(int index, uint16_t value) noexcept {
         Vec8s::insert(index, (int16_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint16_t extract(int index) const {
+    uint16_t extract(int index) const noexcept {
         return (uint16_t)Vec8s::extract(index);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint16_t operator [] (int index) const {
+    uint16_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int elementtype() {
@@ -2522,17 +2523,17 @@ public:
 // Define operators for this class
 
 // vector operator + : add
-static inline Vec8us operator + (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator + (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec8s(a) + Vec8s(b));
 }
 
 // vector operator - : subtract
-static inline Vec8us operator - (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator - (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec8s(a) - Vec8s(b));
 }
 
 // vector operator * : multiply
-static inline Vec8us operator * (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator * (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec8s(a) * Vec8s(b));
 }
 
@@ -2540,33 +2541,33 @@ static inline Vec8us operator * (Vec8us const a, Vec8us const b) {
 // See bottom of file
 
 // vector operator >> : shift right logical all elements
-static inline Vec8us operator >> (Vec8us const a, uint32_t b) {
+static inline Vec8us operator >> (Vec8us const a, uint32_t b) noexcept {
     return _mm_srl_epi16(a, _mm_cvtsi32_si128((int)b));
 }
 
 // vector operator >> : shift right logical all elements
-static inline Vec8us operator >> (Vec8us const a, int32_t b) {
+static inline Vec8us operator >> (Vec8us const a, int32_t b) noexcept {
     return a >> (uint32_t)b;
 }
 
 // vector operator >>= : shift right logical
-static inline Vec8us & operator >>= (Vec8us & a, int b) {
+static inline Vec8us & operator >>= (Vec8us & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec8us operator << (Vec8us const a, uint32_t b) {
+static inline Vec8us operator << (Vec8us const a, uint32_t b) noexcept {
     return _mm_sll_epi16(a, _mm_cvtsi32_si128((int)b));
 }
 
 // vector operator << : shift left all elements
-static inline Vec8us operator << (Vec8us const a, int32_t b) {
+static inline Vec8us operator << (Vec8us const a, int32_t b) noexcept {
     return a << (uint32_t)b;
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec8sb operator >= (Vec8us const a, Vec8us const b) {
+static inline Vec8sb operator >= (Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu16_mask(a, b, 5);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -2581,7 +2582,7 @@ static inline Vec8sb operator >= (Vec8us const a, Vec8us const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec8sb operator <= (Vec8us const a, Vec8us const b) {
+static inline Vec8sb operator <= (Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu16_mask(a, b, 2);
 #else
@@ -2590,7 +2591,7 @@ static inline Vec8sb operator <= (Vec8us const a, Vec8us const b) {
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec8sb operator > (Vec8us const a, Vec8us const b) {
+static inline Vec8sb operator > (Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu16_mask(a, b, 6);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -2601,7 +2602,7 @@ static inline Vec8sb operator > (Vec8us const a, Vec8us const b) {
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec8sb operator < (Vec8us const a, Vec8us const b) {
+static inline Vec8sb operator < (Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu16_mask(a, b, 1);
 #else
@@ -2610,28 +2611,28 @@ static inline Vec8sb operator < (Vec8us const a, Vec8us const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec8us operator & (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator & (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec128b(a) & Vec128b(b));
 }
-static inline Vec8us operator && (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator && (Vec8us const a, Vec8us const b) noexcept {
     return a & b;
 }
 
 // vector operator | : bitwise or
-static inline Vec8us operator | (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator | (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec128b(a) | Vec128b(b));
 }
-static inline Vec8us operator || (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator || (Vec8us const a, Vec8us const b) noexcept {
     return a | b;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8us operator ^ (Vec8us const a, Vec8us const b) {
+static inline Vec8us operator ^ (Vec8us const a, Vec8us const b) noexcept {
     return Vec8us(Vec128b(a) ^ Vec128b(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec8us operator ~ (Vec8us const a) {
+static inline Vec8us operator ~ (Vec8us const a) noexcept {
     return Vec8us(~Vec128b(a));
 }
 
@@ -2639,7 +2640,7 @@ static inline Vec8us operator ~ (Vec8us const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec8us select(Vec8sb const s, Vec8us const a, Vec8us const b) {
+static inline Vec8us select(Vec8sb const s, Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi16(b, s, a);
 #else
@@ -2648,7 +2649,7 @@ static inline Vec8us select(Vec8sb const s, Vec8us const a, Vec8us const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec8us if_add(Vec8sb const f, Vec8us const a, Vec8us const b) {
+static inline Vec8us if_add(Vec8sb const f, Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi16(a, f, a, b);
 #else
@@ -2657,7 +2658,7 @@ static inline Vec8us if_add(Vec8sb const f, Vec8us const a, Vec8us const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec8us if_sub(Vec8sb const f, Vec8us const a, Vec8us const b) {
+static inline Vec8us if_sub(Vec8sb const f, Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi16(a, f, a, b);
 #else
@@ -2666,7 +2667,7 @@ static inline Vec8us if_sub(Vec8sb const f, Vec8us const a, Vec8us const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec8us if_mul(Vec8sb const f, Vec8us const a, Vec8us const b) {
+static inline Vec8us if_mul(Vec8sb const f, Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi16(a, f, a, b);
 #else
@@ -2676,7 +2677,7 @@ static inline Vec8us if_mul(Vec8sb const f, Vec8us const a, Vec8us const b) {
 
 // Horizontal add: Calculates the sum of all vector elements.
 // Overflow will wrap around
-static inline uint32_t horizontal_add(Vec8us const a) {
+static inline uint32_t horizontal_add(Vec8us const a) noexcept {
 #ifdef __XOP__     // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epu16(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -2704,7 +2705,7 @@ static inline uint32_t horizontal_add(Vec8us const a) {
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Each element is zero-extended before addition to avoid overflow
-static inline uint32_t horizontal_add_x(Vec8us const a) {
+static inline uint32_t horizontal_add_x(Vec8us const a) noexcept {
 #ifdef __XOP__     // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epu16(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -2739,17 +2740,17 @@ static inline uint32_t horizontal_add_x(Vec8us const a) {
 }
 
 // function add_saturated: add element by element, unsigned with saturation
-static inline Vec8us add_saturated(Vec8us const a, Vec8us const b) {
+static inline Vec8us add_saturated(Vec8us const a, Vec8us const b) noexcept {
     return _mm_adds_epu16(a, b);
 }
 
 // function sub_saturated: subtract element by element, unsigned with saturation
-static inline Vec8us sub_saturated(Vec8us const a, Vec8us const b) {
+static inline Vec8us sub_saturated(Vec8us const a, Vec8us const b) noexcept {
     return _mm_subs_epu16(a, b);
 }
 
 // function max: a > b ? a : b
-static inline Vec8us max(Vec8us const a, Vec8us const b) {
+static inline Vec8us max(Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_max_epu16(a, b);
 #else  // SSE2
@@ -2762,7 +2763,7 @@ static inline Vec8us max(Vec8us const a, Vec8us const b) {
 }
 
 // function min: a < b ? a : b
-static inline Vec8us min(Vec8us const a, Vec8us const b) {
+static inline Vec8us min(Vec8us const a, Vec8us const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_min_epu16(a, b);
 #else  // SSE2
@@ -2786,38 +2787,38 @@ public:
     // Default constructor:
     Vec4i() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec4i(int i) {
+    Vec4i(int i) noexcept {
         xmm = _mm_set1_epi32(i);
     }
     // Constructor to build from all elements:
-    Vec4i(int32_t i0, int32_t i1, int32_t i2, int32_t i3) {
+    Vec4i(int32_t i0, int32_t i1, int32_t i2, int32_t i3) noexcept {
         xmm = _mm_setr_epi32(i0, i1, i2, i3);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec4i(__m128i const x) {
+    Vec4i(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec4i & operator = (__m128i const x) {
+    Vec4i & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128i used in intrinsics
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec4i & load(void const * p) {
+    Vec4i & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec4i & load_a(void const * p) {
+    Vec4i & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec4i & load_partial(int n, void const * p) {
+    Vec4i & load_partial(int n, void const * p) noexcept {
 #if INSTRSET >= 10  // AVX512VL
         xmm = _mm_maskz_loadu_epi32(__mmask8((1u << n) - 1), p);
 #else
@@ -2839,7 +2840,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi32(p, __mmask8((1u << n) - 1), xmm);
 #else
@@ -2852,7 +2853,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 4-n elements are set to zero
-    Vec4i & cutoff(int n) {
+    Vec4i & cutoff(int n) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi32(__mmask8((1u << n) - 1), xmm);
 #else
@@ -2861,7 +2862,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec4i const insert(int index, int32_t value) {
+    Vec4i const insert(int index, int32_t value) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_mask_set1_epi32(xmm, __mmask8(1u << index), value);
 #else
@@ -2873,7 +2874,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    int32_t extract(int index) const {
+    int32_t extract(int index) const noexcept {
 #if INSTRSET >= 10
         __m128i x = _mm_maskz_compress_epi32(__mmask8(1u << index), xmm);
         return _mm_cvtsi128_si32(x);
@@ -2885,7 +2886,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int32_t operator [] (int index) const {
+    int32_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int size() {
@@ -2909,37 +2910,37 @@ public:
     // Default constructor:
     Vec4ib() = default;
     // Constructor to build from all elements:
-    Vec4ib(bool x0, bool x1, bool x2, bool x3) {
+    Vec4ib(bool x0, bool x1, bool x2, bool x3) noexcept {
         xmm = Vec4i(-int32_t(x0), -int32_t(x1), -int32_t(x2), -int32_t(x3));
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec4ib(__m128i const x) {
+    Vec4ib(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec4ib & operator = (__m128i const x) {
+    Vec4ib & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Constructor to broadcast scalar value:
-    Vec4ib(bool b) : Vec4i(-int32_t(b)) {
+    Vec4ib(bool b) noexcept : Vec4i(-int32_t(b)) {
     }
     // Assignment operator to broadcast scalar value:
-    Vec4ib & operator = (bool b) {
+    Vec4ib & operator = (bool b) noexcept {
         *this = Vec4ib(b);
         return *this;
     }
-    Vec4ib & insert(int index, bool a) {
+    Vec4ib & insert(int index, bool a) noexcept {
         Vec4i::insert(index, -(int)a);
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         return Vec4i::extract(index) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member function to change a bitfield to a boolean vector
@@ -2974,73 +2975,73 @@ typedef Vec4b Vec4ib;  // compact boolean vector
 #if INSTRSET < 10   // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec4ib operator & (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator & (Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(Vec128b(a) & Vec128b(b));
 }
-static inline Vec4ib operator && (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator && (Vec4ib const a, Vec4ib const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec4ib & operator &= (Vec4ib & a, Vec4ib const b) {
+static inline Vec4ib & operator &= (Vec4ib & a, Vec4ib const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4ib operator | (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator | (Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(Vec128b(a) | Vec128b(b));
 }
-static inline Vec4ib operator || (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator || (Vec4ib const a, Vec4ib const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec4ib & operator |= (Vec4ib & a, Vec4ib const b) {
+static inline Vec4ib & operator |= (Vec4ib & a, Vec4ib const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4ib operator ^ (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator ^ (Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec4ib & operator ^= (Vec4ib & a, Vec4ib const b) {
+static inline Vec4ib & operator ^= (Vec4ib & a, Vec4ib const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec4ib operator == (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator == (Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(a ^ (~b));
 }
 
 // vector operator != : xor
-static inline Vec4ib operator != (Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib operator != (Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(a ^ b);
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4ib operator ~ (Vec4ib const a) {
+static inline Vec4ib operator ~ (Vec4ib const a) noexcept {
     return Vec4ib(~Vec128b(a));
 }
 
 // vector operator ! : element not
-static inline Vec4ib operator ! (Vec4ib const a) {
+static inline Vec4ib operator ! (Vec4ib const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec4ib andnot(Vec4ib const a, Vec4ib const b) {
+static inline Vec4ib andnot(Vec4ib const a, Vec4ib const b) noexcept {
     return Vec4ib(andnot(Vec128b(a), Vec128b(b)));
 }
 
 // horizontal_and. Returns true if all elements are true
-static inline bool horizontal_and(Vec4ib const a) {
+static inline bool horizontal_and(Vec4ib const a) noexcept {
     return _mm_movemask_epi8(a) == 0xFFFF;
 }
 
 // horizontal_or. Returns true if at least one element is true
-static inline bool horizontal_or(Vec4ib const a) {
+static inline bool horizontal_or(Vec4ib const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported. Use PTEST
     return !_mm_testz_si128(a, a);
 #else
@@ -3057,55 +3058,55 @@ static inline bool horizontal_or(Vec4ib const a) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec4i operator + (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator + (Vec4i const a, Vec4i const b) noexcept {
     return _mm_add_epi32(a, b);
 }
 // vector operator += : add
-static inline Vec4i & operator += (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator += (Vec4i & a, Vec4i const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec4i operator ++ (Vec4i & a, int) {
+static inline Vec4i operator ++ (Vec4i & a, int) noexcept {
     Vec4i a0 = a;
     a = a + 1;
     return a0;
 }
 // prefix operator ++
-static inline Vec4i & operator ++ (Vec4i & a) {
+static inline Vec4i & operator ++ (Vec4i & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec4i operator - (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator - (Vec4i const a, Vec4i const b) noexcept {
     return _mm_sub_epi32(a, b);
 }
 // vector operator - : unary minus
-static inline Vec4i operator - (Vec4i const a) {
+static inline Vec4i operator - (Vec4i const a) noexcept {
     return _mm_sub_epi32(_mm_setzero_si128(), a);
 }
 // vector operator -= : subtract
-static inline Vec4i & operator -= (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator -= (Vec4i & a, Vec4i const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec4i operator -- (Vec4i & a, int) {
+static inline Vec4i operator -- (Vec4i & a, int) noexcept {
     Vec4i a0 = a;
     a = a - 1;
     return a0;
 }
 // prefix operator --
-static inline Vec4i & operator -- (Vec4i & a) {
+static inline Vec4i & operator -- (Vec4i & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec4i operator * (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator * (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 5  // SSE4.1 instruction set
     return _mm_mullo_epi32(a, b);
 #else
@@ -3120,7 +3121,7 @@ static inline Vec4i operator * (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator *= : multiply
-static inline Vec4i & operator *= (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator *= (Vec4i & a, Vec4i const b) noexcept {
     a = a * b;
     return a;
 }
@@ -3128,27 +3129,27 @@ static inline Vec4i & operator *= (Vec4i & a, Vec4i const b) {
 // vector operator / : divide all elements by same integer. See bottom of file
 
 // vector operator << : shift left
-static inline Vec4i operator << (Vec4i const a, int32_t b) {
+static inline Vec4i operator << (Vec4i const a, int32_t b) noexcept {
     return _mm_sll_epi32(a, _mm_cvtsi32_si128(b));
 }
 // vector operator <<= : shift left
-static inline Vec4i & operator <<= (Vec4i & a, int32_t b) {
+static inline Vec4i & operator <<= (Vec4i & a, int32_t b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic
-static inline Vec4i operator >> (Vec4i const a, int32_t b) {
+static inline Vec4i operator >> (Vec4i const a, int32_t b) noexcept {
     return _mm_sra_epi32(a, _mm_cvtsi32_si128(b));
 }
 // vector operator >>= : shift right arithmetic
-static inline Vec4i & operator >>= (Vec4i & a, int32_t b) {
+static inline Vec4i & operator >>= (Vec4i & a, int32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec4ib operator == (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator == (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 0);
 #else
@@ -3157,7 +3158,7 @@ static inline Vec4ib operator == (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec4ib operator != (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator != (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 4);
 #else
@@ -3166,7 +3167,7 @@ static inline Vec4ib operator != (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec4ib operator > (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator > (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 6);
 #else
@@ -3175,7 +3176,7 @@ static inline Vec4ib operator > (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec4ib operator < (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator < (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 1);
 #else
@@ -3184,7 +3185,7 @@ static inline Vec4ib operator < (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec4ib operator >= (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator >= (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 5);
 #else
@@ -3193,7 +3194,7 @@ static inline Vec4ib operator >= (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec4ib operator <= (Vec4i const a, Vec4i const b) {
+static inline Vec4ib operator <= (Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, b, 2);
 #else
@@ -3202,48 +3203,48 @@ static inline Vec4ib operator <= (Vec4i const a, Vec4i const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec4i operator & (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator & (Vec4i const a, Vec4i const b) noexcept {
     return Vec4i(Vec128b(a) & Vec128b(b));
 }
-static inline Vec4i operator && (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator && (Vec4i const a, Vec4i const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec4i & operator &= (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator &= (Vec4i & a, Vec4i const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4i operator | (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator | (Vec4i const a, Vec4i const b) noexcept {
     return Vec4i(Vec128b(a) | Vec128b(b));
 }
-static inline Vec4i operator || (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator || (Vec4i const a, Vec4i const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise and
-static inline Vec4i & operator |= (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator |= (Vec4i & a, Vec4i const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4i operator ^ (Vec4i const a, Vec4i const b) {
+static inline Vec4i operator ^ (Vec4i const a, Vec4i const b) noexcept {
     return Vec4i(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise and
-static inline Vec4i & operator ^= (Vec4i & a, Vec4i const b) {
+static inline Vec4i & operator ^= (Vec4i & a, Vec4i const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4i operator ~ (Vec4i const a) {
+static inline Vec4i operator ~ (Vec4i const a) noexcept {
     return Vec4i(~Vec128b(a));
 }
 
 // vector operator ! : returns true for elements == 0
-static inline Vec4ib operator ! (Vec4i const a) {
+static inline Vec4ib operator ! (Vec4i const a) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi32_mask(a, _mm_setzero_si128(), 0);
 #else
@@ -3257,7 +3258,7 @@ static inline Vec4ib operator ! (Vec4i const a) {
 // for (int i = 0; i < 4; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or -1 (true). No other values are allowed.
 // (s is signed)
-static inline Vec4i select(Vec4ib const s, Vec4i const a, Vec4i const b) {
+static inline Vec4i select(Vec4ib const s, Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi32(b, s, a);
 #else
@@ -3266,7 +3267,7 @@ static inline Vec4i select(Vec4ib const s, Vec4i const a, Vec4i const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec4i if_add(Vec4ib const f, Vec4i const a, Vec4i const b) {
+static inline Vec4i if_add(Vec4ib const f, Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi32(a, f, a, b);
 #else
@@ -3275,7 +3276,7 @@ static inline Vec4i if_add(Vec4ib const f, Vec4i const a, Vec4i const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec4i if_sub(Vec4ib const f, Vec4i const a, Vec4i const b) {
+static inline Vec4i if_sub(Vec4ib const f, Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi32(a, f, a, b);
 #else
@@ -3284,7 +3285,7 @@ static inline Vec4i if_sub(Vec4ib const f, Vec4i const a, Vec4i const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec4i if_mul(Vec4ib const f, Vec4i const a, Vec4i const b) {
+static inline Vec4i if_mul(Vec4ib const f, Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi32(a, f, a, b);
 #else
@@ -3293,7 +3294,7 @@ static inline Vec4i if_mul(Vec4ib const f, Vec4i const a, Vec4i const b) {
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int32_t horizontal_add(Vec4i const a) {
+static inline int32_t horizontal_add(Vec4i const a) noexcept {
 #ifdef __XOP__       // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epi32(a);
     __m128i sum2 = _mm_shuffle_epi32(sum1, 0x0E);          // high element
@@ -3314,7 +3315,7 @@ static inline int32_t horizontal_add(Vec4i const a) {
 }
 
 // function used below
-static inline int64_t _emulate_movq(__m128i const x) {
+static inline int64_t _emulate_movq(__m128i const x) noexcept {
 #ifdef __x86_64__
     return _mm_cvtsi128_si64(x);
 #else
@@ -3330,7 +3331,7 @@ static inline int64_t _emulate_movq(__m128i const x) {
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Elements are sign extended before adding to avoid overflow
-static inline int64_t horizontal_add_x(Vec4i const a) {
+static inline int64_t horizontal_add_x(Vec4i const a) noexcept {
 #ifdef __XOP__     // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epi32(a);
 #else              // SSE2
@@ -3345,7 +3346,7 @@ static inline int64_t horizontal_add_x(Vec4i const a) {
 }
 
 // function add_saturated: add element by element, signed with saturation
-static inline Vec4i add_saturated(Vec4i const a, Vec4i const b) {
+static inline Vec4i add_saturated(Vec4i const a, Vec4i const b) noexcept {
     // is there a faster method?
     __m128i sum = _mm_add_epi32(a, b);                     // a + b
     __m128i axb = _mm_xor_si128(a, b);                     // check if a and b have different sign
@@ -3359,7 +3360,7 @@ static inline Vec4i add_saturated(Vec4i const a, Vec4i const b) {
 }
 
 // function sub_saturated: subtract element by element, signed with saturation
-static inline Vec4i sub_saturated(Vec4i const a, Vec4i const b) {
+static inline Vec4i sub_saturated(Vec4i const a, Vec4i const b) noexcept {
     __m128i diff = _mm_sub_epi32(a, b);                    // a + b
     __m128i axb = _mm_xor_si128(a, b);                     // check if a and b have different sign
     __m128i axs = _mm_xor_si128(a, diff);                  // check if a and sum have different sign
@@ -3372,7 +3373,7 @@ static inline Vec4i sub_saturated(Vec4i const a, Vec4i const b) {
 }
 
 // function max: a > b ? a : b
-static inline Vec4i max(Vec4i const a, Vec4i const b) {
+static inline Vec4i max(Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_max_epi32(a, b);
 #else
@@ -3382,7 +3383,7 @@ static inline Vec4i max(Vec4i const a, Vec4i const b) {
 }
 
 // function min: a < b ? a : b
-static inline Vec4i min(Vec4i const a, Vec4i const b) {
+static inline Vec4i min(Vec4i const a, Vec4i const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     return _mm_min_epi32(a, b);
 #else
@@ -3392,7 +3393,7 @@ static inline Vec4i min(Vec4i const a, Vec4i const b) {
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec4i abs(Vec4i const a) {
+static inline Vec4i abs(Vec4i const a) noexcept {
 #if INSTRSET >= 4     // SSSE3 supported
     return _mm_abs_epi32(a);
 #else                 // SSE2
@@ -3403,7 +3404,7 @@ static inline Vec4i abs(Vec4i const a) {
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec4i abs_saturated(Vec4i const a) {
+static inline Vec4i abs_saturated(Vec4i const a) noexcept {
 #if INSTRSET >= 10
     return _mm_min_epu32(abs(a), Vec4i(0x7FFFFFFF));
 #else
@@ -3415,7 +3416,7 @@ static inline Vec4i abs_saturated(Vec4i const a) {
 
 // function rotate_left all elements
 // Use negative count to rotate right
-static inline Vec4i rotate_left(Vec4i const a, int b) {
+static inline Vec4i rotate_left(Vec4i const a, int b) noexcept {
 #if INSTRSET >= 10  // __AVX512VL__
     return _mm_rolv_epi32(a, _mm_set1_epi32(b));
 #elif defined __XOP__  // AMD XOP instruction set
@@ -3440,44 +3441,44 @@ public:
     // Default constructor:
     Vec4ui() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec4ui(uint32_t i) {
+    Vec4ui(uint32_t i) noexcept {
         xmm = _mm_set1_epi32((int32_t)i);
     }
     // Constructor to build from all elements:
-    Vec4ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3) {
+    Vec4ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3) noexcept {
         xmm = _mm_setr_epi32((int32_t)i0, (int32_t)i1, (int32_t)i2, (int32_t)i3);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec4ui(__m128i const x) {
+    Vec4ui(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec4ui & operator = (__m128i const x) {
+    Vec4ui & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec4ui & load(void const * p) {
+    Vec4ui & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec4ui & load_a(void const * p) {
+    Vec4ui & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec4ui const insert(int index, uint32_t value) {
+    Vec4ui const insert(int index, uint32_t value) noexcept {
         Vec4i::insert(index, (int32_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint32_t extract(int index) const {
+    uint32_t extract(int index) const noexcept {
         return (uint32_t)Vec4i::extract(index);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint32_t operator [] (int index) const {
+    uint32_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int elementtype() {
@@ -3488,47 +3489,47 @@ public:
 // Define operators for this class
 
 // vector operator + : add
-static inline Vec4ui operator + (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator + (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec4i(a) + Vec4i(b));
 }
 
 // vector operator - : subtract
-static inline Vec4ui operator - (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator - (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec4i(a) - Vec4i(b));
 }
 
 // vector operator * : multiply
-static inline Vec4ui operator * (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator * (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec4i(a) * Vec4i(b));
 }
 
 // vector operator / : divide. See bottom of file
 
 // vector operator >> : shift right logical all elements
-static inline Vec4ui operator >> (Vec4ui const a, uint32_t b) {
+static inline Vec4ui operator >> (Vec4ui const a, uint32_t b) noexcept {
     return _mm_srl_epi32(a, _mm_cvtsi32_si128((int)b));
 }
 // vector operator >> : shift right logical all elements
-static inline Vec4ui operator >> (Vec4ui const a, int32_t b) {
+static inline Vec4ui operator >> (Vec4ui const a, int32_t b) noexcept {
     return a >> (uint32_t)b;
 }
 // vector operator >>= : shift right logical
-static inline Vec4ui & operator >>= (Vec4ui & a, int b) {
+static inline Vec4ui & operator >>= (Vec4ui & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec4ui operator << (Vec4ui const a, uint32_t b) {
+static inline Vec4ui operator << (Vec4ui const a, uint32_t b) noexcept {
     return Vec4ui((Vec4i)a << (int32_t)b);
 }
 // vector operator << : shift left all elements
-static inline Vec4ui operator << (Vec4ui const a, int32_t b) {
+static inline Vec4ui operator << (Vec4ui const a, int32_t b) noexcept {
     return Vec4ui((Vec4i)a << (int32_t)b);
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec4ib operator > (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ib operator > (Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu32_mask(a, b, 6);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -3542,7 +3543,7 @@ static inline Vec4ib operator > (Vec4ui const a, Vec4ui const b) {
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec4ib operator < (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ib operator < (Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu32_mask(a, b, 1);
 #else
@@ -3551,7 +3552,7 @@ static inline Vec4ib operator < (Vec4ui const a, Vec4ui const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec4ib operator >= (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ib operator >= (Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu32_mask(a, b, 5);
 #else
@@ -3567,7 +3568,7 @@ static inline Vec4ib operator >= (Vec4ui const a, Vec4ui const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec4ib operator <= (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ib operator <= (Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu32_mask(a, b, 2);
 #else
@@ -3576,28 +3577,28 @@ static inline Vec4ib operator <= (Vec4ui const a, Vec4ui const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec4ui operator & (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator & (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec128b(a) & Vec128b(b));
 }
-static inline Vec4ui operator && (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator && (Vec4ui const a, Vec4ui const b) noexcept {
     return a & b;
 }
 
 // vector operator | : bitwise or
-static inline Vec4ui operator | (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator | (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec128b(a) | Vec128b(b));
 }
-static inline Vec4ui operator || (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator || (Vec4ui const a, Vec4ui const b) noexcept {
     return a | b;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4ui operator ^ (Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui operator ^ (Vec4ui const a, Vec4ui const b) noexcept {
     return Vec4ui(Vec128b(a) ^ Vec128b(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4ui operator ~ (Vec4ui const a) {
+static inline Vec4ui operator ~ (Vec4ui const a) noexcept {
     return Vec4ui(~Vec128b(a));
 }
 
@@ -3605,7 +3606,7 @@ static inline Vec4ui operator ~ (Vec4ui const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec4ui select(Vec4ib const s, Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui select(Vec4ib const s, Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi32(b, s, a);
 #else
@@ -3614,7 +3615,7 @@ static inline Vec4ui select(Vec4ib const s, Vec4ui const a, Vec4ui const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec4ui if_add(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui if_add(Vec4ib const f, Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi32(a, f, a, b);
 #else
@@ -3623,7 +3624,7 @@ static inline Vec4ui if_add(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec4ui if_sub(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui if_sub(Vec4ib const f, Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi32(a, f, a, b);
 #else
@@ -3632,7 +3633,7 @@ static inline Vec4ui if_sub(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec4ui if_mul(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui if_mul(Vec4ib const f, Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi32(a, f, a, b);
 #else
@@ -3641,13 +3642,13 @@ static inline Vec4ui if_mul(Vec4ib const f, Vec4ui const a, Vec4ui const b) {
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline uint32_t horizontal_add(Vec4ui const a) {
+static inline uint32_t horizontal_add(Vec4ui const a) noexcept {
     return (uint32_t)horizontal_add((Vec4i)a);
 }
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Elements are zero extended before adding to avoid overflow
-static inline uint64_t horizontal_add_x(Vec4ui const a) {
+static inline uint64_t horizontal_add_x(Vec4ui const a) noexcept {
 #ifdef __XOP__     // AMD XOP instruction set
     __m128i sum1 = _mm_haddq_epu32(a);
 #else              // SSE2
@@ -3662,7 +3663,7 @@ static inline uint64_t horizontal_add_x(Vec4ui const a) {
 }
 
 // function add_saturated: add element by element, unsigned with saturation
-static inline Vec4ui add_saturated(Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui add_saturated(Vec4ui const a, Vec4ui const b) noexcept {
     Vec4ui sum = a + b;
     Vec4ui aorb = Vec4ui(a | b);
 #if INSTRSET >= 10
@@ -3675,7 +3676,7 @@ static inline Vec4ui add_saturated(Vec4ui const a, Vec4ui const b) {
 }
 
 // function sub_saturated: subtract element by element, unsigned with saturation
-static inline Vec4ui sub_saturated(Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui sub_saturated(Vec4ui const a, Vec4ui const b) noexcept {
     Vec4ui diff = a - b;
 #if INSTRSET >= 10
     Vec4b  nunderflow = _mm_cmp_epu32_mask(diff, a, 2);    // not underflow if a - b <= a
@@ -3687,7 +3688,7 @@ static inline Vec4ui sub_saturated(Vec4ui const a, Vec4ui const b) {
 }
 
 // function max: a > b ? a : b
-static inline Vec4ui max(Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui max(Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_max_epu32(a, b);
 #else  // SSE2
@@ -3696,7 +3697,7 @@ static inline Vec4ui max(Vec4ui const a, Vec4ui const b) {
 }
 
 // function min: a < b ? a : b
-static inline Vec4ui min(Vec4ui const a, Vec4ui const b) {
+static inline Vec4ui min(Vec4ui const a, Vec4ui const b) noexcept {
 #if INSTRSET >= 5   // SSE4.1
     return _mm_min_epu32(a, b);
 #else  // SSE2
@@ -3716,38 +3717,38 @@ public:
     // Default constructor:
     Vec2q() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec2q(int64_t i) {
+    Vec2q(int64_t i) noexcept {
         xmm = _mm_set1_epi64x(i);
     }
     // Constructor to build from all elements:
-    Vec2q(int64_t i0, int64_t i1) {
+    Vec2q(int64_t i0, int64_t i1) noexcept {
         xmm = _mm_set_epi64x(i1, i0);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec2q(__m128i const x) {
+    Vec2q(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec2q & operator = (__m128i const x) {
+    Vec2q & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Type cast operator to convert to __m128i used in intrinsics
-    operator __m128i() const {
+    operator __m128i() const noexcept {
         return xmm;
     }
     // Member function to load from array (unaligned)
-    Vec2q & load(void const * p) {
+    Vec2q & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec2q & load_a(void const * p) {
+    Vec2q & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec2q & load_partial(int n, void const * p) {
+    Vec2q & load_partial(int n, void const * p) noexcept {
 #if INSTRSET >= 10  // AVX512VL
         xmm = _mm_maskz_loadu_epi64(__mmask8((1u << n) - 1), p);
 #else
@@ -3766,7 +3767,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
 #if INSTRSET >= 10  // AVX512VL + AVX512BW
         _mm_mask_storeu_epi64(p, __mmask8((1u << n) - 1), xmm);
 #else
@@ -3781,7 +3782,7 @@ public:
 #endif
     }
     // cut off vector to n elements. The last 2-n elements are set to zero
-    Vec2q & cutoff(int n) {
+    Vec2q & cutoff(int n) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_maskz_mov_epi64(__mmask8((1u << n) - 1), xmm);
 #else
@@ -3791,7 +3792,7 @@ public:
     }
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
-    Vec2q const insert(int index, int64_t value) {
+    Vec2q const insert(int index, int64_t value) noexcept {
 #if INSTRSET >= 10
         xmm = _mm_mask_set1_epi64(xmm, __mmask8(1u << index), value);
 #elif INSTRSET >= 5 && defined(__x86_64__)  // SSE4.1 supported, 64 bit mode
@@ -3823,7 +3824,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    int64_t extract(int index) const {
+    int64_t extract(int index) const noexcept {
 #if INSTRSET >= 10
         __m128i x = _mm_mask_unpackhi_epi64(xmm, __mmask8(index), xmm, xmm);
         return _emulate_movq(x);
@@ -3835,7 +3836,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int64_t operator [] (int index) const {
+    int64_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int size() {
@@ -3861,37 +3862,37 @@ public:
     // Default constructor:
     Vec2qb() = default;
     // Constructor to build from all elements:
-    Vec2qb(bool x0, bool x1) {
+    Vec2qb(bool x0, bool x1) noexcept {
         xmm = Vec2q(-int64_t(x0), -int64_t(x1));
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec2qb(__m128i const x) {
+    Vec2qb(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec2qb & operator = (__m128i const x) {
+    Vec2qb & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Constructor to broadcast scalar value:
-    Vec2qb(bool b) : Vec2q(-int64_t(b)) {
+    Vec2qb(bool b) noexcept : Vec2q(-int64_t(b)) {
     }
     // Assignment operator to broadcast scalar value:
-    Vec2qb & operator = (bool b) {
+    Vec2qb & operator = (bool b) noexcept {
         *this = Vec2qb(b);
         return *this;
     }
-    Vec2qb & insert(int index, bool a) {
+    Vec2qb & insert(int index, bool a) noexcept {
         Vec2q::insert(index, -(int64_t)a);
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         return Vec2q::extract(index) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member function to change a bitfield to a boolean vector
@@ -3926,73 +3927,73 @@ typedef Vec2b Vec2qb;  // compact boolean vector
 #if INSTRSET < 10   // broad boolean vectors
 
 // vector operator & : bitwise and
-static inline Vec2qb operator & (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator & (Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(Vec128b(a) & Vec128b(b));
 }
-static inline Vec2qb operator && (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator && (Vec2qb const a, Vec2qb const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec2qb & operator &= (Vec2qb & a, Vec2qb const b) {
+static inline Vec2qb & operator &= (Vec2qb & a, Vec2qb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec2qb operator | (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator | (Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(Vec128b(a) | Vec128b(b));
 }
-static inline Vec2qb operator || (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator || (Vec2qb const a, Vec2qb const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec2qb & operator |= (Vec2qb & a, Vec2qb const b) {
+static inline Vec2qb & operator |= (Vec2qb & a, Vec2qb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec2qb operator ^ (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator ^ (Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec2qb & operator ^= (Vec2qb & a, Vec2qb const b) {
+static inline Vec2qb & operator ^= (Vec2qb & a, Vec2qb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec2qb operator == (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator == (Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(a ^ (~b));
 }
 
 // vector operator != : xor
-static inline Vec2qb operator != (Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb operator != (Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(a ^ b);
 }
 
 // vector operator ~ : bitwise not
-static inline Vec2qb operator ~ (Vec2qb const a) {
+static inline Vec2qb operator ~ (Vec2qb const a) noexcept {
     return Vec2qb(~Vec128b(a));
 }
 
 // vector operator ! : element not
-static inline Vec2qb operator ! (Vec2qb const a) {
+static inline Vec2qb operator ! (Vec2qb const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec2qb andnot(Vec2qb const a, Vec2qb const b) {
+static inline Vec2qb andnot(Vec2qb const a, Vec2qb const b) noexcept {
     return Vec2qb(andnot(Vec128b(a), Vec128b(b)));
 }
 
 // horizontal_and. Returns true if all elements are true
-static inline bool horizontal_and(Vec2qb const a) {
+static inline bool horizontal_and(Vec2qb const a) noexcept {
     return _mm_movemask_epi8(a) == 0xFFFF;
 }
 
 // horizontal_or. Returns true if at least one element is true
-static inline bool horizontal_or(Vec2qb const a) {
+static inline bool horizontal_or(Vec2qb const a) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported. Use PTEST
     return !_mm_testz_si128(a, a);
 #else
@@ -4011,55 +4012,55 @@ static inline bool horizontal_or(Vec2qb const a) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec2q operator + (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator + (Vec2q const a, Vec2q const b) noexcept {
     return _mm_add_epi64(a, b);
 }
 // vector operator += : add
-static inline Vec2q & operator += (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator += (Vec2q & a, Vec2q const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec2q operator ++ (Vec2q & a, int) {
+static inline Vec2q operator ++ (Vec2q & a, int) noexcept {
     Vec2q a0 = a;
     a = a + 1;
     return a0;
 }
 // prefix operator ++
-static inline Vec2q & operator ++ (Vec2q & a) {
+static inline Vec2q & operator ++ (Vec2q & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec2q operator - (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator - (Vec2q const a, Vec2q const b) noexcept {
     return _mm_sub_epi64(a, b);
 }
 // vector operator - : unary minus
-static inline Vec2q operator - (Vec2q const a) {
+static inline Vec2q operator - (Vec2q const a) noexcept {
     return _mm_sub_epi64(_mm_setzero_si128(), a);
 }
 // vector operator -= : subtract
-static inline Vec2q & operator -= (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator -= (Vec2q & a, Vec2q const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec2q operator -- (Vec2q & a, int) {
+static inline Vec2q operator -- (Vec2q & a, int) noexcept {
     Vec2q a0 = a;
     a = a - 1;
     return a0;
 }
 // prefix operator --
-static inline Vec2q & operator -- (Vec2q & a) {
+static inline Vec2q & operator -- (Vec2q & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec2q operator * (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator * (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10 // __AVX512DQ__ __AVX512VL__
     return _mm_mullo_epi64(a, b);
 #elif INSTRSET >= 5   // SSE4.1 supported
@@ -4081,24 +4082,24 @@ static inline Vec2q operator * (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator *= : multiply
-static inline Vec2q & operator *= (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator *= (Vec2q & a, Vec2q const b) noexcept {
     a = a * b;
     return a;
 }
 
 // vector operator << : shift left
-static inline Vec2q operator << (Vec2q const a, int32_t b) {
+static inline Vec2q operator << (Vec2q const a, int32_t b) noexcept {
     return _mm_sll_epi64(a, _mm_cvtsi32_si128(b));
 }
 
 // vector operator <<= : shift left
-static inline Vec2q & operator <<= (Vec2q & a, int32_t b) {
+static inline Vec2q & operator <<= (Vec2q & a, int32_t b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic
-static inline Vec2q operator >> (Vec2q const a, int32_t b) {
+static inline Vec2q operator >> (Vec2q const a, int32_t b) noexcept {
 #if INSTRSET >= 10   // AVX512VL
     return _mm_sra_epi64(a, _mm_cvtsi32_si128(b));
 #else
@@ -4124,13 +4125,13 @@ static inline Vec2q operator >> (Vec2q const a, int32_t b) {
 }
 
 // vector operator >>= : shift right arithmetic
-static inline Vec2q & operator >>= (Vec2q & a, int32_t b) {
+static inline Vec2q & operator >>= (Vec2q & a, int32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec2qb operator == (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator == (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epi64_mask(a, b, 0);
 #elif INSTRSET >= 5   // SSE4.1 supported
@@ -4147,7 +4148,7 @@ static inline Vec2qb operator == (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec2qb operator != (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator != (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epi64_mask(a, b, 4);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -4158,7 +4159,7 @@ static inline Vec2qb operator != (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec2qb operator < (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator < (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epi64_mask(a, b, 1);
 #elif INSTRSET >= 6   // SSE4.2 supported
@@ -4179,7 +4180,7 @@ static inline Vec2qb operator < (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec2qb operator > (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator > (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi64_mask(a, b, 6);
 #else
@@ -4188,7 +4189,7 @@ static inline Vec2qb operator > (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec2qb operator >= (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator >= (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epi64_mask(a, b, 5);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -4199,7 +4200,7 @@ static inline Vec2qb operator >= (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec2qb operator <= (Vec2q const a, Vec2q const b) {
+static inline Vec2qb operator <= (Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epi64_mask(a, b, 2);
 #else
@@ -4208,48 +4209,48 @@ static inline Vec2qb operator <= (Vec2q const a, Vec2q const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec2q operator & (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator & (Vec2q const a, Vec2q const b) noexcept {
     return Vec2q(Vec128b(a) & Vec128b(b));
 }
-static inline Vec2q operator && (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator && (Vec2q const a, Vec2q const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec2q & operator &= (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator &= (Vec2q & a, Vec2q const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec2q operator | (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator | (Vec2q const a, Vec2q const b) noexcept {
     return Vec2q(Vec128b(a) | Vec128b(b));
 }
-static inline Vec2q operator || (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator || (Vec2q const a, Vec2q const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec2q & operator |= (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator |= (Vec2q & a, Vec2q const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec2q operator ^ (Vec2q const a, Vec2q const b) {
+static inline Vec2q operator ^ (Vec2q const a, Vec2q const b) noexcept {
     return Vec2q(Vec128b(a) ^ Vec128b(b));
 }
 // vector operator ^= : bitwise xor
-static inline Vec2q & operator ^= (Vec2q & a, Vec2q const b) {
+static inline Vec2q & operator ^= (Vec2q & a, Vec2q const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec2q operator ~ (Vec2q const a) {
+static inline Vec2q operator ~ (Vec2q const a) noexcept {
     return Vec2q(~Vec128b(a));
 }
 
 // vector operator ! : logical not, returns true for elements == 0
-static inline Vec2qb operator ! (Vec2q const a) {
+static inline Vec2qb operator ! (Vec2q const a) noexcept {
     return a == Vec2q(_mm_setzero_si128());
 }
 
@@ -4257,7 +4258,7 @@ static inline Vec2qb operator ! (Vec2q const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec2q select(Vec2qb const s, Vec2q const a, Vec2q const b) {
+static inline Vec2q select(Vec2qb const s, Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi64(b, s, a);
 #else
@@ -4266,7 +4267,7 @@ static inline Vec2q select(Vec2qb const s, Vec2q const a, Vec2q const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec2q if_add(Vec2qb const f, Vec2q const a, Vec2q const b) {
+static inline Vec2q if_add(Vec2qb const f, Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi64(a, f, a, b);
 #else
@@ -4275,7 +4276,7 @@ static inline Vec2q if_add(Vec2qb const f, Vec2q const a, Vec2q const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec2q if_sub(Vec2qb const f, Vec2q const a, Vec2q const b) {
+static inline Vec2q if_sub(Vec2qb const f, Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi64(a, f, a, b);
 #else
@@ -4284,7 +4285,7 @@ static inline Vec2q if_sub(Vec2qb const f, Vec2q const a, Vec2q const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec2q if_mul(Vec2qb const f, Vec2q const a, Vec2q const b) {
+static inline Vec2q if_mul(Vec2qb const f, Vec2q const a, Vec2q const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi64(a, f, a, b);
 #else
@@ -4293,24 +4294,24 @@ static inline Vec2q if_mul(Vec2qb const f, Vec2q const a, Vec2q const b) {
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int64_t horizontal_add(Vec2q const a) {
+static inline int64_t horizontal_add(Vec2q const a) noexcept {
     __m128i sum1 = _mm_unpackhi_epi64(a, a);               // high element
     __m128i sum2 = _mm_add_epi64(a, sum1);                 // sum
     return _emulate_movq(sum2);
 }
 
 // function max: a > b ? a : b
-static inline Vec2q max(Vec2q const a, Vec2q const b) {
+static inline Vec2q max(Vec2q const a, Vec2q const b) noexcept {
     return select(a > b, a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec2q min(Vec2q const a, Vec2q const b) {
+static inline Vec2q min(Vec2q const a, Vec2q const b) noexcept {
     return select(a < b, a, b);
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec2q abs(Vec2q const a) {
+static inline Vec2q abs(Vec2q const a) noexcept {
 #if INSTRSET >= 10     // AVX512VL
     return _mm_abs_epi64(a);
 #elif INSTRSET >= 6     // SSE4.2 supported
@@ -4326,7 +4327,7 @@ static inline Vec2q abs(Vec2q const a) {
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec2q abs_saturated(Vec2q const a) {
+static inline Vec2q abs_saturated(Vec2q const a) noexcept {
 #if INSTRSET >= 10
     return _mm_min_epu64(abs(a), Vec2q(0x7FFFFFFFFFFFFFFF));
 #elif INSTRSET >= 6     // SSE4.2 supported
@@ -4343,7 +4344,7 @@ static inline Vec2q abs_saturated(Vec2q const a) {
 
 // function rotate_left all elements
 // Use negative count to rotate right
-static inline Vec2q rotate_left(Vec2q const a, int b) {
+static inline Vec2q rotate_left(Vec2q const a, int b) noexcept {
 #if INSTRSET >= 10  // __AVX512VL__
     return _mm_rolv_epi64(a, _mm_set1_epi64x(int64_t(b)));
 #elif defined __XOP__  // AMD XOP instruction set
@@ -4368,44 +4369,44 @@ public:
     // Default constructor:
     Vec2uq() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec2uq(uint64_t i) {
+    Vec2uq(uint64_t i) noexcept {
         xmm = Vec2q((int64_t)i);
     }
     // Constructor to build from all elements:
-    Vec2uq(uint64_t i0, uint64_t i1) {
+    Vec2uq(uint64_t i0, uint64_t i1) noexcept {
         xmm = Vec2q((int64_t)i0, (int64_t)i1);
     }
     // Constructor to convert from type __m128i used in intrinsics:
-    Vec2uq(__m128i const x) {
+    Vec2uq(__m128i const x) noexcept {
         xmm = x;
     }
     // Assignment operator to convert from type __m128i used in intrinsics:
-    Vec2uq & operator = (__m128i const x) {
+    Vec2uq & operator = (__m128i const x) noexcept {
         xmm = x;
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec2uq & load(void const * p) {
+    Vec2uq & load(void const * p) noexcept {
         xmm = _mm_loadu_si128((__m128i const*)p);
         return *this;
     }
     // Member function to load from array (aligned)
-    Vec2uq & load_a(void const * p) {
+    Vec2uq & load_a(void const * p) noexcept {
         xmm = _mm_load_si128((__m128i const*)p);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec2uq const insert(int index, uint64_t value) {
+    Vec2uq const insert(int index, uint64_t value) noexcept {
         Vec2q::insert(index, (int64_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint64_t extract(int index) const {
+    uint64_t extract(int index) const noexcept {
         return (uint64_t)Vec2q::extract(index);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint64_t operator [] (int index) const {
+    uint64_t operator [] (int index) const noexcept {
         return extract(index);
     }
     static constexpr int elementtype() {
@@ -4416,48 +4417,48 @@ public:
 // Define operators for this class
 
 // vector operator + : add
-static inline Vec2uq operator + (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator + (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec2q(a) + Vec2q(b));
 }
 
 // vector operator - : subtract
-static inline Vec2uq operator - (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator - (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec2q(a) - Vec2q(b));
 }
 
 // vector operator * : multiply element by element
-static inline Vec2uq operator * (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator * (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec2q(a) * Vec2q(b));
 }
 
 // vector operator >> : shift right logical all elements
-static inline Vec2uq operator >> (Vec2uq const a, uint32_t b) {
+static inline Vec2uq operator >> (Vec2uq const a, uint32_t b) noexcept {
     return _mm_srl_epi64(a, _mm_cvtsi32_si128((int)b));
 }
 
 // vector operator >> : shift right logical all elements
-static inline Vec2uq operator >> (Vec2uq const a, int32_t b) {
+static inline Vec2uq operator >> (Vec2uq const a, int32_t b) noexcept {
     return a >> (uint32_t)b;
 }
 
 // vector operator >>= : shift right logical
-static inline Vec2uq & operator >>= (Vec2uq & a, int b) {
+static inline Vec2uq & operator >>= (Vec2uq & a, int b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec2uq operator << (Vec2uq const a, uint32_t b) {
+static inline Vec2uq operator << (Vec2uq const a, uint32_t b) noexcept {
     return Vec2uq((Vec2q)a << (int32_t)b);
 }
 
 // vector operator << : shift left all elements
-static inline Vec2uq operator << (Vec2uq const a, int32_t b) {
+static inline Vec2uq operator << (Vec2uq const a, int32_t b) noexcept {
     return Vec2uq((Vec2q)a << b);
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec2qb operator > (Vec2uq const a, Vec2uq const b) {
+static inline Vec2qb operator > (Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu64_mask(a, b, 6);
 #elif defined ( __XOP__ ) // AMD XOP instruction set
@@ -4483,7 +4484,7 @@ static inline Vec2qb operator > (Vec2uq const a, Vec2uq const b) {
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec2qb operator < (Vec2uq const a, Vec2uq const b) {
+static inline Vec2qb operator < (Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu64_mask(a, b, 1);
 #else
@@ -4492,7 +4493,7 @@ static inline Vec2qb operator < (Vec2uq const a, Vec2uq const b) {
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec2qb operator >= (Vec2uq const a, Vec2uq const b) {
+static inline Vec2qb operator >= (Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // broad boolean vectors
     return _mm_cmp_epu64_mask(a, b, 5);
 #elif defined (__XOP__)  // AMD XOP instruction set
@@ -4503,7 +4504,7 @@ static inline Vec2qb operator >= (Vec2uq const a, Vec2uq const b) {
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec2qb operator <= (Vec2uq const a, Vec2uq const b) {
+static inline Vec2qb operator <= (Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_cmp_epu64_mask(a, b, 2);
 #else
@@ -4512,28 +4513,28 @@ static inline Vec2qb operator <= (Vec2uq const a, Vec2uq const b) {
 }
 
 // vector operator & : bitwise and
-static inline Vec2uq operator & (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator & (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec128b(a) & Vec128b(b));
 }
-static inline Vec2uq operator && (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator && (Vec2uq const a, Vec2uq const b) noexcept {
     return a & b;
 }
 
 // vector operator | : bitwise or
-static inline Vec2uq operator | (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator | (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec128b(a) | Vec128b(b));
 }
-static inline Vec2uq operator || (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator || (Vec2uq const a, Vec2uq const b) noexcept {
     return a | b;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec2uq operator ^ (Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq operator ^ (Vec2uq const a, Vec2uq const b) noexcept {
     return Vec2uq(Vec128b(a) ^ Vec128b(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec2uq operator ~ (Vec2uq const a) {
+static inline Vec2uq operator ~ (Vec2uq const a) noexcept {
     return Vec2uq(~Vec128b(a));
 }
 
@@ -4541,7 +4542,7 @@ static inline Vec2uq operator ~ (Vec2uq const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 2; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec2uq select(Vec2qb const s, Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq select(Vec2qb const s, Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mov_epi64(b, s, a);
 #else
@@ -4550,7 +4551,7 @@ static inline Vec2uq select(Vec2qb const s, Vec2uq const a, Vec2uq const b) {
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec2uq if_add(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq if_add(Vec2qb const f, Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_add_epi64(a, f, a, b);
 #else
@@ -4559,7 +4560,7 @@ static inline Vec2uq if_add(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
 }
 
 // Conditional sub: For all vector elements i: result[i] = f[i] ? (a[i] - b[i]) : a[i]
-static inline Vec2uq if_sub(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq if_sub(Vec2qb const f, Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_sub_epi64(a, f, a, b);
 #else
@@ -4568,7 +4569,7 @@ static inline Vec2uq if_sub(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
 }
 
 // Conditional mul: For all vector elements i: result[i] = f[i] ? (a[i] * b[i]) : a[i]
-static inline Vec2uq if_mul(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq if_mul(Vec2qb const f, Vec2uq const a, Vec2uq const b) noexcept {
 #if INSTRSET >= 10  // compact boolean vectors
     return _mm_mask_mullo_epi64(a, f, a, b);
 #else
@@ -4577,17 +4578,17 @@ static inline Vec2uq if_mul(Vec2qb const f, Vec2uq const a, Vec2uq const b) {
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline uint64_t horizontal_add(Vec2uq const a) {
+static inline uint64_t horizontal_add(Vec2uq const a) noexcept {
     return (uint64_t)horizontal_add((Vec2q)a);
 }
 
 // function max: a > b ? a : b
-static inline Vec2uq max(Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq max(Vec2uq const a, Vec2uq const b) noexcept {
     return select(a > b, a, b);
 }
 
 // function min: a < b ? a : b
-static inline Vec2uq min(Vec2uq const a, Vec2uq const b) {
+static inline Vec2uq min(Vec2uq const a, Vec2uq const b) noexcept {
     return select(a > b, b, a);
 }
 
@@ -5512,7 +5513,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 *
 *****************************************************************************/
 
-static inline Vec16c lookup16(Vec16c const index, Vec16c const table) {
+static inline Vec16c lookup16(Vec16c const index, Vec16c const table) noexcept {
 #if INSTRSET >= 5  // SSSE3
     return _mm_shuffle_epi8(table, index);
 #else
@@ -5524,7 +5525,7 @@ static inline Vec16c lookup16(Vec16c const index, Vec16c const table) {
 #endif
 }
 
-static inline Vec16c lookup32(Vec16c const index, Vec16c const table0, Vec16c const table1) {
+static inline Vec16c lookup32(Vec16c const index, Vec16c const table0, Vec16c const table1) noexcept {
 #ifdef __XOP__  // AMD XOP instruction set. Use VPPERM
     return (Vec16c)_mm_perm_epi8(table0, table1, index);
 #elif INSTRSET >= 5  // SSSE3
@@ -5566,7 +5567,7 @@ static inline Vec16c lookup(Vec16c const index, void const * table) {
     return Vec16c().load(rr);
 }
 
-static inline Vec8s lookup8(Vec8s const index, Vec8s const table) {
+static inline Vec8s lookup8(Vec8s const index, Vec8s const table) noexcept {
 #if INSTRSET >= 5  // SSSE3
     return _mm_shuffle_epi8(table, index * 0x202 + 0x100);
 #else
@@ -5577,7 +5578,7 @@ static inline Vec8s lookup8(Vec8s const index, Vec8s const table) {
 #endif
 }
 
-static inline Vec8s lookup16(Vec8s const index, Vec8s const table0, Vec8s const table1) {
+static inline Vec8s lookup16(Vec8s const index, Vec8s const table0, Vec8s const table1) noexcept {
 #ifdef __XOP__  // AMD XOP instruction set. Use VPPERM
     return (Vec8s)_mm_perm_epi8(table0, table1, index * 0x202 + 0x100);
 #elif INSTRSET >= 5  // SSSE3
@@ -5622,7 +5623,7 @@ static inline Vec8s lookup(Vec8s const index, void const * table) {
 }
 
 
-static inline Vec4i lookup4(Vec4i const index, Vec4i const table) {
+static inline Vec4i lookup4(Vec4i const index, Vec4i const table) noexcept {
 #if INSTRSET >= 5  // SSSE3
     return _mm_shuffle_epi8(table, index * 0x04040404 + 0x03020100);
 #else
@@ -5630,7 +5631,7 @@ static inline Vec4i lookup4(Vec4i const index, Vec4i const table) {
 #endif
 }
 
-static inline Vec4i lookup8(Vec4i const index, Vec4i const table0, Vec4i const table1) {
+static inline Vec4i lookup8(Vec4i const index, Vec4i const table0, Vec4i const table1) noexcept {
     // return Vec4i(lookup16(Vec8s(index * 0x20002 + 0x10000), Vec8s(table0), Vec8s(table1)));
 #ifdef __XOP__  // AMD XOP instruction set. Use VPPERM
     return (Vec4i)_mm_perm_epi8(table0, table1, index * 0x04040404 + 0x03020100);
@@ -5650,7 +5651,7 @@ static inline Vec4i lookup8(Vec4i const index, Vec4i const table0, Vec4i const t
 #endif
 }
 
-static inline Vec4i lookup16(Vec4i const index, Vec4i const table0, Vec4i const table1, Vec4i const table2, Vec4i const table3) {
+static inline Vec4i lookup16(Vec4i const index, Vec4i const table0, Vec4i const table1, Vec4i const table2, Vec4i const table3) noexcept {
 #if INSTRSET >= 8 // AVX2. Use VPERMD
     __m256i table01 = _mm256_inserti128_si256(_mm256_castsi128_si256(table0), table1, 1); // join tables into 256 bit vector
     __m256i table23 = _mm256_inserti128_si256(_mm256_castsi128_si256(table2), table3, 1); // join tables into 256 bit vector
@@ -5708,7 +5709,7 @@ static inline Vec4i lookup(Vec4i const index, void const * table) {
 }
 
 
-static inline Vec2q lookup2(Vec2q const index, Vec2q const table) {
+static inline Vec2q lookup2(Vec2q const index, Vec2q const table) noexcept {
 #if INSTRSET >= 5  // SSSE3
     return _mm_shuffle_epi8(table, index * 0x0808080808080808ll + 0x0706050403020100ll);
 #else
@@ -5936,7 +5937,7 @@ static inline void scatter(Vec2q const data, void * destination) {
 *
 *****************************************************************************/
 
-static inline void scatter(Vec4i const index, uint32_t limit, Vec4i const data, void * destination) {
+static inline void scatter(Vec4i const index, uint32_t limit, Vec4i const data, void * destination) noexcept {
 #if INSTRSET >= 10  //  AVX512VL
     __mmask8 mask = _mm_cmplt_epu32_mask(index, Vec4ui(limit));
     _mm_mask_i32scatter_epi32((int*)destination, mask, index, data, 4);
@@ -5951,7 +5952,7 @@ static inline void scatter(Vec4i const index, uint32_t limit, Vec4i const data, 
 #endif
 }
 
-static inline void scatter(Vec2q const index, uint32_t limit, Vec2q const data, void * destination) {
+static inline void scatter(Vec2q const index, uint32_t limit, Vec2q const data, void * destination) noexcept {
     int64_t* arr = (int64_t*)destination;
     if (uint64_t(index[0]) < uint64_t(limit)) arr[index[0]] = data[0];
     if (uint64_t(index[1]) < uint64_t(limit)) arr[index[1]] = data[1];
@@ -5967,72 +5968,72 @@ static inline void scatter(Vec2q const index, uint32_t limit, Vec2q const data, 
 // Extend 8-bit integers to 16-bit integers, signed and unsigned
 
 // Function extend_low : extends the low 8 elements to 16 bits with sign extension
-static inline Vec8s extend_low(Vec16c const a) {
+static inline Vec8s extend_low(Vec16c const a) noexcept {
     __m128i sign = _mm_cmpgt_epi8(_mm_setzero_si128(), a);  // 0 > a
     return         _mm_unpacklo_epi8(a, sign);              // interleave with sign extensions
 }
 
 // Function extend_high : extends the high 8 elements to 16 bits with sign extension
-static inline Vec8s extend_high(Vec16c const a) {
+static inline Vec8s extend_high(Vec16c const a) noexcept {
     __m128i sign = _mm_cmpgt_epi8(_mm_setzero_si128(), a);  // 0 > a
     return         _mm_unpackhi_epi8(a, sign);              // interleave with sign extensions
 }
 
 // Function extend_low : extends the low 8 elements to 16 bits with zero extension
-static inline Vec8us extend_low(Vec16uc const a) {
+static inline Vec8us extend_low(Vec16uc const a) noexcept {
     return    _mm_unpacklo_epi8(a, _mm_setzero_si128());    // interleave with zero extensions
 }
 
 // Function extend_high : extends the high 8 elements to 16 bits with zero extension
-static inline Vec8us extend_high(Vec16uc const a) {
+static inline Vec8us extend_high(Vec16uc const a) noexcept {
     return    _mm_unpackhi_epi8(a, _mm_setzero_si128());    // interleave with zero extensions
 }
 
 // Extend 16-bit integers to 32-bit integers, signed and unsigned
 
 // Function extend_low : extends the low 4 elements to 32 bits with sign extension
-static inline Vec4i extend_low(Vec8s const a) {
+static inline Vec4i extend_low(Vec8s const a) noexcept {
     __m128i sign = _mm_srai_epi16(a, 15);                   // sign bit
     return         _mm_unpacklo_epi16(a, sign);             // interleave with sign extensions
 }
 
 // Function extend_high : extends the high 4 elements to 32 bits with sign extension
-static inline Vec4i extend_high(Vec8s const a) {
+static inline Vec4i extend_high(Vec8s const a) noexcept {
     __m128i sign = _mm_srai_epi16(a, 15);                   // sign bit
     return         _mm_unpackhi_epi16(a, sign);             // interleave with sign extensions
 }
 
 // Function extend_low : extends the low 4 elements to 32 bits with zero extension
-static inline Vec4ui extend_low(Vec8us const a) {
+static inline Vec4ui extend_low(Vec8us const a) noexcept {
     return    _mm_unpacklo_epi16(a, _mm_setzero_si128());   // interleave with zero extensions
 }
 
 // Function extend_high : extends the high 4 elements to 32 bits with zero extension
-static inline Vec4ui extend_high(Vec8us const a) {
+static inline Vec4ui extend_high(Vec8us const a) noexcept {
     return    _mm_unpackhi_epi16(a, _mm_setzero_si128());   // interleave with zero extensions
 }
 
 // Extend 32-bit integers to 64-bit integers, signed and unsigned
 
 // Function extend_low : extends the low 2 elements to 64 bits with sign extension
-static inline Vec2q extend_low(Vec4i const a) {
+static inline Vec2q extend_low(Vec4i const a) noexcept {
     __m128i sign = _mm_srai_epi32(a, 31);                   // sign bit
     return         _mm_unpacklo_epi32(a, sign);             // interleave with sign extensions
 }
 
 // Function extend_high : extends the high 2 elements to 64 bits with sign extension
-static inline Vec2q extend_high(Vec4i const a) {
+static inline Vec2q extend_high(Vec4i const a) noexcept {
     __m128i sign = _mm_srai_epi32(a, 31);                   // sign bit
     return         _mm_unpackhi_epi32(a, sign);             // interleave with sign extensions
 }
 
 // Function extend_low : extends the low 2 elements to 64 bits with zero extension
-static inline Vec2uq extend_low(Vec4ui const a) {
+static inline Vec2uq extend_low(Vec4ui const a) noexcept {
     return    _mm_unpacklo_epi32(a, _mm_setzero_si128());   // interleave with zero extensions
 }
 
 // Function extend_high : extends the high 2 elements to 64 bits with zero extension
-static inline Vec2uq extend_high(Vec4ui const a) {
+static inline Vec2uq extend_high(Vec4ui const a) noexcept {
     return    _mm_unpackhi_epi32(a, _mm_setzero_si128());   // interleave with zero extensions
 }
 
@@ -6040,7 +6041,7 @@ static inline Vec2uq extend_high(Vec4ui const a) {
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Overflow wraps around
-static inline Vec16c compress(Vec8s const low, Vec8s const high) {
+static inline Vec16c compress(Vec8s const low, Vec8s const high) noexcept {
     __m128i mask = _mm_set1_epi32(0x00FF00FF);            // mask for low bytes
     __m128i lowm = _mm_and_si128(low, mask);               // bytes of low
     __m128i highm = _mm_and_si128(high, mask);              // bytes of high
@@ -6049,19 +6050,19 @@ static inline Vec16c compress(Vec8s const low, Vec8s const high) {
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Signed, with saturation
-static inline Vec16c compress_saturated(Vec8s const low, Vec8s const high) {
+static inline Vec16c compress_saturated(Vec8s const low, Vec8s const high) noexcept {
     return  _mm_packs_epi16(low, high);
 }
 
 // Function compress : packs two vectors of 16-bit integers to one vector of 8-bit integers
 // Unsigned, overflow wraps around
-static inline Vec16uc compress(Vec8us const low, Vec8us const high) {
+static inline Vec16uc compress(Vec8us const low, Vec8us const high) noexcept {
     return  Vec16uc(compress((Vec8s)low, (Vec8s)high));
 }
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Unsigned, with saturation
-static inline Vec16uc compress_saturated(Vec8us const low, Vec8us const high) {
+static inline Vec16uc compress_saturated(Vec8us const low, Vec8us const high) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     __m128i maxval = _mm_set1_epi32(0x00FF00FF);           // maximum value
     __m128i low1 = _mm_min_epu16(low, maxval);             // upper limit
@@ -6086,7 +6087,7 @@ static inline Vec16uc compress_saturated(Vec8us const low, Vec8us const high) {
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Overflow wraps around
-static inline Vec8s compress(Vec4i const low, Vec4i const high) {
+static inline Vec8s compress(Vec4i const low, Vec4i const high) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     __m128i mask = _mm_set1_epi32(0x0000FFFF);             // mask for low words
     __m128i lowm = _mm_and_si128(low, mask);               // bytes of low
@@ -6105,19 +6106,19 @@ static inline Vec8s compress(Vec4i const low, Vec4i const high) {
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Signed with saturation
-static inline Vec8s compress_saturated(Vec4i const low, Vec4i const high) {
+static inline Vec8s compress_saturated(Vec4i const low, Vec4i const high) noexcept {
     return  _mm_packs_epi32(low, high);                    // pack with signed saturation
 }
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Overflow wraps around
-static inline Vec8us compress(Vec4ui const low, Vec4ui const high) {
+static inline Vec8us compress(Vec4ui const low, Vec4ui const high) noexcept {
     return Vec8us(compress((Vec4i)low, (Vec4i)high));
 }
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Unsigned, with saturation
-static inline Vec8us compress_saturated(Vec4ui const low, Vec4ui const high) {
+static inline Vec8us compress_saturated(Vec4ui const low, Vec4ui const high) noexcept {
 #if INSTRSET >= 5   // SSE4.1 supported
     __m128i maxval = _mm_set1_epi32(0x0000FFFF);           // maximum value
     __m128i low1 = _mm_min_epu32(low, maxval);             // upper limit
@@ -6142,7 +6143,7 @@ static inline Vec8us compress_saturated(Vec4ui const low, Vec4ui const high) {
 
 // Function compress : packs two vectors of 64-bit integers into one vector of 32-bit integers
 // Overflow wraps around
-static inline Vec4i compress(Vec2q const low, Vec2q const high) {
+static inline Vec4i compress(Vec2q const low, Vec2q const high) noexcept {
     __m128i low2 = _mm_shuffle_epi32(low, 0xD8);           // low dwords of low  to pos. 0 and 32
     __m128i high2 = _mm_shuffle_epi32(high, 0xD8);         // low dwords of high to pos. 0 and 32
     return  _mm_unpacklo_epi64(low2, high2);               // interleave
@@ -6151,7 +6152,7 @@ static inline Vec4i compress(Vec2q const low, Vec2q const high) {
 // Function compress : packs two vectors of 64-bit integers into one vector of 32-bit integers
 // Signed, with saturation
 // This function is very inefficient unless the SSE4.2 instruction set is supported
-static inline Vec4i compress_saturated(Vec2q const low, Vec2q const high) {
+static inline Vec4i compress_saturated(Vec2q const low, Vec2q const high) noexcept {
     Vec2q maxval = _mm_set_epi32(0, 0x7FFFFFFF, 0, 0x7FFFFFFF);
     Vec2q minval = _mm_set_epi32(-1, 0x80000000, -1, 0x80000000);
     Vec2q low1 = min(low, maxval);
@@ -6163,13 +6164,13 @@ static inline Vec4i compress_saturated(Vec2q const low, Vec2q const high) {
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Overflow wraps around
-static inline Vec4ui compress(Vec2uq const low, Vec2uq const high) {
+static inline Vec4ui compress(Vec2uq const low, Vec2uq const high) noexcept {
     return Vec4ui(compress((Vec2q)low, (Vec2q)high));
 }
 
 // Function compress : packs two vectors of 64-bit integers into one vector of 32-bit integers
 // Unsigned, with saturation
-static inline Vec4ui compress_saturated(Vec2uq const low, Vec2uq const high) {
+static inline Vec4ui compress_saturated(Vec2uq const low, Vec2uq const high) noexcept {
     __m128i zero = _mm_setzero_si128();
     __m128i lowzero = _mm_cmpeq_epi32(low, zero);          // for each dword is zero
     __m128i highzero = _mm_cmpeq_epi32(high, zero);        // for each dword is zero
@@ -6288,15 +6289,15 @@ protected:
     __m128i sign;                                          // sign of divisor
 public:
     Divisor_i() = default;                                 // Default constructor
-    Divisor_i(int32_t d) {                                 // Constructor with divisor
+    Divisor_i(int32_t d) noexcept {                                 // Constructor with divisor
         set(d);
     }
-    Divisor_i(int m, int s1, int sgn) {                    // Constructor with precalculated multiplier, shift and sign
+    Divisor_i(int m, int s1, int sgn) noexcept {                    // Constructor with precalculated multiplier, shift and sign
         multiplier = _mm_set1_epi32(m);
         shift1 = _mm_cvtsi32_si128(s1);
         sign = _mm_set1_epi32(sgn);
     }
-    void set(int32_t d) {                                  // Set or change divisor, calculate parameters
+    void set(int32_t d) noexcept {                                  // Set or change divisor, calculate parameters
         int32_t sh, m;
         const int32_t d1 = ::abs(d);
         if (uint32_t(d) == 0x80000000u) {                  // fix overflow for this special case
@@ -6317,13 +6318,13 @@ public:
         //sign = _mm_set1_epi32(d < 0 ? -1 : 0);           // bug in VS2019, 32 bit release. Replace by this:
         if (d < 0) sign = _mm_set1_epi32(-1); else sign = _mm_set1_epi32(0);  // sign of divisor
     }
-    __m128i getm() const {                                 // get multiplier
+    __m128i getm() const noexcept {                                 // get multiplier
         return multiplier;
     }
-    __m128i gets1() const {                                // get shift count
+    __m128i gets1() const noexcept {                                // get shift count
         return shift1;
     }
-    __m128i getsign() const {                              // get sign of divisor
+    __m128i getsign() const noexcept {                              // get sign of divisor
         return sign;
     }
 };
@@ -6336,15 +6337,15 @@ protected:
     __m128i shift2;                                        // shift count 2 used in fast division
 public:
     Divisor_ui() = default;                                // Default constructor
-    Divisor_ui(uint32_t d) {                               // Constructor with divisor
+    Divisor_ui(uint32_t d) noexcept {                               // Constructor with divisor
         set(d);
     }
-    Divisor_ui(uint32_t m, int s1, int s2) {               // Constructor with precalculated multiplier and shifts
+    Divisor_ui(uint32_t m, int s1, int s2) noexcept {               // Constructor with precalculated multiplier and shifts
         multiplier = _mm_set1_epi32((int32_t)m);
         shift1 = _mm_setr_epi32(s1, 0, 0, 0);
         shift2 = _mm_setr_epi32(s2, 0, 0, 0);
     }
-    void set(uint32_t d) {                                 // Set or change divisor, calculate parameters
+    void set(uint32_t d) noexcept {                                 // Set or change divisor, calculate parameters
         uint32_t L, L2, sh1, sh2, m;
         switch (d) {
         case 0:
@@ -6366,13 +6367,13 @@ public:
         shift1 = _mm_setr_epi32((int32_t)sh1, 0, 0, 0);
         shift2 = _mm_setr_epi32((int32_t)sh2, 0, 0, 0);
     }
-    __m128i getm() const {                                 // get multiplier
+    __m128i getm() const noexcept {                                 // get multiplier
         return multiplier;
     }
-    __m128i gets1() const {                                // get shift count 1
+    __m128i gets1() const noexcept {                                // get shift count 1
         return shift1;
     }
-    __m128i gets2() const {                                // get shift count 2
+    __m128i gets2() const noexcept {                                // get shift count 2
         return shift2;
     }
 };
@@ -6386,15 +6387,15 @@ protected:
     __m128i sign;                                          // sign of divisor
 public:
     Divisor_s() = default;                                 // Default constructor
-    Divisor_s(int16_t d) {                                 // Constructor with divisor
+    Divisor_s(int16_t d) noexcept {                                 // Constructor with divisor
         set(d);
     }
-    Divisor_s(int16_t m, int s1, int sgn) {                // Constructor with precalculated multiplier, shift and sign
+    Divisor_s(int16_t m, int s1, int sgn) noexcept {                // Constructor with precalculated multiplier, shift and sign
         multiplier = _mm_set1_epi16(m);
         shift1 = _mm_setr_epi32(s1, 0, 0, 0);
         sign = _mm_set1_epi32(sgn);
     }
-    void set(int16_t d) {                                  // Set or change divisor, calculate parameters
+    void set(int16_t d) noexcept {                                  // Set or change divisor, calculate parameters
         const int32_t d1 = ::abs(d);
         int32_t sh, m;
         if (uint16_t(d) == 0x8000u) {                      // fix overflow for this special case
@@ -6414,13 +6415,13 @@ public:
         shift1 = _mm_setr_epi32(sh, 0, 0, 0);              // shift count
         sign = _mm_set1_epi32(d < 0 ? -1 : 0);             // sign of divisor
     }
-    __m128i getm() const {                                 // get multiplier
+    __m128i getm() const noexcept {                                 // get multiplier
         return multiplier;
     }
-    __m128i gets1() const {                                // get shift count
+    __m128i gets1() const noexcept {                                // get shift count
         return shift1;
     }
-    __m128i getsign() const {                              // get sign of divisor
+    __m128i getsign() const noexcept {                              // get sign of divisor
         return sign;
     }
 };
@@ -6434,15 +6435,15 @@ protected:
     __m128i shift2;                                        // shift count 2 used in fast division
 public:
     Divisor_us() = default;                                // Default constructor
-    Divisor_us(uint16_t d) {                               // Constructor with divisor
+    Divisor_us(uint16_t d) noexcept {                               // Constructor with divisor
         set(d);
     }
-    Divisor_us(uint16_t m, int s1, int s2) {               // Constructor with precalculated multiplier and shifts
+    Divisor_us(uint16_t m, int s1, int s2) noexcept {               // Constructor with precalculated multiplier and shifts
         multiplier = _mm_set1_epi16((int16_t)m);
         shift1 = _mm_setr_epi32(s1, 0, 0, 0);
         shift2 = _mm_setr_epi32(s2, 0, 0, 0);
     }
-    void set(uint16_t d) {                                 // Set or change divisor, calculate parameters
+    void set(uint16_t d) noexcept {                                 // Set or change divisor, calculate parameters
         uint16_t L, L2, sh1, sh2, m;
         switch (d) {
         case 0:
@@ -6464,13 +6465,13 @@ public:
         shift1 = _mm_setr_epi32((int32_t)sh1, 0, 0, 0);
         shift2 = _mm_setr_epi32((int32_t)sh2, 0, 0, 0);
     }
-    __m128i getm() const {                                 // get multiplier
+    __m128i getm() const noexcept {                                 // get multiplier
         return multiplier;
     }
-    __m128i gets1() const {                                // get shift count 1
+    __m128i gets1() const noexcept {                                // get shift count 1
         return shift1;
     }
-    __m128i gets2() const {                                // get shift count 2
+    __m128i gets2() const noexcept {                                // get shift count 2
         return shift2;
     }
 };
@@ -6479,7 +6480,7 @@ public:
 // vector operator / : divide each element by divisor
 
 // vector of 4 32-bit signed integers
-static inline Vec4i operator / (Vec4i const a, Divisor_i const d) {
+static inline Vec4i operator / (Vec4i const a, Divisor_i const d) noexcept {
 #if INSTRSET >= 5
     __m128i t1 = _mm_mul_epi32(a, d.getm());               // 32x32->64 bit signed multiplication of a[0] and a[2]
     __m128i t2 = _mm_srli_epi64(t1, 32);                   // high dword of result 0 and 2
@@ -6516,7 +6517,7 @@ static inline Vec4i operator / (Vec4i const a, Divisor_i const d) {
 }
 
 // vector of 4 32-bit unsigned integers
-static inline Vec4ui operator / (Vec4ui const a, Divisor_ui const d) {
+static inline Vec4ui operator / (Vec4ui const a, Divisor_ui const d) noexcept {
     __m128i t1 = _mm_mul_epu32(a, d.getm());               // 32x32->64 bit unsigned multiplication of a[0] and a[2]
     __m128i t2 = _mm_srli_epi64(t1, 32);                   // high dword of result 0 and 2
     __m128i t3 = _mm_srli_epi64(a, 32);                    // get a[1] and a[3] into position for multiplication
@@ -6535,7 +6536,7 @@ static inline Vec4ui operator / (Vec4ui const a, Divisor_ui const d) {
 }
 
 // vector of 8 16-bit signed integers
-static inline Vec8s operator / (Vec8s const a, Divisor_s const d) {
+static inline Vec8s operator / (Vec8s const a, Divisor_s const d) noexcept {
     __m128i t1 = _mm_mulhi_epi16(a, d.getm());             // multiply high signed words
     __m128i t2 = _mm_add_epi16(t1, a);                     // + a
     __m128i t3 = _mm_sra_epi16(t2, d.gets1());             // shift right arithmetic
@@ -6546,7 +6547,7 @@ static inline Vec8s operator / (Vec8s const a, Divisor_s const d) {
 }
 
 // vector of 8 16-bit unsigned integers
-static inline Vec8us operator / (Vec8us const a, Divisor_us const d) {
+static inline Vec8us operator / (Vec8us const a, Divisor_us const d) noexcept {
     __m128i t1 = _mm_mulhi_epu16(a, d.getm());             // multiply high unsigned words
     __m128i t2 = _mm_sub_epi16(a, t1);                     // subtract
     __m128i t3 = _mm_srl_epi16(t2, d.gets1());             // shift right logical
@@ -6556,7 +6557,7 @@ static inline Vec8us operator / (Vec8us const a, Divisor_us const d) {
 
 
 // vector of 16 8-bit signed integers
-static inline Vec16c operator / (Vec16c const a, Divisor_s const d) {
+static inline Vec16c operator / (Vec16c const a, Divisor_s const d) noexcept {
     // expand into two Vec8s
     Vec8s low = extend_low(a) / d;
     Vec8s high = extend_high(a) / d;
@@ -6564,7 +6565,7 @@ static inline Vec16c operator / (Vec16c const a, Divisor_s const d) {
 }
 
 // vector of 16 8-bit unsigned integers
-static inline Vec16uc operator / (Vec16uc const a, Divisor_us const d) {
+static inline Vec16uc operator / (Vec16uc const a, Divisor_us const d) noexcept {
     // expand into two Vec8s
     Vec8us low = extend_low(a) / d;
     Vec8us high = extend_high(a) / d;
@@ -6572,37 +6573,37 @@ static inline Vec16uc operator / (Vec16uc const a, Divisor_us const d) {
 }
 
 // vector operator /= : divide
-static inline Vec8s & operator /= (Vec8s & a, Divisor_s const d) {
+static inline Vec8s & operator /= (Vec8s & a, Divisor_s const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec8us & operator /= (Vec8us & a, Divisor_us const d) {
+static inline Vec8us & operator /= (Vec8us & a, Divisor_us const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec4i & operator /= (Vec4i & a, Divisor_i const d) {
+static inline Vec4i & operator /= (Vec4i & a, Divisor_i const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec4ui & operator /= (Vec4ui & a, Divisor_ui const d) {
+static inline Vec4ui & operator /= (Vec4ui & a, Divisor_ui const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec16c & operator /= (Vec16c & a, Divisor_s const d) {
+static inline Vec16c & operator /= (Vec16c & a, Divisor_s const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec16uc & operator /= (Vec16uc & a, Divisor_us const d) {
+static inline Vec16uc & operator /= (Vec16uc & a, Divisor_us const d) noexcept {
     a = a / d;
     return a;
 }
@@ -6949,25 +6950,25 @@ static inline uint8_t to_bits(Vec2b const x) {
 #else  // broad boolean vectors
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint16_t to_bits(Vec16cb const x) {
+static inline uint16_t to_bits(Vec16cb const x) noexcept {
     return (uint16_t)_mm_movemask_epi8(x);
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec8sb const x) {
+static inline uint8_t to_bits(Vec8sb const x) noexcept {
     __m128i a = _mm_packs_epi16(x, x);  // 16-bit words to bytes
     return (uint8_t)_mm_movemask_epi8(a);
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec4ib const x) {
+static inline uint8_t to_bits(Vec4ib const x) noexcept {
     __m128i a = _mm_packs_epi32(x, x);  // 32-bit dwords to 16-bit words
     __m128i b = _mm_packs_epi16(a, a);  // 16-bit words to bytes
     return uint8_t(_mm_movemask_epi8(b) & 0xF);
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec2qb const x) {
+static inline uint8_t to_bits(Vec2qb const x) noexcept {
     uint32_t a = (uint32_t)_mm_movemask_epi8(x);
     return (a & 1) | ((a >> 7) & 2);
 }

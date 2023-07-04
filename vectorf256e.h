@@ -56,13 +56,13 @@ protected:
     __m128 y1;                         // high half
 public:
     Vec256fe() = default;              // default constructor
-    Vec256fe(__m128 x0, __m128 x1) {   // constructor to build from two __m128
+    Vec256fe(__m128 x0, __m128 x1) noexcept {   // constructor to build from two __m128
         y0 = x0;  y1 = x1;
     }
-    __m128 get_low() const {           // get low half
+    __m128 get_low() const noexcept {           // get low half
         return y0;
     }
-    __m128 get_high() const {          // get high half
+    __m128 get_high() const noexcept {          // get high half
         return y1;
     }
 };
@@ -71,13 +71,13 @@ public:
 class Vec256de {
 public:
     Vec256de() = default;              // default constructor
-    Vec256de(__m128d x0, __m128d x1) { // constructor to build from two __m128d
+    Vec256de(__m128d x0, __m128d x1) noexcept { // constructor to build from two __m128d
         y0 = x0;  y1 = x1;
     }
-    __m128d get_low() const {          // get low half
+    __m128d get_low() const noexcept {          // get low half
         return y0;
     }
-    __m128d get_high() const {         // get high half
+    __m128d get_high() const noexcept {         // get high half
         return y1;
     }
 protected:
@@ -95,7 +95,7 @@ protected:
 // Used in various functions and operators. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
 // Each element in s must be either 0 (false) or 0xFFFFFFFF (true).
-static inline Vec256fe selectf (Vec256fe const s, Vec256fe const a, Vec256fe const b) {
+static inline Vec256fe selectf (Vec256fe const s, Vec256fe const a, Vec256fe const b) noexcept {
     return Vec256fe(selectf(b.get_low(), a.get_low(), s.get_low()), selectf(b.get_high(), a.get_high(), s.get_high()));
 }
 
@@ -104,7 +104,7 @@ static inline Vec256fe selectf (Vec256fe const s, Vec256fe const a, Vec256fe con
 // for (int i = 0; i < 4; i++) result[i] = s[i] ? a[i] : b[i];
 // Each element in s must be either 0 (false) or 0xFFFFFFFFFFFFFFFF (true). No other
 // values are allowed.
-static inline Vec256de selectd (Vec256de const s, Vec256de const a, Vec256de const b) {
+static inline Vec256de selectd (Vec256de const s, Vec256de const a, Vec256de const b) noexcept {
     return Vec256de(selectd(b.get_low(), a.get_low(), s.get_low()), selectd(b.get_high(), a.get_high(), s.get_high()));
 }
 
@@ -120,50 +120,50 @@ public:
     // Default constructor:
     Vec8fb() = default;
     // Constructor to build from all elements:
-    Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
+    Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) noexcept {
         y0 = Vec4fb(b0, b1, b2, b3);
         y1 = Vec4fb(b4, b5, b6, b7);
     }
     // Constructor to build from two Vec4fb:
-    Vec8fb(Vec4fb const a0, Vec4fb const a1) {
+    Vec8fb(Vec4fb const a0, Vec4fb const a1) noexcept {
         y0 = a0;  y1 = a1;
     }
     // Constructor to convert from type Vec256fe
-    Vec8fb(Vec256fe const x) {
+    Vec8fb(Vec256fe const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
     }
     // Constructor to broadcast scalar value:
-    Vec8fb(bool b) {
+    Vec8fb(bool b) noexcept {
         y0 = y1 = Vec4fb(b);
     }
     // Assignment operator to convert from type Vec256fe
-    Vec8fb & operator = (Vec256fe const x) {
+    Vec8fb & operator = (Vec256fe const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
         return *this;
     }
     // Constructor to convert from type Vec8ib used as Boolean for integer vectors
-    Vec8fb(Vec8ib const x) {
+    Vec8fb(Vec8ib const x) noexcept {
         y0 = _mm_castsi128_ps(Vec8i(x).get_low());
         y1 = _mm_castsi128_ps(Vec8i(x).get_high());
     }
     // Assignment operator to convert from type Vec8ib used as Boolean for integer vectors
-    Vec8fb & operator = (Vec8ib const x) {
+    Vec8fb & operator = (Vec8ib const x) noexcept {
         y0 = _mm_castsi128_ps(Vec8i(x).get_low());
         y1 = _mm_castsi128_ps(Vec8i(x).get_high());
         return *this;
     }
     // Assignment operator to broadcast scalar value:
-    Vec8fb & operator = (bool b) {
+    Vec8fb & operator = (bool b) noexcept {
         y0 = y1 = Vec4fb(b);
         return *this;
     }
     // Type cast operator to convert to type Vec8ib used as Boolean for integer vectors
-    operator Vec8ib() const {
+    operator Vec8ib() const noexcept {
         return Vec8i(_mm_castps_si128(y0), _mm_castps_si128(y1));
     }
 
     // Member function to change a single element in vector
-    Vec8fb const insert(int index, bool value) {
+    Vec8fb const insert(int index, bool value) noexcept {
         if ((uint32_t)index < 4) {
             y0 = Vec4fb(y0).insert(index, value);
         }
@@ -173,7 +173,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         if ((uint32_t)index < 4) {
             return Vec4fb(y0).extract(index);
         }
@@ -182,14 +182,14 @@ public:
         }
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec4fb:
-    Vec4fb get_low() const {
+    Vec4fb get_low() const noexcept {
         return y0;
     }
-    Vec4fb get_high() const {
+    Vec4fb get_high() const noexcept {
         return y1;
     }
     // Member function to change a bitfield to a boolean vector
@@ -217,81 +217,81 @@ public:
 *****************************************************************************/
 
 // vector operator & : bitwise and
-static inline Vec8fb operator & (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator & (Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
-static inline Vec8fb operator && (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator && (Vec8fb const a, Vec8fb const b) noexcept {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec8fb & operator &= (Vec8fb & a, Vec8fb const b) {
+static inline Vec8fb & operator &= (Vec8fb & a, Vec8fb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec8fb operator | (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator | (Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
-static inline Vec8fb operator || (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator || (Vec8fb const a, Vec8fb const b) noexcept {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec8fb & operator |= (Vec8fb & a, Vec8fb const b) {
+static inline Vec8fb & operator |= (Vec8fb & a, Vec8fb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8fb operator ^ (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator ^ (Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec8fb & operator ^= (Vec8fb & a, Vec8fb const b) {
+static inline Vec8fb & operator ^= (Vec8fb & a, Vec8fb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec8fb operator ~ (Vec8fb const a) {
+static inline Vec8fb operator ~ (Vec8fb const a) noexcept {
     return Vec8fb(~a.get_low(), ~a.get_high());
 }
 
 // vector operator == : xnor
-static inline Vec8fb operator == (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator == (Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(Vec8fb(a) ^ Vec8fb(~b));
 }
 
 // vector operator != : xor
-static inline Vec8fb operator != (Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb operator != (Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(a ^ b);
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not
 // all bits in an element are the same)
-static inline Vec8fb operator ! (Vec8fb const a) {
+static inline Vec8fb operator ! (Vec8fb const a) noexcept {
     return Vec8fb(!a.get_low(), !a.get_high());
 }
 
 // Functions for Vec8fb
 
 // andnot: a & ~ b
-static inline Vec8fb andnot(Vec8fb const a, Vec8fb const b) {
+static inline Vec8fb andnot(Vec8fb const a, Vec8fb const b) noexcept {
     return Vec8fb(andnot(a.get_low(), b.get_low()), andnot(a.get_high(), b.get_high()));
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec8fb const a) {
+static inline bool horizontal_and (Vec8fb const a) noexcept {
     return horizontal_and(a.get_low() & a.get_high());
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec8fb const a) {
+static inline bool horizontal_or (Vec8fb const a) noexcept {
     return horizontal_or(a.get_low() | a.get_high());
 }
 
@@ -307,51 +307,51 @@ public:
     // Default constructor:
     Vec4db() = default;
     // Constructor to build from all elements:
-    Vec4db(bool b0, bool b1, bool b2, bool b3) {
+    Vec4db(bool b0, bool b1, bool b2, bool b3) noexcept {
         y0 = Vec2db(b0, b1);
         y1 = Vec2db(b2, b3);
     }
     // Constructor to build from two Vec2db:
-    Vec4db(Vec2db const a0, Vec2db const a1) {
+    Vec4db(Vec2db const a0, Vec2db const a1) noexcept {
         y0 = a0;  y1 = a1;
     }
     // Constructor to convert from type Vec256de
-    Vec4db(Vec256de const x) {
+    Vec4db(Vec256de const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
     }
     // Constructor to broadcast scalar value:
-    Vec4db(bool b) {
+    Vec4db(bool b) noexcept {
         y0 = y1 = Vec2db(b);
     }
     // Assignment operator to convert from type Vec256de
-    Vec4db & operator = (Vec256de const x) {
+    Vec4db & operator = (Vec256de const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
         return *this;
     }
 
     // Constructor to convert from type Vec4qb used as Boolean for integer vectors
-    Vec4db(Vec4qb const x) {
+    Vec4db(Vec4qb const x) noexcept {
         y0 = _mm_castsi128_pd(Vec4q(x).get_low());
         y1 = _mm_castsi128_pd(Vec4q(x).get_high());
     }
     // Assignment operator to convert from type Vec4qb used as Boolean for integer vectors
-    Vec4db & operator = (Vec4qb const x) {
+    Vec4db & operator = (Vec4qb const x) noexcept {
         y0 = _mm_castsi128_pd(Vec4q(x).get_low());
         y1 = _mm_castsi128_pd(Vec4q(x).get_high());
         return *this;
     }
     // Assignment operator to broadcast scalar value:
-    Vec4db & operator = (bool b) {
+    Vec4db & operator = (bool b) noexcept {
         y0 = y1 = Vec2db(b);
         return *this;
     }
     // Type cast operator to convert to type Vec4qb used as Boolean for integer vectors
-    operator Vec4qb() const {
+    operator Vec4qb() const noexcept {
         return Vec4q(_mm_castpd_si128(y0), _mm_castpd_si128(y1));
     }
 
     // Member function to change a single element in vector
-    Vec4db const insert(int index, bool value) {
+    Vec4db const insert(int index, bool value) noexcept {
         if ((uint32_t)index < 2) {
             y0 = Vec2db(y0).insert(index, value);
         }
@@ -361,7 +361,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         if ((uint32_t)index < 2) {
             return Vec2db(y0).extract(index);
         }
@@ -370,14 +370,14 @@ public:
         }
     }
     // Extract a single element. Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec4fb:
-    Vec2db get_low() const {
+    Vec2db get_low() const noexcept {
         return y0;
     }
-    Vec2db get_high() const {
+    Vec2db get_high() const noexcept {
         return y1;
     }
     // Member function to change a bitfield to a boolean vector
@@ -405,80 +405,80 @@ public:
 *****************************************************************************/
 
 // vector operator & : bitwise and
-static inline Vec4db operator & (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator & (Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
-static inline Vec4db operator && (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator && (Vec4db const a, Vec4db const b) noexcept {
     return a & b;
 }
 
 // vector operator &= : bitwise and
-static inline Vec4db & operator &= (Vec4db & a, Vec4db const b) {
+static inline Vec4db & operator &= (Vec4db & a, Vec4db const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec4db operator | (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator | (Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
-static inline Vec4db operator || (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator || (Vec4db const a, Vec4db const b) noexcept {
     return a | b;
 }
 
 // vector operator |= : bitwise or
-static inline Vec4db & operator |= (Vec4db & a, Vec4db const b) {
+static inline Vec4db & operator |= (Vec4db & a, Vec4db const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4db operator ^ (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator ^ (Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4db & operator ^= (Vec4db & a, Vec4db const b) {
+static inline Vec4db & operator ^= (Vec4db & a, Vec4db const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec4db operator ~ (Vec4db const a) {
+static inline Vec4db operator ~ (Vec4db const a) noexcept {
     return Vec4db(~a.get_low(), ~a.get_high());
 }
 
 // vector operator == : xnor
-static inline Vec4db operator == (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator == (Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(Vec4db(a) ^ Vec4db(~b));
 }
 
 // vector operator != : xor
-static inline Vec4db operator != (Vec4db const a, Vec4db const b) {
+static inline Vec4db operator != (Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(a ^ b);
 }
 
 // vector operator ! : logical not
 // (operator ! is less efficient than operator ~. Use only where not
 // all bits in an element are the same)
-static inline Vec4db operator ! (Vec4db const a) {
+static inline Vec4db operator ! (Vec4db const a) noexcept {
     return Vec4db(!a.get_low(), !a.get_high());
 }
 
 // Functions for Vec4db
 
 // andnot: a & ~ b
-static inline Vec4db andnot(Vec4db const a, Vec4db const b) {
+static inline Vec4db andnot(Vec4db const a, Vec4db const b) noexcept {
     return Vec4db(andnot(a.get_low(), b.get_low()), andnot(a.get_high(), b.get_high()));
 }
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec4db const a) {
+static inline bool horizontal_and (Vec4db const a) noexcept {
     return horizontal_and(a.get_low() & a.get_high());
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec4db const a) {
+static inline bool horizontal_or (Vec4db const a) noexcept {
     return horizontal_or(a.get_low() | a.get_high());
 }
 
@@ -494,59 +494,59 @@ public:
     // Default constructor:
     Vec8f() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec8f(float f) {
+    Vec8f(float f) noexcept {
         y1 = y0 = _mm_set1_ps(f);
     }
     // Constructor to build from all elements:
-    Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) {
+    Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) noexcept {
         y0 = _mm_setr_ps(f0, f1, f2, f3);
         y1 = _mm_setr_ps(f4, f5, f6, f7);
     }
     // Constructor to build from two Vec4f:
-    Vec8f(Vec4f const a0, Vec4f const a1) {
+    Vec8f(Vec4f const a0, Vec4f const a1) noexcept {
         y0 = a0;  y1 = a1;
     }
     // Constructor to convert from type Vec256fe
-    Vec8f(Vec256fe const x) {
+    Vec8f(Vec256fe const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
     }
     // Assignment operator to convert from type Vec256fe
-    Vec8f & operator = (Vec256fe const x) {
+    Vec8f & operator = (Vec256fe const x) noexcept {
         y0 = x.get_low();  y1 = x.get_high();
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec8f & load(float const * p) {
+    Vec8f & load(float const * p) noexcept {
         y0 = _mm_loadu_ps(p);
         y1 = _mm_loadu_ps(p+4);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address divisible by 32.
-    Vec8f & load_a(float const * p) {
+    Vec8f & load_a(float const * p) noexcept {
         y0 = _mm_load_ps(p);
         y1 = _mm_load_ps(p+4);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(float * p) const {
+    void store(float * p) const noexcept {
         _mm_storeu_ps(p,   y0);
         _mm_storeu_ps(p+4, y1);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address divisible by 32.
-    void store_a(float * p) const {
+    void store_a(float * p) const noexcept {
         _mm_store_ps(p,   y0);
         _mm_store_ps(p+4, y1);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // Note: Will generate runtime error if p is not aligned by 32
-    void store_nt(float * p) const {
+    void store_nt(float * p) const noexcept {
         _mm_stream_ps(p,   y0);
         _mm_stream_ps(p+4, y1);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec8f & load_partial(int n, float const * p) {
+    Vec8f & load_partial(int n, float const * p) noexcept {
         if (n > 0 && n <= 4) {
             *this = Vec8f(Vec4f().load_partial(n, p),_mm_setzero_ps());
         }
@@ -559,7 +559,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, float * p) const {
+    void store_partial(int n, float * p) const noexcept {
         if (n <= 4) {
             get_low().store_partial(n, p);
         }
@@ -569,7 +569,7 @@ public:
         }
     }
     // cut off vector to n elements. The last 8-n elements are set to zero
-    Vec8f & cutoff(int n) {
+    Vec8f & cutoff(int n) noexcept {
         if (uint32_t(n) >= 8) return *this;
         else if (n >= 4) {
             y1 = Vec4f(y1).cutoff(n - 4);
@@ -581,7 +581,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec8f const insert(int index, float value) {
+    Vec8f const insert(int index, float value) noexcept {
         if ((uint32_t)index < 4) {
             y0 = Vec4f(y0).insert(index, value);
         }
@@ -591,7 +591,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    float extract(int index) const {
+    float extract(int index) const noexcept {
         if ((uint32_t)index < 4) {
             return Vec4f(y0).extract(index);
         }
@@ -601,14 +601,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    float operator [] (int index) const {
+    float operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec4f:
-    Vec4f get_low() const {
+    Vec4f get_low() const noexcept {
         return y0;
     }
-    Vec4f get_high() const {
+    Vec4f get_high() const noexcept {
         return y1;
     }
     static constexpr int size() {
@@ -627,188 +627,188 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec8f operator + (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator + (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator + : add vector and scalar
-static inline Vec8f operator + (Vec8f const a, float b) {
+static inline Vec8f operator + (Vec8f const a, float b) noexcept {
     return a + Vec8f(b);
 }
-static inline Vec8f operator + (float a, Vec8f const b) {
+static inline Vec8f operator + (float a, Vec8f const b) noexcept {
     return Vec8f(a) + b;
 }
 
 // vector operator += : add
-static inline Vec8f & operator += (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator += (Vec8f & a, Vec8f const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec8f operator ++ (Vec8f & a, int) {
+static inline Vec8f operator ++ (Vec8f & a, int) noexcept {
     Vec8f a0 = a;
     a = a + 1.0f;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec8f & operator ++ (Vec8f & a) {
+static inline Vec8f & operator ++ (Vec8f & a) noexcept {
     a = a + 1.0f;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec8f operator - (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator - (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec8f operator - (Vec8f const a, float b) {
+static inline Vec8f operator - (Vec8f const a, float b) noexcept {
     return a - Vec8f(b);
 }
-static inline Vec8f operator - (float a, Vec8f const b) {
+static inline Vec8f operator - (float a, Vec8f const b) noexcept {
     return Vec8f(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec8f operator - (Vec8f const a) {
+static inline Vec8f operator - (Vec8f const a) noexcept {
     return Vec8f(-a.get_low(), -a.get_high());
 }
 
 // vector operator -= : subtract
-static inline Vec8f & operator -= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator -= (Vec8f & a, Vec8f const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec8f operator -- (Vec8f & a, int) {
+static inline Vec8f operator -- (Vec8f & a, int) noexcept {
     Vec8f a0 = a;
     a = a - 1.0f;
     return a0;
 }
 
 // prefix operator --
-static inline Vec8f & operator -- (Vec8f & a) {
+static inline Vec8f & operator -- (Vec8f & a) noexcept {
     a = a - 1.0f;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec8f operator * (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator * (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec8f operator * (Vec8f const a, float b) {
+static inline Vec8f operator * (Vec8f const a, float b) noexcept {
     return a * Vec8f(b);
 }
-static inline Vec8f operator * (float a, Vec8f const b) {
+static inline Vec8f operator * (float a, Vec8f const b) noexcept {
     return Vec8f(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec8f & operator *= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator *= (Vec8f & a, Vec8f const b) noexcept {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec8f operator / (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator / (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() / b.get_low(), a.get_high() / b.get_high());
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec8f operator / (Vec8f const a, float b) {
+static inline Vec8f operator / (Vec8f const a, float b) noexcept {
     return a / Vec8f(b);
 }
-static inline Vec8f operator / (float a, Vec8f const b) {
+static inline Vec8f operator / (float a, Vec8f const b) noexcept {
     return Vec8f(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec8f & operator /= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator /= (Vec8f & a, Vec8f const b) noexcept {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec8fb operator == (Vec8f const a, Vec8f const b) {
+static inline Vec8fb operator == (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() == b.get_low(), a.get_high() == b.get_high());
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec8fb operator != (Vec8f const a, Vec8f const b) {
+static inline Vec8fb operator != (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec8fb operator < (Vec8f const a, Vec8f const b) {
+static inline Vec8fb operator < (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() < b.get_low(), a.get_high() < b.get_high());
 }
 
-// vector operator <= : returns true for elements for which a <= b
-static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) {
+// vector operator <= : returns true for elements for which a <=noexcept b
+static inline Vec8fb operator <= (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() <= b.get_low(), a.get_high() <= b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec8fb operator > (Vec8f const a, Vec8f const b) {
+static inline Vec8fb operator > (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() > b.get_low(), a.get_high() > b.get_high());
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) {
+static inline Vec8fb operator >= (Vec8f const a, Vec8f const b) noexcept {
     return Vec8fb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec8f operator & (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator & (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator &= : bitwise and
-static inline Vec8f & operator &= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator &= (Vec8f & a, Vec8f const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec8f and Vec8fb
-static inline Vec8f operator & (Vec8f const a, Vec8fb const b) {
+static inline Vec8f operator & (Vec8f const a, Vec8fb const b) noexcept {
     return Vec8f(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
-static inline Vec8f operator & (Vec8fb const a, Vec8f const b) {
+static inline Vec8f operator & (Vec8fb const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator | : bitwise or
-static inline Vec8f operator | (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator | (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
 
 // vector operator |= : bitwise or
-static inline Vec8f & operator |= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator |= (Vec8f & a, Vec8f const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec8f operator ^ (Vec8f const a, Vec8f const b) {
+static inline Vec8f operator ^ (Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec8f & operator ^= (Vec8f & a, Vec8f const b) {
+static inline Vec8f & operator ^= (Vec8f & a, Vec8f const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec8fb operator ! (Vec8f const a) {
+static inline Vec8fb operator ! (Vec8f const a) noexcept {
     return Vec8fb(!a.get_low(), !a.get_high());
 }
 
@@ -822,61 +822,61 @@ static inline Vec8fb operator ! (Vec8f const a) {
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or 0xFFFFFFFF (true). No other values are allowed.
-static inline Vec8f select (Vec8fb const s, Vec8f const a, Vec8f const b) {
+static inline Vec8f select (Vec8fb const s, Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(select(s.get_low(),a.get_low(),b.get_low()), select(s.get_high(),a.get_high(),b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec8f if_add (Vec8fb const f, Vec8f const a, Vec8f const b) {
+static inline Vec8f if_add (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
     return a + (Vec8f(f) & b);
 }
 
 // Conditional subtract
-static inline Vec8f if_sub (Vec8fb const f, Vec8f const a, Vec8f const b) {
+static inline Vec8f if_sub (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
     return a - (Vec8f(f) & b);
 }
 
 // Conditional multiply
-static inline Vec8f if_mul (Vec8fb const f, Vec8f const a, Vec8f const b) {
+static inline Vec8f if_mul (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
     return a * select(f, b, 1.f);
 }
 
 // Conditional divide
-static inline Vec8f if_div (Vec8fb const f, Vec8f const a, Vec8f const b) {
+static inline Vec8f if_div (Vec8fb const f, Vec8f const a, Vec8f const b) noexcept {
     return a / select(f, b, 1.f);
 }
 
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline float horizontal_add (Vec8f const a) {
+static inline float horizontal_add (Vec8f const a) noexcept {
     return horizontal_add(a.get_low() + a.get_high());
 }
 
 // function max: a > b ? a : b
-static inline Vec8f max(Vec8f const a, Vec8f const b) {
+static inline Vec8f max(Vec8f const a, Vec8f const b)noexcept {
     return Vec8f(max(a.get_low(),b.get_low()), max(a.get_high(),b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec8f min(Vec8f const a, Vec8f const b) {
+static inline Vec8f min(Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(min(a.get_low(),b.get_low()), min(a.get_high(),b.get_high()));
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
 // Removes sign bit, even for -0.0f, -INF and -NAN
-static inline Vec8f abs(Vec8f const a) {
+static inline Vec8f abs(Vec8f const a) noexcept {
     return Vec8f(abs(a.get_low()), abs(a.get_high()));
 }
 
 // function sqrt: square root
-static inline Vec8f sqrt(Vec8f const a) {
+static inline Vec8f sqrt(Vec8f const a) noexcept {
     return Vec8f(sqrt(a.get_low()), sqrt(a.get_high()));
 }
 
 // function square: a * a
-static inline Vec8f square(Vec8f const a) {
+static inline Vec8f square(Vec8f const a) noexcept {
     return Vec8f(square(a.get_low()), square(a.get_high()));
 }
 
@@ -904,42 +904,42 @@ static inline Vec8f pow(Vec8f const a, Const_int_t<n>) {
 
 
 // function round: round to nearest integer (even). (result as float vector)
-static inline Vec8f round(Vec8f const a) {
+static inline Vec8f round(Vec8f const a) noexcept {
     return Vec8f(round(a.get_low()), round(a.get_high()));
 }
 
 // function truncate: round towards zero. (result as float vector)
-static inline Vec8f truncate(Vec8f const a) {
+static inline Vec8f truncate(Vec8f const a) noexcept {
     return Vec8f(truncate(a.get_low()), truncate(a.get_high()));
 }
 
 // function floor: round towards minus infinity. (result as float vector)
-static inline Vec8f floor(Vec8f const a) {
+static inline Vec8f floor(Vec8f const a) noexcept {
     return Vec8f(floor(a.get_low()), floor(a.get_high()));
 }
 
 // function ceil: round towards plus infinity. (result as float vector)
-static inline Vec8f ceil(Vec8f const a) {
+static inline Vec8f ceil(Vec8f const a) noexcept {
     return Vec8f(ceil(a.get_low()), ceil(a.get_high()));
 }
 
 // function roundi: round to nearest integer (even). (result as integer vector)
-static inline Vec8i roundi(Vec8f const a) {
+static inline Vec8i roundi(Vec8f const a) noexcept {
     return Vec8i(roundi(a.get_low()), roundi(a.get_high()));
 }
 
 // function truncatei: round towards zero. (result as integer vector)
-static inline Vec8i truncatei(Vec8f const a) {
+static inline Vec8i truncatei(Vec8f const a) noexcept {
     return Vec8i(truncatei(a.get_low()), truncatei(a.get_high()));
 }
 
 // function to_float: convert integer vector to float vector
-static inline Vec8f to_float(Vec8i const a) {
+static inline Vec8f to_float(Vec8i const a) noexcept {
     return Vec8f(to_float(a.get_low()), to_float(a.get_high()));
 }
 
 // function to_float: convert unsigned integer vector to float vector
-static inline Vec8f to_float(Vec8ui const a) {
+static inline Vec8f to_float(Vec8ui const a) noexcept {
     return Vec8f(to_float(a.get_low()), to_float(a.get_high()));
 }
 
@@ -947,35 +947,35 @@ static inline Vec8f to_float(Vec8ui const a) {
 // Approximate math functions
 
 // approximate reciprocal (Faster than 1.f / a. relative accuracy better than 2^-11)
-static inline Vec8f approx_recipr(Vec8f const a) {
+static inline Vec8f approx_recipr(Vec8f const a) noexcept {
     return Vec8f(approx_recipr(a.get_low()), approx_recipr(a.get_high()));
 }
 
 // approximate reciprocal squareroot (Faster than 1.f / sqrt(a). Relative accuracy better than 2^-11)
-static inline Vec8f approx_rsqrt(Vec8f const a) {
+static inline Vec8f approx_rsqrt(Vec8f const a) noexcept {
     return Vec8f(approx_rsqrt(a.get_low()), approx_rsqrt(a.get_high()));
 }
 
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
+static inline Vec8f mul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
     return Vec8f(mul_add(a.get_low(),b.get_low(),c.get_low()), mul_add(a.get_high(),b.get_high(),c.get_high()));
 }
 
 // Multiply and subtract
-static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) {
+static inline Vec8f mul_sub(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
     return Vec8f(mul_sub(a.get_low(),b.get_low(),c.get_low()), mul_sub(a.get_high(),b.get_high(),c.get_high()));
 }
 
 // Multiply and inverse subtract
-static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) {
+static inline Vec8f nmul_add(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
     return Vec8f(nmul_add(a.get_low(),b.get_low(),c.get_low()), nmul_add(a.get_high(),b.get_high(),c.get_high()));
 }
 
 
 // Multiply and subtract with extra precision on the intermediate calculations, used internally
-static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) {
+static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) noexcept {
     return Vec8f(mul_sub_x(a.get_low(),b.get_low(),c.get_low()), mul_sub_x(a.get_high(),b.get_high(),c.get_high()));
 }
 
@@ -984,7 +984,7 @@ static inline Vec8f mul_sub_x(Vec8f const a, Vec8f const b, Vec8f const c) {
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0f) = 0, exponent(0.0f) = -127, exponent(INF) = +128, exponent(NAN) = +128
-static inline Vec8i exponent(Vec8f const a) {
+static inline Vec8i exponent(Vec8f const a) noexcept {
     return Vec8i(exponent(a.get_low()), exponent(a.get_high()));
 }
 
@@ -993,7 +993,7 @@ static inline Vec8i exponent(Vec8f const a) {
 // n >=  128 gives +INF
 // n <= -127 gives 0.0f
 // This function will never produce denormals, and never raise exceptions
-static inline Vec8f exp2(Vec8i const a) {
+static inline Vec8f exp2(Vec8i const a) noexcept {
     return Vec8f(exp2(a.get_low()), exp2(a.get_high()));
 }
 //static Vec8f exp2(Vec8f const x); // defined in vectormath_exp.h
@@ -1001,7 +1001,7 @@ static inline Vec8f exp2(Vec8i const a) {
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0f) = 1.0f, fraction(5.0f) = 1.25f
-static inline Vec8f fraction(Vec8f const a) {
+static inline Vec8f fraction(Vec8f const a) noexcept {
     return Vec8f(fraction(a.get_low()), fraction(a.get_high()));
 }
 
@@ -1012,56 +1012,56 @@ static inline Vec8f fraction(Vec8f const a) {
 // even for -0.0f, -INF and -NAN
 // Note that sign_bit(Vec8f(-0.0f)) gives true, while Vec8f(-0.0f) < Vec8f(0.0f) gives false
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb sign_bit(Vec8f const a) {
+static inline Vec8fb sign_bit(Vec8f const a) noexcept {
     return Vec8fb(sign_bit(a.get_low()), sign_bit(a.get_high()));
 }
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) {
+static inline Vec8f sign_combine(Vec8f const a, Vec8f const b) noexcept {
     return Vec8f(sign_combine(a.get_low(), b.get_low()), sign_combine(a.get_high(), b.get_high()));
 }
 
 // Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb is_finite(Vec8f const a) {
+static inline Vec8fb is_finite(Vec8f const a) noexcept {
     return Vec8fb(is_finite(a.get_low()), is_finite(a.get_high()));
 }
 
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb is_inf(Vec8f const a) {
+static inline Vec8fb is_inf(Vec8f const a) noexcept {
     return Vec8fb(is_inf(a.get_low()), is_inf(a.get_high()));
 }
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
 // (the underscore in the name avoids a conflict with a macro in Intel's mathimf.h)
-static inline Vec8fb is_nan(Vec8f const a) {
+static inline Vec8fb is_nan(Vec8f const a) noexcept {
     return Vec8fb(is_nan(a.get_low()), is_nan(a.get_high()));
 }
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF
-static inline Vec8fb is_subnormal(Vec8f const a) {
+static inline Vec8fb is_subnormal(Vec8f const a) noexcept {
     return Vec8fb(is_subnormal(a.get_low()), is_subnormal(a.get_high()));
 }
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal (denormal)
 // false for finite numbers, NAN and INF
-static inline Vec8fb is_zero_or_subnormal(Vec8f const a) {
+static inline Vec8fb is_zero_or_subnormal(Vec8f const a) noexcept {
     return Vec8fb(is_zero_or_subnormal(a.get_low()), is_zero_or_subnormal(a.get_high()));
 }
 
 // Function infinite4f: returns a vector where all elements are +INF
-static inline Vec8f infinite8f() {
+static inline Vec8f infinite8f() noexcept {
     return Vec8f(infinite4f(),infinite4f());
 }
 
 // Function nan4f: returns a vector where all elements are +NAN (quiet)
-static inline Vec8f nan8f(int n = 0x10) {
+static inline Vec8f nan8f(int n = 0x10) noexcept {
     return Vec8f(nan4f(n), nan4f(n));
 }
 
@@ -1087,31 +1087,31 @@ public:
     // Default constructor:
     Vec4d() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec4d(double d) {
+    Vec4d(double d) noexcept {
         y1 = y0 = _mm_set1_pd(d);
     }
     // Constructor to build from all elements:
-    Vec4d(double d0, double d1, double d2, double d3) {
+    Vec4d(double d0, double d1, double d2, double d3) noexcept {
         y0 = _mm_setr_pd(d0, d1);
         y1 = _mm_setr_pd(d2, d3);
     }
     // Constructor to build from two Vec4f:
-    Vec4d(Vec2d const a0, Vec2d const a1) {
+    Vec4d(Vec2d const a0, Vec2d const a1) noexcept {
         y0 = a0;  y1 = a1;
     }
     // Constructor to convert from type Vec256de
-    Vec4d(Vec256de const x) {
+    Vec4d(Vec256de const x) noexcept {
         y0 = x.get_low();
         y1 = x.get_high();
     }
     // Assignment operator to convert from type Vec256de
-    Vec4d & operator = (Vec256de const x) {
+    Vec4d & operator = (Vec256de const x) noexcept {
         y0 = x.get_low();
         y1 = x.get_high();
         return *this;
     }
     // Member function to load from array (unaligned)
-    Vec4d & load(double const * p) {
+    Vec4d & load(double const * p) noexcept {
         y0 = _mm_loadu_pd(p);
         y1 = _mm_loadu_pd(p+2);
         return *this;
@@ -1119,31 +1119,31 @@ public:
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 32
-    Vec4d & load_a(double const * p) {
+    Vec4d & load_a(double const * p) noexcept {
         y0 = _mm_load_pd(p);
         y1 = _mm_load_pd(p+2);
         return *this;
     }
     // Member function to store into array (unaligned)
-    void store(double * p) const {
+    void store(double * p) const noexcept {
         _mm_storeu_pd(p,   y0);
         _mm_storeu_pd(p+2, y1);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 32
-    void store_a(double * p) const {
+    void store_a(double * p) const noexcept {
         _mm_store_pd(p,   y0);
         _mm_store_pd(p+2, y1);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // Note: Will generate runtime error if p is not aligned by 32
-    void store_nt(double * p) const {
+    void store_nt(double * p) const noexcept {
         _mm_stream_pd(p,   y0);
         _mm_stream_pd(p+2, y1);
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec4d & load_partial(int n, double const * p) {
+    Vec4d & load_partial(int n, double const * p) noexcept {
         if (n > 0 && n <= 2) {
             *this = Vec4d(Vec2d().load_partial(n, p), _mm_setzero_pd());
         }
@@ -1156,7 +1156,7 @@ public:
         return *this;
     }
     // Partial store. Store n elements
-    void store_partial(int n, double * p) const {
+    void store_partial(int n, double * p) const noexcept {
         if (n <= 2) {
             get_low().store_partial(n, p);
         }
@@ -1165,7 +1165,7 @@ public:
             get_high().store_partial(n - 2, p + 2);
         }
     }
-    Vec4d & cutoff(int n) {
+    Vec4d & cutoff(int n) noexcept {
         if (uint32_t(n) >= 4) return *this;
         else if (n >= 2) {
             y1 = Vec2d(y1).cutoff(n - 2);
@@ -1177,7 +1177,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec4d const insert(int index, double value) {
+    Vec4d const insert(int index, double value) noexcept {
         if ((uint32_t)index < 2) {
             y0 = Vec2d(y0).insert(index, value);
         }
@@ -1187,7 +1187,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    double extract(int index) const {
+    double extract(int index) const noexcept {
         if ((uint32_t)index < 2) {
             return Vec2d(y0).extract(index);
         }
@@ -1197,14 +1197,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    double operator [] (int index) const {
+    double operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec2d:
-    Vec2d get_low() const {
+    Vec2d get_low() const noexcept {
         return y0;
     }
-    Vec2d get_high() const {
+    Vec2d get_high() const noexcept {
         return y1;
     }
     static constexpr int size() {
@@ -1223,188 +1223,188 @@ public:
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec4d operator + (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator + (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator + : add vector and scalar
-static inline Vec4d operator + (Vec4d const a, double b) {
+static inline Vec4d operator + (Vec4d const a, double b) noexcept {
     return a + Vec4d(b);
 }
-static inline Vec4d operator + (double a, Vec4d const b) {
+static inline Vec4d operator + (double a, Vec4d const b) noexcept {
     return Vec4d(a) + b;
 }
 
 // vector operator += : add
-static inline Vec4d & operator += (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator += (Vec4d & a, Vec4d const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec4d operator ++ (Vec4d & a, int) {
+static inline Vec4d operator ++ (Vec4d & a, int) noexcept {
     Vec4d a0 = a;
     a = a + 1.0;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec4d & operator ++ (Vec4d & a) {
+static inline Vec4d & operator ++ (Vec4d & a) noexcept {
     a = a + 1.0;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec4d operator - (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator - (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec4d operator - (Vec4d const a, double b) {
+static inline Vec4d operator - (Vec4d const a, double b) noexcept {
     return a - Vec4d(b);
 }
-static inline Vec4d operator - (double a, Vec4d const b) {
+static inline Vec4d operator - (double a, Vec4d const b) noexcept {
     return Vec4d(a) - b;
 }
 
 // vector operator - : unary minus
 // Change sign bit, even for 0, INF and NAN
-static inline Vec4d operator - (Vec4d const a) {
+static inline Vec4d operator - (Vec4d const a) noexcept {
     return Vec4d(-a.get_low(), -a.get_high());
 }
 
 // vector operator -= : subtract
-static inline Vec4d & operator -= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator -= (Vec4d & a, Vec4d const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec4d operator -- (Vec4d & a, int) {
+static inline Vec4d operator -- (Vec4d & a, int) noexcept {
     Vec4d a0 = a;
     a = a - 1.0;
     return a0;
 }
 
 // prefix operator --
-static inline Vec4d & operator -- (Vec4d & a) {
+static inline Vec4d & operator -- (Vec4d & a) noexcept {
     a = a - 1.0;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec4d operator * (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator * (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
 // vector operator * : multiply vector and scalar
-static inline Vec4d operator * (Vec4d const a, double b) {
+static inline Vec4d operator * (Vec4d const a, double b) noexcept {
     return a * Vec4d(b);
 }
-static inline Vec4d operator * (double a, Vec4d const b) {
+static inline Vec4d operator * (double a, Vec4d const b) noexcept {
     return Vec4d(a) * b;
 }
 
 // vector operator *= : multiply
-static inline Vec4d & operator *= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator *= (Vec4d & a, Vec4d const b) noexcept {
     a = a * b;
     return a;
 }
 
 // vector operator / : divide all elements by same integer
-static inline Vec4d operator / (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator / (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() / b.get_low(), a.get_high() / b.get_high());
 }
 
 // vector operator / : divide vector and scalar
-static inline Vec4d operator / (Vec4d const a, double b) {
+static inline Vec4d operator / (Vec4d const a, double b) noexcept {
     return a / Vec4d(b);
 }
-static inline Vec4d operator / (double a, Vec4d const b) {
+static inline Vec4d operator / (double a, Vec4d const b) noexcept {
     return Vec4d(a) / b;
 }
 
 // vector operator /= : divide
-static inline Vec4d & operator /= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator /= (Vec4d & a, Vec4d const b) noexcept {
     a = a / b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec4db operator == (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator == (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() == b.get_low(), a.get_high() == b.get_high());
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec4db operator != (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator != (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec4db operator < (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator < (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() < b.get_low(), a.get_high() < b.get_high());
 }
 
 // vector operator <= : returns true for elements for which a <= b
-static inline Vec4db operator <= (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator <= (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() <= b.get_low(), a.get_high() <= b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec4db operator > (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator > (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() > b.get_low(), a.get_high() > b.get_high());
 }
 
 // vector operator >= : returns true for elements for which a >= b
-static inline Vec4db operator >= (Vec4d const a, Vec4d const b) {
+static inline Vec4db operator >= (Vec4d const a, Vec4d const b) noexcept {
     return Vec4db(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // Bitwise logical operators
 
 // vector operator & : bitwise and
-static inline Vec4d operator & (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator & (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator &= : bitwise and
-static inline Vec4d & operator &= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator &= (Vec4d & a, Vec4d const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator & : bitwise and of Vec4d and Vec4db
-static inline Vec4d operator & (Vec4d const a, Vec4db const b) {
+static inline Vec4d operator & (Vec4d const a, Vec4db const b) noexcept {
     return Vec4d(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
-static inline Vec4d operator & (Vec4db const a, Vec4d const b) {
+static inline Vec4d operator & (Vec4db const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator | : bitwise or
-static inline Vec4d operator | (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator | (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
 
 // vector operator |= : bitwise or
-static inline Vec4d & operator |= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator |= (Vec4d & a, Vec4d const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec4d operator ^ (Vec4d const a, Vec4d const b) {
+static inline Vec4d operator ^ (Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec4d & operator ^= (Vec4d & a, Vec4d const b) {
+static inline Vec4d & operator ^= (Vec4d & a, Vec4d const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ! : logical not. Returns Boolean vector
-static inline Vec4db operator ! (Vec4d const a) {
+static inline Vec4db operator ! (Vec4d const a) noexcept {
     return Vec4db(!a.get_low(), !a.get_high());
 }
 
@@ -1419,27 +1419,27 @@ static inline Vec4db operator ! (Vec4d const a) {
 // for (int i = 0; i < 2; i++) result[i] = s[i] ? a[i] : b[i];
 // Each byte in s must be either 0 (false) or 0xFFFFFFFFFFFFFFFF (true).
 // No other values are allowed.
-static inline Vec4d select (Vec4db const s, Vec4d const a, Vec4d const b) {
+static inline Vec4d select (Vec4db const s, Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(select(s.get_low(), a.get_low(), b.get_low()), select(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec4d if_add (Vec4db const f, Vec4d const a, Vec4d const b) {
+static inline Vec4d if_add (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
     return a + (Vec4d(f) & b);
 }
 
 // Conditional subtract
-static inline Vec4d if_sub (Vec4db const f, Vec4d const a, Vec4d const b) {
+static inline Vec4d if_sub (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
     return a - (Vec4d(f) & b);
 }
 
 // Conditional multiply
-static inline Vec4d if_mul (Vec4db const f, Vec4d const a, Vec4d const b) {
+static inline Vec4d if_mul (Vec4db const f, Vec4d const a, Vec4d const b) noexcept {
     return a * select(f, b, 1.f);
 }
 
 // Conditional divide
-static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b) {
+static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b)noexcept {
     return a / select(f, b, 1.);
 }
 
@@ -1447,34 +1447,34 @@ static inline Vec4d if_div (Vec4db const f, Vec4d const a, Vec4d const b) {
 // General arithmetic functions, etc.
 
 // Horizontal add: Calculates the sum of all vector elements.
-static inline double horizontal_add (Vec4d const a) {
+static inline double horizontal_add (Vec4d const a) noexcept {
     return horizontal_add(a.get_low() + a.get_high());
 }
 
 // function max: a > b ? a : b
-static inline Vec4d max(Vec4d const a, Vec4d const b) {
+static inline Vec4d max(Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(max(a.get_low(),b.get_low()), max(a.get_high(),b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec4d min(Vec4d const a, Vec4d const b) {
+static inline Vec4d min(Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(min(a.get_low(),b.get_low()), min(a.get_high(),b.get_high()));
 }
 // NAN-safe versions of maximum and minimum are in vector_convert.h
 
 // function abs: absolute value
 // Removes sign bit, even for -0.0f, -INF and -NAN
-static inline Vec4d abs(Vec4d const a) {
+static inline Vec4d abs(Vec4d const a) noexcept {
     return Vec4d(abs(a.get_low()), abs(a.get_high()));
 }
 
 // function sqrt: square root
-static inline Vec4d sqrt(Vec4d const a) {
+static inline Vec4d sqrt(Vec4d const a) noexcept {
     return Vec4d(sqrt(a.get_low()), sqrt(a.get_high()));
 }
 
 // function square: a * a
-static inline Vec4d square(Vec4d const a) {
+static inline Vec4d square(Vec4d const a) noexcept {
     return Vec4d(square(a.get_low()), square(a.get_high()));
 }
 
@@ -1503,78 +1503,78 @@ static inline Vec4d pow(Vec4d const a, Const_int_t<n>) {
 
 
 // function round: round to nearest integer (even). (result as double vector)
-static inline Vec4d round(Vec4d const a) {
+static inline Vec4d round(Vec4d const a) noexcept {
     return Vec4d(round(a.get_low()), round(a.get_high()));
 }
 
 // function truncate: round towards zero. (result as double vector)
-static inline Vec4d truncate(Vec4d const a) {
+static inline Vec4d truncate(Vec4d const a) noexcept {
     return Vec4d(truncate(a.get_low()), truncate(a.get_high()));
 }
 
 // function floor: round towards minus infinity. (result as double vector)
-static inline Vec4d floor(Vec4d const a) {
+static inline Vec4d floor(Vec4d const a) noexcept {
     return Vec4d(floor(a.get_low()), floor(a.get_high()));
 }
 
 // function ceil: round towards plus infinity. (result as double vector)
-static inline Vec4d ceil(Vec4d const a) {
+static inline Vec4d ceil(Vec4d const a) noexcept {
     return Vec4d(ceil(a.get_low()), ceil(a.get_high()));
 }
 
 // function round_to_int32: round to nearest integer (even). (result as integer vector)
-static inline Vec4i round_to_int32(Vec4d const a) {
+static inline Vec4i round_to_int32(Vec4d const a) noexcept {
     return round_to_int32(a.get_low(), a.get_high());
 }
 
 // function truncate_to_int32: round towards zero. (result as integer vector)
-static inline Vec4i truncate_to_int32(Vec4d const a) {
+static inline Vec4i truncate_to_int32(Vec4d const a) noexcept {
     return truncate_to_int32(a.get_low(), a.get_high());
 }
 
 // function truncatei: round towards zero. (inefficient)
-static inline Vec4q truncatei(Vec4d const a) {
+static inline Vec4q truncatei(Vec4d const a) noexcept {
     double aa[4];
     a.store(aa);
     return Vec4q(int64_t(aa[0]), int64_t(aa[1]), int64_t(aa[2]), int64_t(aa[3]));
 }
 
 // function roundi: round to nearest or even. (inefficient)
-static inline Vec4q roundi(Vec4d const a) {
+static inline Vec4q roundi(Vec4d const a) noexcept {
     return truncatei(round(a));
 }
 
 // function to_double: convert integer vector elements to double vector (inefficient)
-static inline Vec4d to_double(Vec4q const a) {
+static inline Vec4d to_double(Vec4q const a) noexcept {
     int64_t aa[4];
     a.store(aa);
     return Vec4d(double(aa[0]), double(aa[1]), double(aa[2]), double(aa[3]));
 }
 
 // function to_double: convert unsigned integer vector elements to double vector (inefficient)
-static inline Vec4d to_double(Vec4uq const a) {
+static inline Vec4d to_double(Vec4uq const a) noexcept {
     uint64_t aa[4];
     a.store(aa);
     return Vec4d(double(aa[0]), double(aa[1]), double(aa[2]), double(aa[3]));
 }
 
 // function to_double: convert integer vector to double vector
-static inline Vec4d to_double(Vec4i const a) {
+static inline Vec4d to_double(Vec4i const a) noexcept {
     return Vec4d(to_double_low(a), to_double_high(a));
 }
 
 // function compress: convert two Vec4d to one Vec8f
-static inline Vec8f compress (Vec4d const low, Vec4d const high) {
+static inline Vec8f compress (Vec4d const low, Vec4d const high) noexcept {
     return Vec8f(compress(low.get_low(), low.get_high()), compress(high.get_low(), high.get_high()));
 }
 
 // Function extend_low : convert Vec8f vector elements 0 - 3 to Vec4d
-static inline Vec4d extend_low (Vec8f const a) {
+static inline Vec4d extend_low (Vec8f const a) noexcept {
     return Vec4d(extend_low(a.get_low()), extend_high(a.get_low()));
 }
 
 // Function extend_high : convert Vec8f vector elements 4 - 7 to Vec4d
-static inline Vec4d extend_high (Vec8f const a) {
+static inline Vec4d extend_high (Vec8f const a) noexcept {
     return Vec4d(extend_low(a.get_high()), extend_high(a.get_high()));
 }
 
@@ -1582,23 +1582,23 @@ static inline Vec4d extend_high (Vec8f const a) {
 // Fused multiply and add functions
 
 // Multiply and add
-static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
+static inline Vec4d mul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
     return Vec4d(mul_add(a.get_low(),b.get_low(),c.get_low()), mul_add(a.get_high(),b.get_high(),c.get_high()));
 }
 
 // Multiply and subtract
-static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) {
+static inline Vec4d mul_sub(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
     return Vec4d(mul_sub(a.get_low(),b.get_low(),c.get_low()), mul_sub(a.get_high(),b.get_high(),c.get_high()));
 }
 
 // Multiply and inverse subtract
-static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) {
+static inline Vec4d nmul_add(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
     return Vec4d(nmul_add(a.get_low(),b.get_low(),c.get_low()), nmul_add(a.get_high(),b.get_high(),c.get_high()));
 }
 
 // Multiply and subtract with extra precision on the intermediate calculations,
 // even if FMA instructions not supported, using Veltkamp-Dekker split
-static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) {
+static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) noexcept {
     return Vec4d(mul_sub_x(a.get_low(),b.get_low(),c.get_low()), mul_sub_x(a.get_high(),b.get_high(),c.get_high()));
 }
 
@@ -1607,14 +1607,14 @@ static inline Vec4d mul_sub_x(Vec4d const a, Vec4d const b, Vec4d const c) {
 // Extract the exponent as an integer
 // exponent(a) = floor(log2(abs(a)));
 // exponent(1.0) = 0, exponent(0.0) = -1023, exponent(INF) = +1024, exponent(NAN) = +1024
-static inline Vec4q exponent(Vec4d const a) {
+static inline Vec4q exponent(Vec4d const a) noexcept {
     return Vec4q(exponent(a.get_low()), exponent(a.get_high()));
 }
 
 // Extract the fraction part of a floating point number
 // a = 2^exponent(a) * fraction(a), except for a = 0
 // fraction(1.0) = 1.0, fraction(5.0) = 1.25
-static inline Vec4d fraction(Vec4d const a) {
+static inline Vec4d fraction(Vec4d const a) noexcept {
     return Vec4d(fraction(a.get_low()), fraction(a.get_high()));
 }
 
@@ -1623,7 +1623,7 @@ static inline Vec4d fraction(Vec4d const a) {
 // n >=  1024 gives +INF
 // n <= -1023 gives 0.0
 // This function will never produce denormals, and never raise exceptions
-static inline Vec4d exp2(Vec4q const a) {
+static inline Vec4d exp2(Vec4q const a) noexcept {
     return Vec4d(exp2(a.get_low()), exp2(a.get_high()));
 }
 //static Vec4d exp2(Vec4d const x); // defined in vectormath_exp.h
@@ -1634,53 +1634,53 @@ static inline Vec4d exp2(Vec4q const a) {
 // Function sign_bit: gives true for elements that have the sign bit set
 // even for -0.0, -INF and -NAN
 // Note that sign_bit(Vec4d(-0.0)) gives true, while Vec4d(-0.0) < Vec4d(0.0) gives false
-static inline Vec4db sign_bit(Vec4d const a) {
+static inline Vec4db sign_bit(Vec4d const a) noexcept {
     return Vec4db(sign_bit(a.get_low()), sign_bit(a.get_high()));
 }
 
 // Function sign_combine: changes the sign of a when b has the sign bit set
 // same as select(sign_bit(b), -a, a)
-static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) {
+static inline Vec4d sign_combine(Vec4d const a, Vec4d const b) noexcept {
     return Vec4d(sign_combine(a.get_low(), b.get_low()), sign_combine(a.get_high(), b.get_high()));
 }
 
 // Function is_finite: gives true for elements that are normal, denormal or zero,
 // false for INF and NAN
-static inline Vec4db is_finite(Vec4d const a) {
+static inline Vec4db is_finite(Vec4d const a) noexcept {
     return Vec4db(is_finite(a.get_low()), is_finite(a.get_high()));
 }
 
 // Function is_inf: gives true for elements that are +INF or -INF
 // false for finite numbers and NAN
-static inline Vec4db is_inf(Vec4d const a) {
+static inline Vec4db is_inf(Vec4d const a) noexcept {
     return Vec4db(is_inf(a.get_low()), is_inf(a.get_high()));
 }
 
 // Function is_nan: gives true for elements that are +NAN or -NAN
 // false for finite numbers and +/-INF
-static inline Vec4db is_nan(Vec4d const a) {
+static inline Vec4db is_nan(Vec4d const a) noexcept {
     return Vec4db(is_nan(a.get_low()), is_nan(a.get_high()));
 }
 
 // Function is_subnormal: gives true for elements that are denormal (subnormal)
 // false for finite numbers, zero, NAN and INF
-static inline Vec4db is_subnormal(Vec4d const a) {
+static inline Vec4db is_subnormal(Vec4d const a) noexcept {
     return Vec4db(is_subnormal(a.get_low()), is_subnormal(a.get_high()));
 }
 
 // Function is_zero_or_subnormal: gives true for elements that are zero or subnormal (denormal)
 // false for finite numbers, NAN and INF
-static inline Vec4db is_zero_or_subnormal(Vec4d const a) {
+static inline Vec4db is_zero_or_subnormal(Vec4d const a) noexcept {
     return Vec4db(is_zero_or_subnormal(a.get_low()),is_zero_or_subnormal(a.get_high()));
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
-static inline Vec4d infinite4d() {
+static inline Vec4d infinite4d() noexcept {
     return Vec4d(infinite2d(), infinite2d());
 }
 
 // Function nan2d: returns a vector where all elements are +NAN (quiet)
-static inline Vec4d nan4d(int n = 0x10) {
+static inline Vec4d nan4d(int n = 0x10) noexcept {
     return Vec4d(nan2d(n), nan2d(n));
 }
 
@@ -1701,54 +1701,54 @@ inline Vec4d change_sign(Vec4d const a) {
 *
 *****************************************************************************/
 
-static inline Vec256b reinterpret_i (Vec256b const x) {
+static inline Vec256b reinterpret_i (Vec256b const x) noexcept {
     return x;
 }
 
-static inline Vec256b reinterpret_i (Vec256fe  const x) {
+static inline Vec256b reinterpret_i (Vec256fe  const x) noexcept {
     return Vec256b(reinterpret_i(x.get_low()), reinterpret_i(x.get_high()));
 }
 
-static inline Vec256b reinterpret_i (Vec256de const x) {
+static inline Vec256b reinterpret_i (Vec256de const x) noexcept {
     return Vec256b(reinterpret_i(x.get_low()), reinterpret_i(x.get_high()));
 }
 
-static inline Vec256fe  reinterpret_f (Vec256b const x) {
+static inline Vec256fe  reinterpret_f (Vec256b const x) noexcept {
     return Vec256fe(reinterpret_f(x.get_low()), reinterpret_f(x.get_high()));
 }
 
-static inline Vec256fe  reinterpret_f (Vec256fe  const x) {
+static inline Vec256fe  reinterpret_f (Vec256fe  const x) noexcept {
     return x;
 }
 
-static inline Vec256fe  reinterpret_f (Vec256de const x) {
+static inline Vec256fe  reinterpret_f (Vec256de const x) noexcept {
     return Vec256fe(reinterpret_f(x.get_low()), reinterpret_f(x.get_high()));
 }
 
-static inline Vec256de reinterpret_d (Vec256b const x) {
+static inline Vec256de reinterpret_d (Vec256b const x) noexcept {
     return Vec256de(reinterpret_d(x.get_low()), reinterpret_d(x.get_high()));
 }
 
-static inline Vec256de reinterpret_d (Vec256fe  const x) {
+static inline Vec256de reinterpret_d (Vec256fe  const x) noexcept {
     return Vec256de(reinterpret_d(x.get_low()), reinterpret_d(x.get_high()));
 }
 
-static inline Vec256de reinterpret_d (Vec256de const x) {
+static inline Vec256de reinterpret_d (Vec256de const x) noexcept {
     return x;
 }
 
 // extend vectors to double size by adding zeroes
-static inline Vec8f extend_z(Vec4f a) {
+static inline Vec8f extend_z(Vec4f a) noexcept {
     return Vec8f(a, _mm_setzero_ps());
 }
-static inline Vec4d extend_z(Vec2d a) {
+static inline Vec4d extend_z(Vec2d a) noexcept {
     return Vec4d(a, _mm_setzero_pd());
 }
 
-static inline Vec8fb extend_z(Vec4fb a) {
+static inline Vec8fb extend_z(Vec4fb a) noexcept {
     return Vec8fb(a, Vec4fb(false));
 }
-static inline Vec4db extend_z(Vec2db a) {
+static inline Vec4db extend_z(Vec2db a) noexcept {
     return Vec4db(a, Vec2db(false));
 }
 
@@ -1807,14 +1807,14 @@ static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
 *
 *****************************************************************************/
 
-static inline Vec8f lookup8(Vec8i const index, Vec8f const table) {
+static inline Vec8f lookup8(Vec8i const index, Vec8f const table) noexcept {
     Vec4f  r0 = lookup8(index.get_low() , table.get_low(), table.get_high());
     Vec4f  r1 = lookup8(index.get_high(), table.get_low(), table.get_high());
     return Vec8f(r0, r1);
 }
 
 template <int n>
-static inline Vec8f lookup(Vec8i const index, float const * table) {
+static inline Vec8f lookup(Vec8i const index, float const * table) noexcept {
     if constexpr (n <= 0) return 0;
     if constexpr (n <= 4) {
         Vec4f table1 = Vec4f().load(table);
@@ -1842,14 +1842,14 @@ static inline Vec8f lookup(Vec8i const index, float const * table) {
     table[index1[4]],table[index1[5]],table[index1[6]],table[index1[7]]);
 }
 
-static inline Vec4d lookup4(Vec4q const index, Vec4d const table) {
+static inline Vec4d lookup4(Vec4q const index, Vec4d const table) noexcept {
     Vec2d  r0 = lookup4(index.get_low() , table.get_low(), table.get_high());
     Vec2d  r1 = lookup4(index.get_high(), table.get_low(), table.get_high());
     return Vec4d(r0, r1);
 }
 
 template <int n>
-static inline Vec4d lookup(Vec4q const index, double const * table) {
+static inline Vec4d lookup(Vec4q const index, double const * table) noexcept {
     if constexpr (n <= 0) return 0;
     if constexpr (n <= 2) {
         Vec2d table1 = Vec2d().load(table);
@@ -1870,7 +1870,7 @@ static inline Vec4d lookup(Vec4q const index, double const * table) {
         // n is not a power of 2, limit to n-1
         index1 = min(Vec8ui(index), Vec8ui(n-1, 0, n-1, 0, n-1, 0, n-1, 0));
     }
-    Vec4q index2 = Vec4q(index1);
+    const Vec4q index2(index1);
     return Vec4d(table[index2[0]],table[index2[1]],table[index2[2]],table[index2[3]]);
 }
 
@@ -1926,19 +1926,19 @@ static inline void scatter(Vec4d const data, double * array) {
 
 // scatter functions with variable indexes
 
-static inline void scatter(Vec8i const index, uint32_t limit, Vec8f const data, float * destination) {
+static inline void scatter(Vec8i const index, uint32_t limit, Vec8f const data, float * destination) noexcept {
     for (int i = 0; i < 8; i++) {
         if (uint32_t(index[i]) < limit) destination[index[i]] = data[i];
     }
 }
 
-static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, double * destination) {
+static inline void scatter(Vec4q const index, uint32_t limit, Vec4d const data, double * destination) noexcept {
     for (int i = 0; i < 4; i++) {
         if (uint64_t(index[i]) < uint64_t(limit)) destination[index[i]] = data[i];
     }
 }
 
-static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, double * destination) {
+static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, double * destination) noexcept {
     for (int i = 0; i < 4; i++) {
         if (uint32_t(index[i]) < limit) destination[index[i]] = data[i];
     }
@@ -1952,12 +1952,12 @@ static inline void scatter(Vec4i const index, uint32_t limit, Vec4d const data, 
 *****************************************************************************/
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec8fb const x) {
+static inline uint8_t to_bits(Vec8fb const x) noexcept {
     return to_bits(Vec8ib(reinterpret_i(x)));
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint8_t to_bits(Vec4db const x) {
+static inline uint8_t to_bits(Vec4db const x) noexcept {
     return to_bits(Vec4qb(reinterpret_i(x)));
 }
 

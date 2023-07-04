@@ -62,12 +62,12 @@ public:
     // Default constructor:
     Vec64c() = default;
     // Constructor to build from two Vec32c:
-    Vec64c(Vec32c const a0, Vec32c const a1) {
+    Vec64c(Vec32c const a0, Vec32c const a1) noexcept {
         z0 = a0;
         z1 = a1;
     }
     // Constructor to broadcast the same value into all elements:
-    Vec64c(int8_t i) {
+    Vec64c(int8_t i) noexcept {
         z0 = z1 = Vec32c(i);
     }
     // Constructor to build from all elements:
@@ -78,7 +78,7 @@ public:
         int8_t i32, int8_t i33, int8_t i34, int8_t i35, int8_t i36, int8_t i37, int8_t i38, int8_t i39,
         int8_t i40, int8_t i41, int8_t i42, int8_t i43, int8_t i44, int8_t i45, int8_t i46, int8_t i47,
         int8_t i48, int8_t i49, int8_t i50, int8_t i51, int8_t i52, int8_t i53, int8_t i54, int8_t i55,
-        int8_t i56, int8_t i57, int8_t i58, int8_t i59, int8_t i60, int8_t i61, int8_t i62, int8_t i63) {
+        int8_t i56, int8_t i57, int8_t i58, int8_t i59, int8_t i60, int8_t i61, int8_t i62, int8_t i63) noexcept {
         // _mm512_set_epi8 and _mm512_set_epi16 missing in GCC 7.4.0
         int8_t aa[64] = {
             i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,
@@ -103,37 +103,37 @@ public:
     }
 #else
     // Assignment operator to convert from type __m512i used in intrinsics:
-    Vec64c & operator = (Vec512b const x) {
+    Vec64c & operator = (Vec512b const x) noexcept {
         z0 = x.get_low();
         z1 = x.get_high();
         return *this;
     }
 #endif
     // Constructor to convert from type Vec512b
-    Vec64c(Vec512b const x) {
+    Vec64c(Vec512b const x) noexcept {
         z0 = x.get_low();
         z1 = x.get_high();
      }
     // Type cast operator to convert to Vec512b used in emulation
-    operator Vec512b() const {
+    operator Vec512b() const noexcept {
         return Vec512b(z0,z1);
     }
     // Member function to load from array (unaligned)
-    Vec64c & load(void const * p) {
+    Vec64c & load(void const * p) noexcept {
         Vec16i x = Vec16i().load(p);
         z0 = x.get_low();
         z1 = x.get_high();
         return *this;
     }
     // Member function to load from array, aligned by 64
-    Vec64c & load_a(void const * p) {
+    Vec64c & load_a(void const * p) noexcept {
         Vec16i x = Vec16i().load_a(p);
         z0 = x.get_low();
         z1 = x.get_high();
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec64c & load_partial(int n, void const * p) {
+    Vec64c & load_partial(int n, void const * p) noexcept {
         Vec32c lo, hi;
         if ((uint32_t)n < 32) {
             lo = Vec32c().load_partial(n,p);
@@ -147,23 +147,23 @@ public:
         return *this;
     }
     // store
-    void store(void * p) const {
+    void store(void * p) const noexcept {
         Vec16i x = Vec16i(Vec8i(z0),Vec8i(z1));
         x.store(p);
     }
     // store aligned
-    void store_a(void * p) const {
+    void store_a(void * p) const noexcept {
         Vec16i x = Vec16i(Vec8i(z0),Vec8i(z1));
         x.store_a(p);
     } 
     // Member function storing to aligned uncached memory (non-temporal store).
     // Note: Will generate runtime error if p is not aligned by 64
-    void store_nt(void * p) const {
+    void store_nt(void * p) const noexcept {
         Vec16i x = Vec16i(Vec8i(z0),Vec8i(z1));
         x.store_nt(p);
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
         if ((uint32_t)n < 32) {
             get_low().store_partial(n, p);
         }
@@ -173,7 +173,7 @@ public:
         }
     }
     // cut off vector to n elements. The last 64-n elements are set to zero
-    Vec64c & cutoff(int n) {
+    Vec64c & cutoff(int n) noexcept {
         Vec32c lo, hi;
         if ((uint32_t)n < 32) {
             lo = Vec32c(get_low()).cutoff(n);
@@ -187,7 +187,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec64c const insert(int index, int8_t value) {
+    Vec64c const insert(int index, int8_t value) noexcept {
         Vec32c lo, hi;
         if ((uint32_t)index < 32) {
             lo = Vec32c(get_low()).insert(index, value);
@@ -201,7 +201,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    int8_t extract(int index) const {
+    int8_t extract(int index) const noexcept {
         if ((uint32_t)index < 32) {
             return Vec32c(get_low()).extract(index);
         }
@@ -211,14 +211,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int8_t operator [] (int index) const {
+    int8_t operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec32c:
-    Vec32c get_low() const {
+    Vec32c get_low() const noexcept {
         return z0;
     }
-    Vec32c get_high() const {
+    Vec32c get_high() const noexcept {
         return z1;
     }
     static constexpr int size() {
@@ -241,7 +241,7 @@ public:
     // Default constructor:
     Vec64cb() = default;
 
-    Vec64cb (Vec64c const a) : Vec64c(a) {}
+    Vec64cb (Vec64c const a) noexcept : Vec64c(a) {}
 
     // Constructor to build from all elements: Not implemented
 
@@ -249,29 +249,29 @@ public:
     // Vec64cb (__mmask64 x);
 
     // Constructor to broadcast single value:
-    Vec64cb(bool b) {
+    Vec64cb(bool b) noexcept {
         z0 = z1 = Vec32c(-int8_t(b));
     }
     // Constructor to make from two halves (big booleans)
-    Vec64cb (Vec32cb const x0, Vec32cb const x1) : Vec64c(x0,x1) {}
+    Vec64cb (Vec32cb const x0, Vec32cb const x1) noexcept : Vec64c(x0,x1) {}
 
     // Assignment operator to convert from type __mmask64 used in intrinsics: not possible
     //Vec64cb & operator = (__mmask64 x);
 
     // Member functions to split into two Vec32cb:
-    Vec32cb get_low() const {
+    Vec32cb get_low() const noexcept {
         return Vec32c(z0);
     }
-    Vec32cb get_high() const {
+    Vec32cb get_high() const noexcept {
         return Vec32c(z1);
     }
     // Assignment operator to broadcast scalar value:
-    Vec64cb & operator = (bool b) {
+    Vec64cb & operator = (bool b) noexcept {
         *this = Vec64cb(b);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec64cb & insert (int index, bool a) {
+    Vec64cb & insert (int index, bool a) noexcept {
         if ((uint32_t)index < 32) {
             z0 = get_low().insert(index, a);
         }
@@ -281,7 +281,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         if (index < 32) {
             return get_low().extract(index);
         }
@@ -291,7 +291,7 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Type cast operator to convert to __mmask64 used in intrinsics. not possible
@@ -322,76 +322,76 @@ public:
 *****************************************************************************/
 
 // vector operator & : bitwise and
-static inline Vec64cb operator & (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator & (Vec64cb const a, Vec64cb const b) noexcept {
     return Vec64cb(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
-static inline Vec64cb operator && (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator && (Vec64cb const a, Vec64cb const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec64cb & operator &= (Vec64cb & a, Vec64cb const b) {
+static inline Vec64cb & operator &= (Vec64cb & a, Vec64cb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec64cb operator | (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator | (Vec64cb const a, Vec64cb const b) noexcept {
     return Vec64cb(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
-static inline Vec64cb operator || (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator || (Vec64cb const a, Vec64cb const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec64cb & operator |= (Vec64cb & a, Vec64cb const b) {
+static inline Vec64cb & operator |= (Vec64cb & a, Vec64cb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec64cb operator ^ (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator ^ (Vec64cb const a, Vec64cb const b) noexcept {
     return Vec64cb(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 // vector operator ^= : bitwise xor
-static inline Vec64cb & operator ^= (Vec64cb & a, Vec64cb const b) {
+static inline Vec64cb & operator ^= (Vec64cb & a, Vec64cb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec64cb operator == (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator == (Vec64cb const a, Vec64cb const b) noexcept {
     return Vec64cb(a.get_low() == b.get_low(), a.get_high() == b.get_high());
 }
 
 // vector operator != : xor
-static inline Vec64cb operator != (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb operator != (Vec64cb const a, Vec64cb const b) noexcept {
     return a ^ b;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec64cb operator ~ (Vec64cb const a) {
+static inline Vec64cb operator ~ (Vec64cb const a) noexcept {
     return Vec64cb(~a.get_low(), ~a.get_high());}
 
 // vector operator ! : element not
-static inline Vec64cb operator ! (Vec64cb const a) {
+static inline Vec64cb operator ! (Vec64cb const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec64cb andnot (Vec64cb const a, Vec64cb const b) {
+static inline Vec64cb andnot (Vec64cb const a, Vec64cb const b) noexcept {
     return Vec64cb(andnot(a.get_low(), b.get_low()), andnot(a.get_high(), b.get_high()));}
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec64cb const a) {
+static inline bool horizontal_and (Vec64cb const a) noexcept {
     return horizontal_and(a.get_low()) && horizontal_and(a.get_high());
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec64cb const a) {
+static inline bool horizontal_or (Vec64cb const a) noexcept {
     return horizontal_or(a.get_low()) || horizontal_or(a.get_high());
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint64_t to_bits(Vec64cb x) {
+static inline uint64_t to_bits(Vec64cb x) noexcept {
     return (uint64_t(to_bits(x.get_high())) << 32) | to_bits(x.get_low());
 }
 
@@ -403,65 +403,65 @@ static inline uint64_t to_bits(Vec64cb x) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec64c operator + (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator + (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator += : add
-static inline Vec64c & operator += (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator += (Vec64c & a, Vec64c const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec64c operator ++ (Vec64c & a, int) {
+static inline Vec64c operator ++ (Vec64c & a, int) noexcept {
     Vec64c a0 = a;
     a = a + 1;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec64c & operator ++ (Vec64c & a) {
+static inline Vec64c & operator ++ (Vec64c & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec64c operator - (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator - (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator - : unary minus
-static inline Vec64c operator - (Vec64c const a) {
+static inline Vec64c operator - (Vec64c const a) noexcept {
     return Vec64c(-a.get_low(), -a.get_high());
 }
 
 // vector operator -= : subtract
-static inline Vec64c & operator -= (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator -= (Vec64c & a, Vec64c const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec64c operator -- (Vec64c & a, int) {
+static inline Vec64c operator -- (Vec64c & a, int) noexcept {
     Vec64c a0 = a;
     a = a - 1;
     return a0;
 }
 
 // prefix operator --
-static inline Vec64c & operator -- (Vec64c & a) {
+static inline Vec64c & operator -- (Vec64c & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec64c operator * (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator * (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
 // vector operator *= : multiply
-static inline Vec64c & operator *= (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator *= (Vec64c & a, Vec64c const b) noexcept {
     a = a * b;
     return a;
 }
@@ -470,92 +470,92 @@ static inline Vec64c & operator *= (Vec64c & a, Vec64c const b) {
 // See bottom of file
 
 // vector operator << : shift left
-static inline Vec64c operator << (Vec64c const a, int32_t b) {
+static inline Vec64c operator << (Vec64c const a, int32_t b) noexcept {
     return Vec64c(a.get_low() << b, a.get_high() << b);
 }
 
 // vector operator <<= : shift left
-static inline Vec64c & operator <<= (Vec64c & a, int32_t b) {
+static inline Vec64c & operator <<= (Vec64c & a, int32_t b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic
-static inline Vec64c operator >> (Vec64c const a, int32_t b) {
+static inline Vec64c operator >> (Vec64c const a, int32_t b) noexcept {
     return Vec64c(a.get_low() >> b, a.get_high() >> b);
 }
 
 // vector operator >>= : shift right arithmetic
-static inline Vec64c & operator >>= (Vec64c & a, int32_t b) {
+static inline Vec64c & operator >>= (Vec64c & a, int32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec64cb operator == (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator == (Vec64c const a, Vec64c const b) noexcept {
     return Vec64cb(a.get_low() == b.get_low(), a.get_high() == b.get_high());
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec64cb operator != (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator != (Vec64c const a, Vec64c const b) noexcept {
     return Vec64cb(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec64cb operator > (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator > (Vec64c const a, Vec64c const b) noexcept {
     return Vec64cb(a.get_low() > b.get_low(), a.get_high() > b.get_high());
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec64cb operator < (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator < (Vec64c const a, Vec64c const b) noexcept {
     return b > a;
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec64cb operator >= (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator >= (Vec64c const a, Vec64c const b) noexcept {
     return Vec64cb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec64cb operator <= (Vec64c const a, Vec64c const b) {
+static inline Vec64cb operator <= (Vec64c const a, Vec64c const b) noexcept {
     return b >= a;
 }
 
 // vector operator & : bitwise and
-static inline Vec64c operator & (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator & (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator &= : bitwise and
-static inline Vec64c & operator &= (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator &= (Vec64c & a, Vec64c const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec64c operator | (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator | (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
 
 // vector operator |= : bitwise or
-static inline Vec64c & operator |= (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator |= (Vec64c & a, Vec64c const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec64c operator ^ (Vec64c const a, Vec64c const b) {
+static inline Vec64c operator ^ (Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec64c & operator ^= (Vec64c & a, Vec64c const b) {
+static inline Vec64c & operator ^= (Vec64c & a, Vec64c const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec64c operator ~ (Vec64c const a) {
+static inline Vec64c operator ~ (Vec64c const a) noexcept {
     return Vec64c(~a.get_low(), ~a.get_high());
 }
 
@@ -563,69 +563,69 @@ static inline Vec64c operator ~ (Vec64c const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec64c select (Vec64cb const s, Vec64c const a, Vec64c const b) {
+static inline Vec64c select (Vec64cb const s, Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(select(s.get_low(), a.get_low(), b.get_low()), select(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec64c if_add (Vec64cb const f, Vec64c const a, Vec64c const b) {
+static inline Vec64c if_add (Vec64cb const f, Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(if_add(f.get_low(), a.get_low(), b.get_low()), if_add(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional subtract
-static inline Vec64c if_sub (Vec64cb const f, Vec64c const a, Vec64c const b) {
+static inline Vec64c if_sub (Vec64cb const f, Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(if_sub(f.get_low(), a.get_low(), b.get_low()), if_sub(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional multiply
-static inline Vec64c if_mul (Vec64cb const f, Vec64c const a, Vec64c const b) {
+static inline Vec64c if_mul (Vec64cb const f, Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(if_mul(f.get_low(), a.get_low(), b.get_low()), if_mul(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int8_t horizontal_add (Vec64c const a) {
+static inline int8_t horizontal_add (Vec64c const a) noexcept {
     return (int8_t)horizontal_add(a.get_low() + a.get_high());
 }
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Each element is sign-extended before addition to avoid overflow
-static inline int32_t horizontal_add_x (Vec64c const a) {
+static inline int32_t horizontal_add_x (Vec64c const a) noexcept {
     return horizontal_add_x(a.get_low()) + horizontal_add_x(a.get_high());
 }
 
 // function add_saturated: add element by element, signed with saturation
-static inline Vec64c add_saturated(Vec64c const a, Vec64c const b) {
+static inline Vec64c add_saturated(Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(add_saturated(a.get_low(), b.get_low()), add_saturated(a.get_high(), b.get_high()));
 }
 
 // function sub_saturated: subtract element by element, signed with saturation
-static inline Vec64c sub_saturated(Vec64c const a, Vec64c const b) {
+static inline Vec64c sub_saturated(Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(sub_saturated(a.get_low(), b.get_low()), sub_saturated(a.get_high(), b.get_high()));
 }
 
 // function max: a > b ? a : b
-static inline Vec64c max(Vec64c const a, Vec64c const b) {
+static inline Vec64c max(Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(max(a.get_low(), b.get_low()), max(a.get_high(), b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec64c min(Vec64c const a, Vec64c const b) {
+static inline Vec64c min(Vec64c const a, Vec64c const b) noexcept {
     return Vec64c(min(a.get_low(), b.get_low()), min(a.get_high(), b.get_high()));
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec64c abs(Vec64c const a) {
+static inline Vec64c abs(Vec64c const a) noexcept {
     return Vec64c(abs(a.get_low()), abs(a.get_high()));
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec64c abs_saturated(Vec64c const a) {
+static inline Vec64c abs_saturated(Vec64c const a) noexcept {
     return Vec64c(abs_saturated(a.get_low()), abs_saturated(a.get_high()));
 }
 
 // function rotate_left all elements
 // Use negative count to rotate right
-static inline Vec64c rotate_left(Vec64c const a, int b) {
+static inline Vec64c rotate_left(Vec64c const a, int b) noexcept {
     return Vec64c(rotate_left(a.get_low(), b), rotate_left(a.get_high(), b));
 }
 
@@ -641,13 +641,13 @@ public:
     // Default constructor:
     Vec64uc() = default;
     // Construct from Vec64c
-    Vec64uc(Vec64c const a) : Vec64c(a) {
+    Vec64uc(Vec64c const a) noexcept : Vec64c(a) {
     }
     // Constructor to broadcast the same value into all elements:
-    Vec64uc(uint8_t i) : Vec64c(int8_t(i)) {
+    Vec64uc(uint8_t i) noexcept : Vec64c(int8_t(i)) {
     }
     // Constructor to build from two Vec32uc:
-    Vec64uc(Vec32uc const a0, Vec32uc const a1) : Vec64c(a0,a1) {
+    Vec64uc(Vec32uc const a0, Vec32uc const a1) noexcept : Vec64c(a0,a1) {
     }
     // Constructor to build from all elements:
     Vec64uc(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7,
@@ -657,7 +657,7 @@ public:
         uint8_t i32, uint8_t i33, uint8_t i34, uint8_t i35, uint8_t i36, uint8_t i37, uint8_t i38, uint8_t i39,
         uint8_t i40, uint8_t i41, uint8_t i42, uint8_t i43, uint8_t i44, uint8_t i45, uint8_t i46, uint8_t i47,
         uint8_t i48, uint8_t i49, uint8_t i50, uint8_t i51, uint8_t i52, uint8_t i53, uint8_t i54, uint8_t i55,
-        uint8_t i56, uint8_t i57, uint8_t i58, uint8_t i59, uint8_t i60, uint8_t i61, uint8_t i62, uint8_t i63) {
+        uint8_t i56, uint8_t i57, uint8_t i58, uint8_t i59, uint8_t i60, uint8_t i61, uint8_t i62, uint8_t i63) noexcept {
         // _mm512_set_epi8 and _mm512_set_epi16 missing in GCC 7.4.0
         uint8_t aa[64] = {
             i0, i1, i2, i3, i4, i5, i6, i7,i8, i9, i10, i11, i12, i13, i14, i15,
@@ -677,43 +677,43 @@ public:
    }
 #else
     // Constructor to convert from type Vec512b
-    Vec64uc(Vec512b const x) : Vec64c(x) {}
+    Vec64uc(Vec512b const x) noexcept : Vec64c(x) {}
 
     // Assignment operator to convert from type __m512i used in intrinsics:
-    Vec64uc & operator = (Vec512b const x) {
+    Vec64uc & operator = (Vec512b const x) noexcept {
         return *this = Vec64uc(x);
     }
 #endif
     // Member function to load from array (unaligned)
-    Vec64uc & load(void const * p) {
+    Vec64uc & load(void const * p) noexcept {
         Vec64c::load(p);
         return *this;
     }
     // Member function to load from array, aligned by 64
-    Vec64uc & load_a(void const * p) {
+    Vec64uc & load_a(void const * p) noexcept {
         Vec64c::load_a(p);
         return *this;
     }
     // Member function to change a single element in vector
     // Note: This function is inefficient. Use load function if changing more than one element
-    Vec64uc const insert(int index, uint8_t value) {
+    Vec64uc const insert(int index, uint8_t value) noexcept {
         Vec64c::insert(index, (int8_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint8_t extract(int index) const {
+    uint8_t extract(int index) const noexcept {
         return (uint8_t)Vec64c::extract(index);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint8_t operator [] (int index) const {
+    uint8_t operator [] (int index) const noexcept {
         return (uint8_t)Vec64c::extract(index);
     }
     // Member functions to split into two Vec32uc:
-    Vec32uc get_low() const {
+    Vec32uc get_low() const noexcept {
         return Vec32uc(Vec64c::get_low());
     }
-    Vec32uc get_high() const {
+    Vec32uc get_high() const noexcept {
         return Vec32uc(Vec64c::get_high());
     }
     static constexpr int elementtype() {
@@ -724,17 +724,17 @@ public:
 // Define operators for this class
 
 // vector operator + : add element by element
-static inline Vec64uc operator + (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator + (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator - : subtract element by element
-static inline Vec64uc operator - (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator - (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator ' : multiply element by element
-static inline Vec64uc operator * (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator * (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
@@ -742,70 +742,70 @@ static inline Vec64uc operator * (Vec64uc const a, Vec64uc const b) {
 // See bottom of file
 
 // vector operator >> : shift right logical all elements
-static inline Vec64uc operator >> (Vec64uc const a, uint32_t b) {
+static inline Vec64uc operator >> (Vec64uc const a, uint32_t b) noexcept {
     return Vec64uc(a.get_low() >> b, a.get_high() >> b);
 }
-static inline Vec64uc operator >> (Vec64uc const a, int b) {
+static inline Vec64uc operator >> (Vec64uc const a, int b) noexcept {
     return a >> uint32_t(b);
 }
 
 // vector operator >>= : shift right logical
-static inline Vec64uc & operator >>= (Vec64uc & a, uint32_t b) {
+static inline Vec64uc & operator >>= (Vec64uc & a, uint32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator >>= : shift right logical (signed b)
-static inline Vec64uc & operator >>= (Vec64uc & a, int32_t b) {
+static inline Vec64uc & operator >>= (Vec64uc & a, int32_t b) noexcept {
     a = a >> uint32_t(b);
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec64uc operator << (Vec64uc const a, uint32_t b) {
+static inline Vec64uc operator << (Vec64uc const a, uint32_t b) noexcept {
     return Vec64uc(a.get_low() << b, a.get_high() << b);
 }
-static inline Vec64uc operator << (Vec64uc const a, int b) {
+static inline Vec64uc operator << (Vec64uc const a, int b) noexcept {
     return a << uint32_t(b);
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec64cb operator < (Vec64uc const a, Vec64uc const b) {
+static inline Vec64cb operator < (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64cb(a.get_low() < b.get_low(), a.get_high() < b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec64cb operator > (Vec64uc const a, Vec64uc const b) {
+static inline Vec64cb operator > (Vec64uc const a, Vec64uc const b) noexcept {
     return b < a;
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec64cb operator >= (Vec64uc const a, Vec64uc const b) {
+static inline Vec64cb operator >= (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64cb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec64cb operator <= (Vec64uc const a, Vec64uc const b) {
+static inline Vec64cb operator <= (Vec64uc const a, Vec64uc const b) noexcept {
     return b >= a;
 }
 
 // vector operator & : bitwise and
-static inline Vec64uc operator & (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator & (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(Vec64c(a) & Vec64c(b));
 }
 
 // vector operator | : bitwise or
-static inline Vec64uc operator | (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator | (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(Vec64c(a) | Vec64c(b));
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec64uc operator ^ (Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc operator ^ (Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(Vec64c(a) ^ Vec64c(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec64uc operator ~ (Vec64uc const a) {
+static inline Vec64uc operator ~ (Vec64uc const a) noexcept {
     return Vec64uc( ~ Vec64c(a));
 }
 
@@ -813,42 +813,42 @@ static inline Vec64uc operator ~ (Vec64uc const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec64uc select (Vec64cb const s, Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc select (Vec64cb const s, Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(select(s.get_low(), a.get_low(), b.get_low()), select(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec64uc if_add (Vec64cb const f, Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc if_add (Vec64cb const f, Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(if_add(f.get_low(), a.get_low(), b.get_low()), if_add(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional subtract
-static inline Vec64uc if_sub (Vec64cb const f, Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc if_sub (Vec64cb const f, Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(if_sub(f.get_low(), a.get_low(), b.get_low()), if_sub(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional multiply
-static inline Vec64uc if_mul (Vec64cb const f, Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc if_mul (Vec64cb const f, Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(if_mul(f.get_low(), a.get_low(), b.get_low()), if_mul(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // function add_saturated: add element by element, unsigned with saturation
-static inline Vec64uc add_saturated(Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc add_saturated(Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(add_saturated(a.get_low(), b.get_low()), add_saturated(a.get_high(), b.get_high()));
 }
 
 // function sub_saturated: subtract element by element, unsigned with saturation
-static inline Vec64uc sub_saturated(Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc sub_saturated(Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(sub_saturated(a.get_low(), b.get_low()), sub_saturated(a.get_high(), b.get_high()));
 }
 
 // function max: a > b ? a : b
-static inline Vec64uc max(Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc max(Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(max(a.get_low(), b.get_low()), max(a.get_high(), b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec64uc min(Vec64uc const a, Vec64uc const b) {
+static inline Vec64uc min(Vec64uc const a, Vec64uc const b) noexcept {
     return Vec64uc(min(a.get_low(), b.get_low()), min(a.get_high(), b.get_high()));
 }
 
@@ -864,20 +864,20 @@ public:
     // Default constructor:
     Vec32s() = default;
     // Constructor to broadcast the same value into all elements:
-    Vec32s(int16_t i) {
+    Vec32s(int16_t i) noexcept {
         z0 = z1 = Vec16s(i);
     }
     // Constructor to build from all elements:
     Vec32s(int16_t i0, int16_t i1, int16_t i2, int16_t i3, int16_t i4, int16_t i5, int16_t i6, int16_t i7,
         int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15,
         int16_t i16, int16_t i17, int16_t i18, int16_t i19, int16_t i20, int16_t i21, int16_t i22, int16_t i23,
-        int16_t i24, int16_t i25, int16_t i26, int16_t i27, int16_t i28, int16_t i29, int16_t i30, int16_t i31) {
+        int16_t i24, int16_t i25, int16_t i26, int16_t i27, int16_t i28, int16_t i29, int16_t i30, int16_t i31) noexcept {
         Vec16s x0 = Vec16s(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15);
         Vec16s x1 = Vec16s(i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31);
         *this = Vec32s(x0,x1);
     }
     // Constructor to build from two Vec16s:
-    Vec32s(Vec16s const a0, Vec16s const a1) {
+    Vec32s(Vec16s const a0, Vec16s const a1) noexcept {
         z0 = a0;  z1 = a1;
     }
 #ifdef VECTORI512_H
@@ -896,31 +896,31 @@ public:
     }
 #else
     // Constructor to convert from type Vec512b
-    Vec32s(Vec512b const x) {
+    Vec32s(Vec512b const x) noexcept {
         z0 = x.get_low();
         z1 = x.get_high();
     }
     // Assignment operator to convert from type Vec512b
-    Vec32s & operator = (Vec512b const x) {
+    Vec32s & operator = (Vec512b const x) noexcept {
         z0 = x.get_low();
         z1 = x.get_high();
         return *this;
     }
 #endif
     // Member function to load from array (unaligned)
-    Vec32s & load(void const * p) {
+    Vec32s & load(void const * p) noexcept {
         z0 = Vec16s().load(p);
         z1 = Vec16s().load((int16_t*)p + 16);
         return *this;
     }
     // Member function to load from array, aligned by 64
-    Vec32s & load_a(void const * p) {
+    Vec32s & load_a(void const * p) noexcept {
         z0 = Vec16s().load_a(p);
         z1 = Vec16s().load_a((int16_t*)p + 16);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
-    Vec32s & load_partial(int n, void const * p) {
+    Vec32s & load_partial(int n, void const * p) noexcept {
         if (uint32_t(n) < 16) {
             z0 = Vec16s().load_partial(n, p);
             z1 = Vec16s(0);
@@ -932,17 +932,17 @@ public:
         return *this;
     }
     // store
-    void store(void * p) const {
+    void store(void * p) const noexcept {
         Vec16s(z0).store(p);
         Vec16s(z1).store((int16_t*)p + 16);
     }
     // store aligned
-    void store_a(void * p) const {
+    void store_a(void * p) const noexcept {
         Vec16s(z0).store_a(p);
         Vec16s(z1).store_a((int16_t*)p + 16);
     }
     // Partial store. Store n elements
-    void store_partial(int n, void * p) const {
+    void store_partial(int n, void * p) const noexcept {
         if (uint32_t(n) < 16) {
             Vec16s(z0).store_partial(n, p);
         }
@@ -952,7 +952,7 @@ public:
         }
     }
     // cut off vector to n elements. The last 32-n elements are set to zero
-    Vec32s & cutoff(int n) {
+    Vec32s & cutoff(int n) noexcept {
         if (uint32_t(n) < 16) {
             z0 = Vec16s(z0).cutoff(n);
             z1 = Vec16s(0);
@@ -963,7 +963,7 @@ public:
         return *this;
     }
     // Member function to change a single element in vector
-    Vec32s const insert(int index, int16_t value) {
+    Vec32s const insert(int index, int16_t value) noexcept {
         if ((uint32_t)index < 16) {
             z0 = Vec16s(z0).insert(index, value);
         }
@@ -973,7 +973,7 @@ public:
         return *this;
     }
     // Member function extract a single element from vector
-    int16_t extract(int index) const {
+    int16_t extract(int index) const noexcept {
         if (index < 16) {
             return Vec16s(z0).extract(index);
         }
@@ -983,14 +983,14 @@ public:
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    int16_t operator [] (int index) const {
+    int16_t operator [] (int index) const noexcept {
         return extract(index);
     }
     // Member functions to split into two Vec16s:
-    Vec16s get_low() const {
+    Vec16s get_low() const noexcept {
         return z0;
     }
-    Vec16s get_high() const {
+    Vec16s get_high() const noexcept {
         return z1;
     }
     static constexpr int size() {
@@ -1017,39 +1017,39 @@ public:
     // Constructor to convert from type __mmask32 used in intrinsics: not possible
 
     // Constructor to broadcast single value:
-    Vec32sb(bool b) {
+    Vec32sb(bool b) noexcept {
         z0 = z1 = Vec16s(-int16_t(b));
     }
     // Constructor to make from two halves
-    Vec32sb (Vec16sb const x0, Vec16sb const x1) {
+    Vec32sb (Vec16sb const x0, Vec16sb const x1) noexcept {
         z0 = x0;  z1 = x1;
     }
     // Assignment operator to convert from type __mmask32 used in intrinsics: not possible
 
     // Assignment operator to broadcast scalar value:
-    Vec32sb & operator = (bool b) {
+    Vec32sb & operator = (bool b) noexcept {
         *this = Vec32sb(b);
         return *this;
     }
     // Member functions to split into two Vec16sb:
-    Vec16sb get_low() const {
+    Vec16sb get_low() const noexcept {
         return z0;
     }
-    Vec16sb get_high() const {
+    Vec16sb get_high() const noexcept {
         return z1;
     }
     // Member function to change a single element in vector
-    Vec32sb & insert(int index, bool a) {
+    Vec32sb & insert(int index, bool a) noexcept {
         Vec32s::insert(index, -(int16_t)a);
         return *this;
     }
     // Member function extract a single element from vector
-    bool extract(int index) const {
+    bool extract(int index) const noexcept {
         return Vec32s::extract(index) != 0;
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    bool operator [] (int index) const {
+    bool operator [] (int index) const noexcept {
         return extract(index);
     }
     // Type cast operator to convert to __mmask64 used in intrinsics. Not possible
@@ -1075,74 +1075,74 @@ public:
 *****************************************************************************/
 
 // vector operator & : bitwise and
-static inline Vec32sb operator & (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator & (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
-static inline Vec32sb operator && (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator && (Vec32sb const a, Vec32sb const b) noexcept {
     return a & b;
 }
 // vector operator &= : bitwise and
-static inline Vec32sb & operator &= (Vec32sb & a, Vec32sb const b) {
+static inline Vec32sb & operator &= (Vec32sb & a, Vec32sb const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec32sb operator | (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator | (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
-static inline Vec32sb operator || (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator || (Vec32sb const a, Vec32sb const b) noexcept {
     return a | b;
 }
 // vector operator |= : bitwise or
-static inline Vec32sb & operator |= (Vec32sb & a, Vec32sb const b) {
+static inline Vec32sb & operator |= (Vec32sb & a, Vec32sb const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec32sb operator ^ (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator ^ (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 // vector operator ^= : bitwise xor
-static inline Vec32sb & operator ^= (Vec32sb & a, Vec32sb const b) {
+static inline Vec32sb & operator ^= (Vec32sb & a, Vec32sb const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator == : xnor
-static inline Vec32sb operator == (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator == (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(a.get_low() == b.get_low(), a.get_high() == b.get_high());}
 
 // vector operator != : xor
-static inline Vec32sb operator != (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb operator != (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());}
 
 // vector operator ~ : bitwise not
-static inline Vec32sb operator ~ (Vec32sb const a) {
+static inline Vec32sb operator ~ (Vec32sb const a) noexcept {
     return Vec32sb(~a.get_low(), ~a.get_high());}
 
 // vector operator ! : element not
-static inline Vec32sb operator ! (Vec32sb const a) {
+static inline Vec32sb operator ! (Vec32sb const a) noexcept {
     return ~a;
 }
 
 // vector function andnot
-static inline Vec32sb andnot (Vec32sb const a, Vec32sb const b) {
+static inline Vec32sb andnot (Vec32sb const a, Vec32sb const b) noexcept {
     return Vec32sb(andnot(a.get_low(), b.get_low()), andnot(a.get_high(), b.get_high()));}
 
 // horizontal_and. Returns true if all bits are 1
-static inline bool horizontal_and (Vec32sb const a) {
+static inline bool horizontal_and (Vec32sb const a) noexcept {
     return horizontal_and(a.get_low()) && horizontal_and(a.get_high());
 }
 
 // horizontal_or. Returns true if at least one bit is 1
-static inline bool horizontal_or (Vec32sb const a) {
+static inline bool horizontal_or (Vec32sb const a) noexcept {
     return horizontal_or(a.get_low()) || horizontal_or(a.get_high());
 }
 
 // to_bits: convert boolean vector to integer bitfield
-static inline uint32_t to_bits(Vec32sb a) {
+static inline uint32_t to_bits(Vec32sb a) noexcept {
     return uint32_t(to_bits(a.get_high())) << 16 | to_bits(a.get_low());
 }
 
@@ -1154,65 +1154,65 @@ static inline uint32_t to_bits(Vec32sb a) {
 *****************************************************************************/
 
 // vector operator + : add element by element
-static inline Vec32s operator + (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator + (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator += : add
-static inline Vec32s & operator += (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator += (Vec32s & a, Vec32s const b) noexcept {
     a = a + b;
     return a;
 }
 
 // postfix operator ++
-static inline Vec32s operator ++ (Vec32s & a, int) {
+static inline Vec32s operator ++ (Vec32s & a, int) noexcept {
     Vec32s a0 = a;
     a = a + 1;
     return a0;
 }
 
 // prefix operator ++
-static inline Vec32s & operator ++ (Vec32s & a) {
+static inline Vec32s & operator ++ (Vec32s & a) noexcept {
     a = a + 1;
     return a;
 }
 
 // vector operator - : subtract element by element
-static inline Vec32s operator - (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator - (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator - : unary minus
-static inline Vec32s operator - (Vec32s const a) {
+static inline Vec32s operator - (Vec32s const a) noexcept {
     return Vec32s(-a.get_low(), -a.get_high());
 }
 
 // vector operator -= : subtract
-static inline Vec32s & operator -= (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator -= (Vec32s & a, Vec32s const b) noexcept {
     a = a - b;
     return a;
 }
 
 // postfix operator --
-static inline Vec32s operator -- (Vec32s & a, int) {
+static inline Vec32s operator -- (Vec32s & a, int) noexcept {
     Vec32s a0 = a;
     a = a - 1;
     return a0;
 }
 
 // prefix operator --
-static inline Vec32s & operator -- (Vec32s & a) {
+static inline Vec32s & operator -- (Vec32s & a) noexcept {
     a = a - 1;
     return a;
 }
 
 // vector operator * : multiply element by element
-static inline Vec32s operator * (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator * (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
 // vector operator *= : multiply
-static inline Vec32s & operator *= (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator *= (Vec32s & a, Vec32s const b) noexcept {
     a = a * b;
     return a;
 }
@@ -1221,92 +1221,92 @@ static inline Vec32s & operator *= (Vec32s & a, Vec32s const b) {
 // See bottom of file
 
 // vector operator << : shift left
-static inline Vec32s operator << (Vec32s const a, int32_t b) {
+static inline Vec32s operator << (Vec32s const a, int32_t b) noexcept {
     return Vec32s(a.get_low() << b, a.get_high() << b);
 }
 
 // vector operator <<= : shift left
-static inline Vec32s & operator <<= (Vec32s & a, int32_t b) {
+static inline Vec32s & operator <<= (Vec32s & a, int32_t b) noexcept {
     a = a << b;
     return a;
 }
 
 // vector operator >> : shift right arithmetic
-static inline Vec32s operator >> (Vec32s const a, int32_t b) {
+static inline Vec32s operator >> (Vec32s const a, int32_t b) noexcept {
     return Vec32s(a.get_low() >> b, a.get_high() >> b);
 }
 
 // vector operator >>= : shift right arithmetic
-static inline Vec32s & operator >>= (Vec32s & a, int32_t b) {
+static inline Vec32s & operator >>= (Vec32s & a, int32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator == : returns true for elements for which a == b
-static inline Vec32sb operator == (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator == (Vec32s const a, Vec32s const b) noexcept {
     return Vec32sb(a.get_low() == b.get_low(), a.get_high() == b.get_high());
 }
 
 // vector operator != : returns true for elements for which a != b
-static inline Vec32sb operator != (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator != (Vec32s const a, Vec32s const b) noexcept {
     return Vec32sb(a.get_low() != b.get_low(), a.get_high() != b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b
-static inline Vec32sb operator > (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator > (Vec32s const a, Vec32s const b) noexcept {
     return Vec32sb(a.get_low() > b.get_low(), a.get_high() > b.get_high());
 }
 
 // vector operator < : returns true for elements for which a < b
-static inline Vec32sb operator < (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator < (Vec32s const a, Vec32s const b) noexcept {
     return b > a;
 }
 
 // vector operator >= : returns true for elements for which a >= b (signed)
-static inline Vec32sb operator >= (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator >= (Vec32s const a, Vec32s const b) noexcept {
     return Vec32sb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // vector operator <= : returns true for elements for which a <= b (signed)
-static inline Vec32sb operator <= (Vec32s const a, Vec32s const b) {
+static inline Vec32sb operator <= (Vec32s const a, Vec32s const b) noexcept {
     return b >= a;
 }
 
 // vector operator & : bitwise and
-static inline Vec32s operator & (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator & (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() & b.get_low(), a.get_high() & b.get_high());
 }
 
 // vector operator &= : bitwise and
-static inline Vec32s & operator &= (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator &= (Vec32s & a, Vec32s const b) noexcept {
     a = a & b;
     return a;
 }
 
 // vector operator | : bitwise or
-static inline Vec32s operator | (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator | (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() | b.get_low(), a.get_high() | b.get_high());
 }
 
 // vector operator |= : bitwise or
-static inline Vec32s & operator |= (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator |= (Vec32s & a, Vec32s const b) noexcept {
     a = a | b;
     return a;
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec32s operator ^ (Vec32s const a, Vec32s const b) {
+static inline Vec32s operator ^ (Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(a.get_low() ^ b.get_low(), a.get_high() ^ b.get_high());
 }
 
 // vector operator ^= : bitwise xor
-static inline Vec32s & operator ^= (Vec32s & a, Vec32s const b) {
+static inline Vec32s & operator ^= (Vec32s & a, Vec32s const b) noexcept {
     a = a ^ b;
     return a;
 }
 
 // vector operator ~ : bitwise not
-static inline Vec32s operator ~ (Vec32s const a) {
+static inline Vec32s operator ~ (Vec32s const a) noexcept {
     return Vec32s(~a.get_low(), ~a.get_high());
 }
 
@@ -1314,70 +1314,70 @@ static inline Vec32s operator ~ (Vec32s const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec32s select (Vec32sb const s, Vec32s const a, Vec32s const b) {
+static inline Vec32s select (Vec32sb const s, Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(select(s.get_low(), a.get_low(), b.get_low()), select(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec32s if_add (Vec32sb const f, Vec32s const a, Vec32s const b) {
+static inline Vec32s if_add (Vec32sb const f, Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(if_add(f.get_low(), a.get_low(), b.get_low()), if_add(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional subtract
-static inline Vec32s if_sub (Vec32sb const f, Vec32s const a, Vec32s const b) {
+static inline Vec32s if_sub (Vec32sb const f, Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(if_sub(f.get_low(), a.get_low(), b.get_low()), if_sub(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional multiply
-static inline Vec32s if_mul (Vec32sb const f, Vec32s const a, Vec32s const b) {
+static inline Vec32s if_mul (Vec32sb const f, Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(if_mul(f.get_low(), a.get_low(), b.get_low()), if_mul(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Horizontal add: Calculates the sum of all vector elements. Overflow will wrap around
-static inline int16_t horizontal_add (Vec32s const a) {
+static inline int16_t horizontal_add (Vec32s const a) noexcept {
     Vec16s s = a.get_low() + a.get_high();
     return (int16_t)horizontal_add(s);
 }
 
 // Horizontal add extended: Calculates the sum of all vector elements.
 // Each element is sign-extended before addition to avoid overflow
-static inline int32_t horizontal_add_x (Vec32s const a) {
+static inline int32_t horizontal_add_x (Vec32s const a) noexcept {
     return horizontal_add_x(a.get_low()) + horizontal_add_x(a.get_high());
 }
 
 // function add_saturated: add element by element, signed with saturation
-static inline Vec32s add_saturated(Vec32s const a, Vec32s const b) {
+static inline Vec32s add_saturated(Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(add_saturated(a.get_low(), b.get_low()), add_saturated(a.get_high(), b.get_high()));
 }
 
 // function sub_saturated: subtract element by element, signed with saturation
-static inline Vec32s sub_saturated(Vec32s const a, Vec32s const b) {
+static inline Vec32s sub_saturated(Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(sub_saturated(a.get_low(), b.get_low()), sub_saturated(a.get_high(), b.get_high()));
 }
 
 // function max: a > b ? a : b
-static inline Vec32s max(Vec32s const a, Vec32s const b) {
+static inline Vec32s max(Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(max(a.get_low(), b.get_low()), max(a.get_high(), b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec32s min(Vec32s const a, Vec32s const b) {
+static inline Vec32s min(Vec32s const a, Vec32s const b) noexcept {
     return Vec32s(min(a.get_low(), b.get_low()), min(a.get_high(), b.get_high()));
 }
 
 // function abs: a >= 0 ? a : -a
-static inline Vec32s abs(Vec32s const a) {
+static inline Vec32s abs(Vec32s const a) noexcept {
     return Vec32s(abs(a.get_low()), abs(a.get_high()));
 }
 
 // function abs_saturated: same as abs, saturate if overflow
-static inline Vec32s abs_saturated(Vec32s const a) {
+static inline Vec32s abs_saturated(Vec32s const a) noexcept {
     return Vec32s(abs_saturated(a.get_low()), abs_saturated(a.get_high()));
 }
 
 // function rotate_left all elements
 // Use negative count to rotate right
-static inline Vec32s rotate_left(Vec32s const a, int b) {
+static inline Vec32s rotate_left(Vec32s const a, int b) noexcept {
     return Vec32s(rotate_left(a.get_low(), b), rotate_left(a.get_high(), b));
 }
 
@@ -1393,24 +1393,24 @@ public:
     // Default constructor:
     Vec32us() = default;
     // Construct from Vec32s
-    Vec32us(Vec32s const a) {
+    Vec32us(Vec32s const a) noexcept {
         z0 = a.get_low();  z1 = a.get_high();
     }
     // Constructor to broadcast the same value into all elements:
-    Vec32us(uint16_t i) {
+    Vec32us(uint16_t i) noexcept {
         z0 = z1 = Vec16us(i);
     }
     // Constructor to build from all elements:
     Vec32us(uint16_t i0, uint16_t i1, uint16_t i2, uint16_t i3, uint16_t i4, uint16_t i5, uint16_t i6, uint16_t i7,
         uint16_t i8, uint16_t i9, uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15,
         uint16_t i16, uint16_t i17, uint16_t i18, uint16_t i19, uint16_t i20, uint16_t i21, uint16_t i22, uint16_t i23,
-        uint16_t i24, uint16_t i25, uint16_t i26, uint16_t i27, uint16_t i28, uint16_t i29, uint16_t i30, uint16_t i31) {
+        uint16_t i24, uint16_t i25, uint16_t i26, uint16_t i27, uint16_t i28, uint16_t i29, uint16_t i30, uint16_t i31) noexcept {
         Vec16us x0 = Vec16us(i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15);
         Vec16us x1 = Vec16us(i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31);
         *this = Vec32us(x0,x1);
     }
     // Constructor to build from two Vec16us:
-    Vec32us(Vec16us const a0, Vec16us const a1) {
+    Vec32us(Vec16us const a0, Vec16us const a1) noexcept {
         z0 = a0;  z1 = a1;
     }
 #ifdef VECTORI512_H
@@ -1423,43 +1423,43 @@ public:
     }
 #else
     // Constructor to convert from type Vec512b
-    Vec32us(Vec512b const x) : Vec32s(x) {}
+    Vec32us(Vec512b const x) noexcept : Vec32s(x) {}
     // Assignment operator to convert from type Vec512b
-    Vec32us & operator = (Vec512b const x) {
+    Vec32us & operator = (Vec512b const x) noexcept {
         z0 = x.get_low();
         z1 = x.get_high();
         return *this;
     }
 #endif
     // Member function to load from array (unaligned)
-    Vec32us & load(void const * p) {
+    Vec32us & load(void const * p) noexcept {
         Vec32s::load(p);
         return *this;
     }
     // Member function to load from array, aligned by 64
-    Vec32us & load_a(void const * p) {
+    Vec32us & load_a(void const * p) noexcept {
         Vec32s::load_a(p);
         return *this;
     }
     // Member function to change a single element in vector
-    Vec32us const insert(int index, uint16_t value) {
+    Vec32us const insert(int index, uint16_t value) noexcept {
         Vec32s::insert(index, (int16_t)value);
         return *this;
     }
     // Member function extract a single element from vector
-    uint16_t extract(int index) const {
+    uint16_t extract(int index) const noexcept {
         return (uint16_t)Vec32s::extract(index);
     }
     // Extract a single element. Use store function if extracting more than one element.
     // Operator [] can only read an element, not write.
-    uint16_t operator [] (int index) const {
+    uint16_t operator [] (int index) const noexcept {
         return (uint16_t)Vec32s::extract(index);
     }
     // Member functions to split into two Vec16us:
-    Vec16us get_low() const {
+    Vec16us get_low() const noexcept {
         return Vec16us(Vec32s::get_low());
     }
-    Vec16us get_high() const {
+    Vec16us get_high() const noexcept {
         return Vec16us(Vec32s::get_high());
     }
     static constexpr int elementtype() {
@@ -1470,87 +1470,87 @@ public:
 // Define operators for this class
 
 // vector operator + : add element by element
-static inline Vec32us operator + (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator + (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(a.get_low() + b.get_low(), a.get_high() + b.get_high());
 }
 
 // vector operator - : subtract element by element
-static inline Vec32us operator - (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator - (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(a.get_low() - b.get_low(), a.get_high() - b.get_high());
 }
 
 // vector operator * : multiply element by element
-static inline Vec32us operator * (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator * (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(a.get_low() * b.get_low(), a.get_high() * b.get_high());
 }
 
 // vector operator / : divide. See bottom of file
 
 // vector operator >> : shift right logical all elements
-static inline Vec32us operator >> (Vec32us const a, uint32_t b) {
+static inline Vec32us operator >> (Vec32us const a, uint32_t b) noexcept {
     return Vec32us(a.get_low() >> b, a.get_high() >> b);
 }
-static inline Vec32us operator >> (Vec32us const a, int b) {
+static inline Vec32us operator >> (Vec32us const a, int b) noexcept {
     return a >> uint32_t(b);
 }
 
 // vector operator >>= : shift right logical
-static inline Vec32us & operator >>= (Vec32us & a, uint32_t b) {
+static inline Vec32us & operator >>= (Vec32us & a, uint32_t b) noexcept {
     a = a >> b;
     return a;
 }
 
 // vector operator >>= : shift right logical (signed b)
-static inline Vec32us & operator >>= (Vec32us & a, int32_t b) {
+static inline Vec32us & operator >>= (Vec32us & a, int32_t b) noexcept {
     a = a >> uint32_t(b);
     return a;
 }
 
 // vector operator << : shift left all elements
-static inline Vec32us operator << (Vec32us const a, uint32_t b) {
+static inline Vec32us operator << (Vec32us const a, uint32_t b) noexcept {
     return Vec32us(a.get_low() << b, a.get_high() << b);
 }
-static inline Vec32us operator << (Vec32us const a, int b) {
+static inline Vec32us operator << (Vec32us const a, int b) noexcept {
     return a << uint32_t(b);
 }
 
 // vector operator < : returns true for elements for which a < b (unsigned)
-static inline Vec32sb operator < (Vec32us const a, Vec32us const b) {
+static inline Vec32sb operator < (Vec32us const a, Vec32us const b) noexcept {
     return Vec32sb(a.get_low() < b.get_low(), a.get_high() < b.get_high());
 }
 
 // vector operator > : returns true for elements for which a > b (unsigned)
-static inline Vec32sb operator > (Vec32us const a, Vec32us const b) {
+static inline Vec32sb operator > (Vec32us const a, Vec32us const b) noexcept {
     return b < a;
 }
 
 // vector operator >= : returns true for elements for which a >= b (unsigned)
-static inline Vec32sb operator >= (Vec32us const a, Vec32us const b) {
+static inline Vec32sb operator >= (Vec32us const a, Vec32us const b) noexcept {
     return Vec32sb(a.get_low() >= b.get_low(), a.get_high() >= b.get_high());
 }
 
 // vector operator <= : returns true for elements for which a <= b (unsigned)
-static inline Vec32sb operator <= (Vec32us const a, Vec32us const b) {
+static inline Vec32sb operator <= (Vec32us const a, Vec32us const b) noexcept {
     return b >= a;
 }
 
 // vector operator & : bitwise and
-static inline Vec32us operator & (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator & (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(Vec32s(a) & Vec32s(b));
 }
 
 // vector operator | : bitwise or
-static inline Vec32us operator | (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator | (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(Vec32s(a) | Vec32s(b));
 }
 
 // vector operator ^ : bitwise xor
-static inline Vec32us operator ^ (Vec32us const a, Vec32us const b) {
+static inline Vec32us operator ^ (Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(Vec32s(a) ^ Vec32s(b));
 }
 
 // vector operator ~ : bitwise not
-static inline Vec32us operator ~ (Vec32us const a) {
+static inline Vec32us operator ~ (Vec32us const a) noexcept {
     return Vec32us( ~ Vec32s(a));
 }
 
@@ -1558,42 +1558,42 @@ static inline Vec32us operator ~ (Vec32us const a) {
 
 // Select between two operands. Corresponds to this pseudocode:
 // for (int i = 0; i < 16; i++) result[i] = s[i] ? a[i] : b[i];
-static inline Vec32us select (Vec32sb const s, Vec32us const a, Vec32us const b) {
+static inline Vec32us select (Vec32sb const s, Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(select(s.get_low(), a.get_low(), b.get_low()), select(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional add: For all vector elements i: result[i] = f[i] ? (a[i] + b[i]) : a[i]
-static inline Vec32us if_add (Vec32sb const f, Vec32us const a, Vec32us const b) {
+static inline Vec32us if_add (Vec32sb const f, Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(if_add(f.get_low(), a.get_low(), b.get_low()), if_add(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional subtract
-static inline Vec32us if_sub (Vec32sb const f, Vec32us const a, Vec32us const b) {
+static inline Vec32us if_sub (Vec32sb const f, Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(if_sub(f.get_low(), a.get_low(), b.get_low()), if_sub(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // Conditional multiply
-static inline Vec32us if_mul (Vec32sb const f, Vec32us const a, Vec32us const b) {
+static inline Vec32us if_mul (Vec32sb const f, Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(if_mul(f.get_low(), a.get_low(), b.get_low()), if_mul(f.get_high(), a.get_high(), b.get_high()));
 }
 
 // function add_saturated: add element by element, unsigned with saturation
-static inline Vec32us add_saturated(Vec32us const a, Vec32us const b) {
+static inline Vec32us add_saturated(Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(add_saturated(a.get_low(), b.get_low()), add_saturated(a.get_high(), b.get_high()));
 }
 
 // function sub_saturated: subtract element by element, unsigned with saturation
-static inline Vec32us sub_saturated(Vec32us const a, Vec32us const b) {
+static inline Vec32us sub_saturated(Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(sub_saturated(a.get_low(), b.get_low()), sub_saturated(a.get_high(), b.get_high()));
 }
 
 // function max: a > b ? a : b
-static inline Vec32us max(Vec32us const a, Vec32us const b) {
+static inline Vec32us max(Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(max(a.get_low(), b.get_low()), max(a.get_high(), b.get_high()));
 }
 
 // function min: a < b ? a : b
-static inline Vec32us min(Vec32us const a, Vec32us const b) {
+static inline Vec32us min(Vec32us const a, Vec32us const b) noexcept {
     return Vec32us(min(a.get_low(), b.get_low()), min(a.get_high(), b.get_high()));
 }
 
@@ -1701,7 +1701,7 @@ static inline Vec64uc blend64(Vec64uc const a, Vec64uc const b) {
 *****************************************************************************/
 
 // lookup in table of 64 int8_t values
-static inline Vec64c lookup64(Vec64c const index, Vec64c const table1) {
+static inline Vec64c lookup64(Vec64c const index, Vec64c const table1) noexcept {
     int8_t table[64], result[64];
     table1.store(table);
     for (int i=0; i<64; i++) result[i] = table[index[i] & 63];
@@ -1709,7 +1709,7 @@ static inline Vec64c lookup64(Vec64c const index, Vec64c const table1) {
 }
 
 // lookup in table of 128 int8_t values
-static inline Vec64c lookup128(Vec64c const index, Vec64c const table1, Vec64c const table2) {
+static inline Vec64c lookup128(Vec64c const index, Vec64c const table1, Vec64c const table2) noexcept {
     int8_t table[128], result[64];
     table1.store(table);  table2.store(table+64);
     for (int i=0; i<64; i++) result[i] = table[index[i] & 127];
@@ -1719,7 +1719,7 @@ static inline Vec64c lookup128(Vec64c const index, Vec64c const table1, Vec64c c
 // lookup in table of 256 int8_t values.
 // The complete table of all possible 256 byte values is contained in four vectors
 // The index is treated as unsigned
-static inline Vec64c lookup256(Vec64c const index, Vec64c const table1, Vec64c const table2, Vec64c const table3, Vec64c const table4) {
+static inline Vec64c lookup256(Vec64c const index, Vec64c const table1, Vec64c const table2, Vec64c const table3, Vec64c const table4) noexcept {
     int8_t table[256], result[64];
     table1.store(table);  table2.store(table+64);  table3.store(table+128);  table4.store(table+192);
     for (int i=0; i<64; i++) result[i] = table[index[i] & 255];
@@ -1727,7 +1727,7 @@ static inline Vec64c lookup256(Vec64c const index, Vec64c const table1, Vec64c c
 }
 
 // lookup in table of 32 values
-static inline Vec32s lookup32(Vec32s const index, Vec32s const table1) {
+static inline Vec32s lookup32(Vec32s const index, Vec32s const table1) noexcept {
     int16_t table[32], result[32];
     table1.store(table);
     for (int i=0; i<32; i++) result[i] = table[index[i] & 31];
@@ -1735,7 +1735,7 @@ static inline Vec32s lookup32(Vec32s const index, Vec32s const table1) {
 }
 
 // lookup in table of 64 values
-static inline Vec32s lookup64(Vec32s const index, Vec32s const table1, Vec32s const table2) {
+static inline Vec32s lookup64(Vec32s const index, Vec32s const table1, Vec32s const table2) noexcept {
     int16_t table[64], result[32];
     table1.store(table);  table2.store(table+32);
     for (int i=0; i<32; i++) result[i] = table[index[i] & 63];
@@ -1743,7 +1743,7 @@ static inline Vec32s lookup64(Vec32s const index, Vec32s const table1, Vec32s co
 }
 
 // lookup in table of 128 values
-static inline Vec32s lookup128(Vec32s const index, Vec32s const table1, Vec32s const table2, Vec32s const table3, Vec32s const table4) {
+static inline Vec32s lookup128(Vec32s const index, Vec32s const table1, Vec32s const table2, Vec32s const table3, Vec32s const table4) noexcept {
     int16_t table[128], result[32];
     table1.store(table);  table2.store(table+32);  table3.store(table+64);  table4.store(table+96);
     for (int i=0; i<32; i++) result[i] = table[index[i] & 127];
@@ -1791,44 +1791,44 @@ static inline Vec64c shift_bytes_down(Vec64c const a) {
 // Extend 8-bit integers to 16-bit integers, signed and unsigned
 
 // Function extend_low : extends the low 32 elements to 16 bits with sign extension
-static inline Vec32s extend_low (Vec64c const a) {
+static inline Vec32s extend_low (Vec64c const a) noexcept {
     return Vec32s(extend_low(a.get_low()), extend_high(a.get_low()));
 }
 
 // Function extend_high : extends the high 16 elements to 16 bits with sign extension
-static inline Vec32s extend_high (Vec64c const a) {
+static inline Vec32s extend_high (Vec64c const a) noexcept {
     return Vec32s(extend_low(a.get_high()), extend_high(a.get_high()));
 }
 
 // Function extend_low : extends the low 16 elements to 16 bits with zero extension
-static inline Vec32us extend_low (Vec64uc const a) {
+static inline Vec32us extend_low (Vec64uc const a) noexcept {
     return Vec32us(extend_low(a.get_low()), extend_high(a.get_low()));
 }
 
 // Function extend_high : extends the high 19 elements to 16 bits with zero extension
-static inline Vec32us extend_high (Vec64uc const a) {
+static inline Vec32us extend_high (Vec64uc const a) noexcept {
     return Vec32us(extend_low(a.get_high()), extend_high(a.get_high()));
 }
 
 // Extend 16-bit integers to 32-bit integers, signed and unsigned
 
 // Function extend_low : extends the low 8 elements to 32 bits with sign extension
-static inline Vec16i extend_low (Vec32s const a) {
+static inline Vec16i extend_low (Vec32s const a) noexcept {
     return Vec16i(extend_low(a.get_low()), extend_high(a.get_low()));
 }
 
 // Function extend_high : extends the high 8 elements to 32 bits with sign extension
-static inline Vec16i extend_high (Vec32s const a) {
+static inline Vec16i extend_high (Vec32s const a) noexcept {
     return Vec16i(extend_low(a.get_high()), extend_high(a.get_high()));
 }
 
 // Function extend_low : extends the low 8 elements to 32 bits with zero extension
-static inline Vec16ui extend_low (Vec32us const a) {
+static inline Vec16ui extend_low (Vec32us const a) noexcept {
     return Vec16ui(extend_low(a.get_low()), extend_high(a.get_low()));
 }
 
 // Function extend_high : extends the high 8 elements to 32 bits with zero extension
-static inline Vec16ui extend_high (Vec32us const a) {
+static inline Vec16ui extend_high (Vec32us const a) noexcept {
     return Vec16ui(extend_low(a.get_high()), extend_high(a.get_high()));
 }
 
@@ -1837,25 +1837,25 @@ static inline Vec16ui extend_high (Vec32us const a) {
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Overflow wraps around
-static inline Vec64c compress (Vec32s const low, Vec32s const high) {
+static inline Vec64c compress (Vec32s const low, Vec32s const high) noexcept {
     return Vec64c(compress(low.get_low(),low.get_high()), compress(high.get_low(),high.get_high()));
 }
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Signed, with saturation
-static inline Vec64c compress_saturated (Vec32s const low, Vec32s const high) {
+static inline Vec64c compress_saturated (Vec32s const low, Vec32s const high) noexcept {
     return Vec64c(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
 
 // Function compress : packs two vectors of 16-bit integers to one vector of 8-bit integers
 // Unsigned, overflow wraps around
-static inline Vec64uc compress (Vec32us const low, Vec32us const high) {
+static inline Vec64uc compress (Vec32us const low, Vec32us const high) noexcept {
     return  Vec64uc(compress((Vec32s)low, (Vec32s)high));
 }
 
 // Function compress : packs two vectors of 16-bit integers into one vector of 8-bit integers
 // Unsigned, with saturation
-static inline Vec64uc compress_saturated (Vec32us const low, Vec32us const high) {
+static inline Vec64uc compress_saturated (Vec32us const low, Vec32us const high) noexcept {
     return Vec64uc(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
 
@@ -1863,48 +1863,48 @@ static inline Vec64uc compress_saturated (Vec32us const low, Vec32us const high)
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Overflow wraps around
-static inline Vec32s compress (Vec16i const low, Vec16i const high) {
+static inline Vec32s compress (Vec16i const low, Vec16i const high) noexcept {
     return Vec32s(compress(low.get_low(),low.get_high()), compress(high.get_low(),high.get_high()));
 }
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Signed with saturation
-static inline Vec32s compress_saturated (Vec16i const low, Vec16i const high) {
+static inline Vec32s compress_saturated (Vec16i const low, Vec16i const high) noexcept {
     return Vec32s(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Overflow wraps around
-static inline Vec32us compress (Vec16ui const low, Vec16ui const high) {
+static inline Vec32us compress (Vec16ui const low, Vec16ui const high) noexcept {
     return Vec32us (compress((Vec16i)low, (Vec16i)high));
 }
 
 // Function compress : packs two vectors of 32-bit integers into one vector of 16-bit integers
 // Unsigned, with saturation
-static inline Vec32us compress_saturated (Vec16ui const low, Vec16ui const high) {
+static inline Vec32us compress_saturated (Vec16ui const low, Vec16ui const high) noexcept {
     return Vec32us(compress_saturated(low.get_low(),low.get_high()), compress_saturated(high.get_low(),high.get_high()));
 }
 
 // extend vectors to double size by adding zeroes
-static inline Vec64c extend_z(Vec32c a) {
+static inline Vec64c extend_z(Vec32c a) noexcept {
     return Vec64c(a, Vec32c(0));
 }
-static inline Vec64uc extend_z(Vec32uc a) {
+static inline Vec64uc extend_z(Vec32uc a) noexcept {
     return Vec64uc(a, Vec32uc(0));
 }
-static inline Vec32s extend_z(Vec16s a) {
+static inline Vec32s extend_z(Vec16s a) noexcept {
     return Vec32s(a, Vec16s(0));
 }
-static inline Vec32us extend_z(Vec16us a) {
+static inline Vec32us extend_z(Vec16us a) noexcept {
     return Vec32us(a, Vec16us(0));
 }
 
 // broad boolean vectors
 
-static inline Vec64cb extend_z(Vec32cb a) {
+static inline Vec64cb extend_z(Vec32cb a) noexcept {
     return Vec64cb(a, Vec32cb(false));
 }
-static inline Vec32sb extend_z(Vec16sb a) {
+static inline Vec32sb extend_z(Vec16sb a) noexcept {
     return Vec32sb(a, Vec16sb(false));
 }
 
@@ -1921,45 +1921,45 @@ static inline Vec32sb extend_z(Vec16sb a) {
 // vector operator / : divide each element by divisor
 
 // vector of 32 16-bit signed integers
-static inline Vec32s operator / (Vec32s const a, Divisor_s const d) {
+static inline Vec32s operator / (Vec32s const a, Divisor_s const d) noexcept {
     return Vec32s(a.get_low() / d, a.get_high() / d);
 }
 
 // vector of 16 16-bit unsigned integers
-static inline Vec32us operator / (Vec32us const a, Divisor_us const d) {
+static inline Vec32us operator / (Vec32us const a, Divisor_us const d) noexcept {
     return Vec32us(a.get_low() / d, a.get_high() / d);
 }
 
 // vector of 32 8-bit signed integers
-static inline Vec64c operator / (Vec64c const a, Divisor_s const d) {
+static inline Vec64c operator / (Vec64c const a, Divisor_s const d) noexcept {
     return Vec64c(a.get_low() / d, a.get_high() / d);
 }
 
 // vector of 32 8-bit unsigned integers
-static inline Vec64uc operator / (Vec64uc const a, Divisor_us const d) {
+static inline Vec64uc operator / (Vec64uc const a, Divisor_us const d) noexcept {
     return Vec64uc(a.get_low() / d, a.get_high() / d);
 }
 
 // vector operator /= : divide
-static inline Vec32s & operator /= (Vec32s & a, Divisor_s const d) {
+static inline Vec32s & operator /= (Vec32s & a, Divisor_s const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec32us & operator /= (Vec32us & a, Divisor_us const d) {
+static inline Vec32us & operator /= (Vec32us & a, Divisor_us const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec64c & operator /= (Vec64c & a, Divisor_s const d) {
+static inline Vec64c & operator /= (Vec64c & a, Divisor_s const d) noexcept {
     a = a / d;
     return a;
 }
 
 // vector operator /= : divide
-static inline Vec64uc & operator /= (Vec64uc & a, Divisor_us const d) {
+static inline Vec64uc & operator /= (Vec64uc & a, Divisor_us const d) noexcept {
     a = a / d;
     return a;
 }
