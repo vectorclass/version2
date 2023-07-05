@@ -1,8 +1,8 @@
 /****************************  vectorf128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit floating point vector classes
@@ -87,11 +87,6 @@ static inline __m128d selectd(__m128d const s, __m128d const a, __m128d const b)
 *****************************************************************************/
 
 #if INSTRSET < 10 // broad boolean vectors
-
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
 
 class Vec4fb {
 protected:
@@ -190,10 +185,6 @@ public:
     Vec4fb(int b) = delete;
     Vec4fb & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 
@@ -300,11 +291,6 @@ static inline bool horizontal_or(Vec4fb const a) {
 
 #if INSTRSET < 10 // broad boolean vectors
 
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 class Vec2db {
 protected:
     __m128d xmm; // Double vector
@@ -355,7 +341,8 @@ public:
     // Member function to change a single element in vector
     Vec2db const insert(int index, bool value) {
         const int32_t maskl[8] = { 0,0,0,0,-1,-1,0,0 };
-        __m128 mask = _mm_loadu_ps((float const*)(maskl + 4 - (index & 1) * 2)); // mask with FFFFFFFFFFFFFFFF at index position
+        const size_t two = 2;  // avoid silly warning from MS compiler
+        __m128 mask = _mm_loadu_ps((float const*)(maskl + 4 - (index & 1) * two)); // mask with FFFFFFFFFFFFFFFF at index position
         if (value) {
             xmm = _mm_or_pd(xmm, _mm_castps_pd(mask));
         }
@@ -388,10 +375,6 @@ public:
     Vec2db(int b) = delete;
     Vec2db & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 
@@ -1048,8 +1031,8 @@ static inline Vec4f infinite4f() {
 }
 
 // Function nan4f: returns a vector where all elements are NAN (quiet)
-static inline Vec4f nan4f(int n = 0x10) {
-    return nan_vec<Vec4f>(static_cast<uint32_t>(n));
+static inline Vec4f nan4f(uint32_t n = 0x10) {
+    return nan_vec<Vec4f>(n);
 }
 
 // General arithmetic functions, etc.
@@ -2440,8 +2423,8 @@ static inline Vec2d infinite2d() {
 }
 
 // Function nan2d: returns a vector where all elements are +NAN (quiet)
-static inline Vec2d nan2d(int n = 0x10) {
-    return nan_vec<Vec2d>(static_cast<uint32_t>(n));
+static inline Vec2d nan2d(uint32_t n = 0x10) {
+    return nan_vec<Vec2d>(n);
 }
 
 

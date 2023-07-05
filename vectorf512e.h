@@ -1,8 +1,8 @@
 /****************************  vectorf512.h   *******************************
 * Author:        Agner Fog
 * Date created:  2014-07-23
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit floating point vector classes
@@ -19,7 +19,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2014-2022 Agner Fog.
+* (c) Copyright 2014-2023 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -939,7 +939,7 @@ static inline Vec16f infinite16f() {
 }
 
 // Function nan4f: returns a vector where all elements are +NAN (quiet)
-static inline Vec16f nan16f(int n = 0x10) {
+static inline Vec16f nan16f(uint32_t n = 0x10) {
     Vec8f nan = nan8f(n);
     return Vec16f(nan, nan);
 }
@@ -1590,7 +1590,7 @@ static inline Vec8d infinite8d() {
 }
 
 // Function nan8d: returns a vector where all elements are +NAN (quiet NAN)
-static inline Vec8d nan8d(int n = 0x10) {
+static inline Vec8d nan8d(uint32_t n = 0x10) {
     Vec4d nan = nan4d(n);
     return Vec8d(nan, nan);
 }

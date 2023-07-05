@@ -1,8 +1,8 @@
 /****************************  vectorf256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -75,11 +75,6 @@ inline __m256 constant8f() {
 *****************************************************************************/
 
 #if INSTRSET < 10  // broad boolean vectors
-
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
 
 class Vec8fb {
 protected:
@@ -217,10 +212,6 @@ public:
     Vec8fb & operator = (int x) = delete;
     };
 
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
-
 #else
 
 typedef Vec8b Vec8fb;  // compact boolean vector
@@ -329,11 +320,6 @@ static inline uint8_t to_bits(Vec8fb const x) {
 
 #if INSTRSET < 10  // broad boolean vectors
 
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 class Vec4db {
 protected:
     __m256d ymm; // double vector
@@ -430,7 +416,8 @@ public:
     // Member function to change a single element in vector
     Vec4db const insert(int index, bool value) {
         const int32_t maskl[16] = {0,0,0,0,0,0,0,0,-1,-1,0,0,0,0,0,0};
-        __m256d mask = _mm256_loadu_pd((double const*)(maskl+8-(index&3)*2)); // mask with FFFFFFFFFFFFFFFF at index position
+        const size_t two = 2;  // avoid silly warning from MS compiler
+        __m256d mask = _mm256_loadu_pd((double const*)(maskl+8-(index&3)*two)); // mask with FFFFFFFFFFFFFFFF at index position
         if (value) {
             ymm = _mm256_or_pd(ymm,mask);
         }
@@ -469,10 +456,6 @@ public:
     Vec4db(int b) = delete;
     Vec4db & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 
@@ -2445,8 +2428,8 @@ static inline Vec8f infinite8f() {
 }
 
 // Function nan8f: returns a vector where all elements are +NAN (quiet)
-static inline Vec8f nan8f(int n = 0x10) {
-    return nan_vec<Vec8f>(static_cast<uint32_t>(n));
+static inline Vec8f nan8f(uint32_t n = 0x10) {
+    return nan_vec<Vec8f>(n);
 }
 
 // Function infinite2d: returns a vector where all elements are +INF
@@ -2455,8 +2438,8 @@ static inline Vec4d infinite4d() {
 }
 
 // Function nan4d: returns a vector where all elements are +NAN (quiet)
-static inline Vec4d nan4d(int n = 0x10) {
-    return nan_vec<Vec4d>(static_cast<uint32_t>(n));
+static inline Vec4d nan4d(uint32_t n = 0x10) {
+    return nan_vec<Vec4d>(n);
 }
 
 

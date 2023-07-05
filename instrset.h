@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -105,6 +105,7 @@
 // Header files for non-vector intrinsic functions including _BitScanReverse(int), __cpuid(int[4],int), _xgetbv(int)
 #ifdef _MSC_VER                        // Microsoft compiler or compatible Intel compiler
 #include <intrin.h>
+#pragma warning(disable: 6323 4514 4710 4711) // Diasble annoying warnings
 #else
 #include <x86intrin.h>                 // Gcc or Clang compiler
 #endif
@@ -266,7 +267,7 @@ static inline uint32_t vml_popcnt(uint32_t a) {
     return   e >> 24;
 }
 static inline int32_t vml_popcnt(uint64_t a) {
-    return static_cast<int32_t>(vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a)));
+    return (int32_t)(vml_popcnt(uint32_t(a >> 32)) + vml_popcnt(uint32_t(a)));
 }
 #endif
 
@@ -462,7 +463,7 @@ struct EList {
 // of vector class V with the value -1
 template <typename V>
 constexpr auto get_inttype() {
-    constexpr int elementsize = sizeof(V) / V::size();  // size of vector elements
+    constexpr int elementsize = int(sizeof(V) / V::size());  // size of vector elements
 
     if constexpr (elementsize >= 8) {
         return -int64_t(1);
@@ -663,8 +664,8 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         }
         // check if same pattern in all lanes
         if (lane != 0 && ix >= 0) {                        // not first lane
-            int j1  = i - int(lane * lanesize);            // index into lanepattern
-            int jx = ix - int(lane * lanesize);            // pattern within lane
+            int j1 = int(i - int(lane * lanesize));        // index into lanepattern
+            int jx = int(ix - int(lane * lanesize));       // pattern within lane
             if (jx < 0 || jx >= (int)lanesize) r &= ~perm_same_pattern; // source is in another lane
             if (lanepattern[j1] < 0) {
                 lanepattern[j1] = jx;                      // pattern not known from previous lane
@@ -681,7 +682,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             // check if pattern fits compress (perm_compress)
             if (ix > compresslasti && ix - compresslasti >= (int)i - compresslastp) {
                 if ((int)i - compresslastp > 1) addz2 |= 2;// perm_compress may need additional zeroing
-                compresslasti = ix;  compresslastp = i;
+                compresslasti = ix;  compresslastp = int(i);
             }
             else {
                 patfail |= 2;                              // does not fit perm_compress
@@ -689,7 +690,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
             // check if pattern fits expand (perm_expand)
             if (ix > expandlasti && ix - expandlasti <= (int)i - expandlastp) {
                 if (ix - expandlasti > 1) addz2 |= 4;      // perm_expand may need additional zeroing
-                expandlasti = ix;  expandlastp = i;
+                expandlasti = ix;  expandlastp = int(i);
             }
             else {
                 patfail |= 4;                              // does not fit perm_compress
@@ -788,7 +789,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
         if (fit) r |= perm_punpckl;
         // fit pshufd
         if constexpr (elementsize >= 4) {
-            uint64_t p = 0;
+            uint32_t p = 0;
             for (i = 0; i < lanesize; i++) {
                 if constexpr (lanesize == 4) {
                     p |= (lanepattern[i] & 3) << 2 * i;
@@ -797,7 +798,7 @@ constexpr uint64_t perm_flags(int const (&a)[V::size()]) {
                     p |= ((lanepattern[i] & 1) * 10 + 4) << 4 * i;
                 }
             }
-            r |= p << perm_ipattern;
+            r |= (uint64_t)p << perm_ipattern;
         }
     }
 #if INSTRSET >= 7
@@ -901,7 +902,7 @@ constexpr uint64_t perm16_flags(int const (&a)[V::size()]) {
         }
         else if (ix >= 0) {                                // not first lane
             uint32_t j = i - lane * lanesize;              // index into lanepattern
-            int jx = ix - lane * lanesize;                 // pattern within lane
+            int jx = int(ix - lane * lanesize);            // pattern within lane
             if (lanepattern[j] < 0) {
                 lanepattern[j] = jx;                       // pattern not known from previous lane
             }
@@ -949,7 +950,7 @@ constexpr auto pshufb_mask(int const (&A)[V::size()]) {
     // Parameter a is a reference to a constexpr array of permutation indexes
     // V is a vector class
     // oppos = 1 for data from the opposite 128-bit lane in 256-bit vectors
-    constexpr uint32_t N = V::size();                      // number of vector elements
+    constexpr uint32_t N = uint32_t(V::size());            // number of vector elements
     constexpr uint32_t elementsize = sizeof(V) / N;        // size of each vector element
     constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128 bit lanes in vector
     constexpr uint32_t elements_per_lane = N / nlanes;     // number of vector elements per lane
@@ -972,10 +973,10 @@ constexpr auto pshufb_mask(int const (&A)[V::size()]) {
             }
             ix -= int(lane * elements_per_lane);           // index relative to lane
             if (ix >= 0 && ix < (int)elements_per_lane) {  // index points to desired lane
-                p = ix * elementsize;
+                p = int8_t(ix * elementsize);
             }
             for (j = 0; j < elementsize; j++) {            // loop through bytes in element
-                u.a[k++] = p < 0 ? -1 : p + j;             // store byte permutation index
+                u.a[k++] = int8_t(p < 0 ? -1 : p + j);     // store byte permutation index
             }
             m++;
         }
@@ -1061,12 +1062,12 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
     uint32_t iu = 0;                                       // loop counter
     int32_t ii = 0;                                        // loop counter
     int ix = 0;                                            // index number i
-    const uint32_t nlanes = sizeof(V) / 16;                // number of 128-bit lanes
-    const uint32_t lanesize = N / nlanes;                  // elements per lane
+    constexpr uint32_t nlanes = sizeof(V) / 16;            // number of 128-bit lanes
+    constexpr uint32_t lanesize = N / nlanes;              // elements per lane
     uint32_t lane = 0;                                     // current lane
     uint32_t rot = 999;                                    // rotate left count
     int lanepattern[lanesize] = {0};                       // pattern in each lane
-    if (lanesize == 2 && N <= 8) {
+    if constexpr (lanesize == 2 && N <= 8) {
         r |= blend_shufab | blend_shufba;                  // check if it fits shufpd
     }
 
@@ -1112,7 +1113,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             if (lanei != lane) {
                 r |= blend_cross_lane;                     // crossing lane
             }
-            if (lanesize == 2) {   // check if it fits pshufd
+            if constexpr (lanesize == 2) {   // check if it fits pshufd
                 if (lanei != lane) r &= ~(blend_shufab | blend_shufba);
                 if ((((ix & N) != 0) ^ ii) & 1) r &= ~blend_shufab;
                 else r &= ~blend_shufba;
@@ -1152,7 +1153,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
         for (iu = 0; iu < lanesize; iu++) {
             ix = lanepattern[iu];
             if (ix >= 0) {
-                uint32_t t = ix & ~N;
+                uint32_t t = uint32_t(ix & ~N);
                 if (ix & N) t += lanesize;
                 uint32_t tb = (t + 2*lanesize - iu) % (lanesize * 2);
                 if (rot == 999) {
@@ -1174,7 +1175,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             r |= uint64_t((rot & (lanesize - 1)) * elementsize) << blend_rotpattern;
         }
 #endif
-        if (lanesize == 4) {
+        if constexpr (lanesize == 4) {
             // check if it fits shufps
             r |= blend_shufab | blend_shufba;
             for (ii = 0; ii < 2; ii++) {
@@ -1200,12 +1201,12 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
             }
         }
     }
-    else if  (nlanes > 1) {  // not same pattern in all lanes
+    else if constexpr (nlanes > 1) {  // not same pattern in all lanes
         rot = 999;                                         // check if it fits big rotate
         for (ii = 0; ii < N; ii++) {
             ix = a[ii];
             if (ix >= 0) {
-                uint32_t rot2 = (ix + 2 * N - ii) % (2 * N);// rotate count
+                uint32_t rot2 = uint32_t((ix + 2 * N - ii) % (2 * N));// rotate count
                 if (rot == 999) {
                     rot = rot2;                            // save rotate count
                 }
@@ -1241,7 +1242,7 @@ constexpr EList<int, 2*N> blend_perm_indexes(int const (&a)[N]) {
     for (j = 0; j < N; j++) {          // loop through indexes
         int ix = a[j];                 // current index
         if (ix < 0) {                  // zero or don't care
-            if (dozero == 2) {
+            if constexpr (dozero == 2) {
                 // list.a[j] = list.a[j + N] = ix;  // fails in gcc in complicated cases
                 list.a[j] = ix;
                 list.a[j + N] = ix;

@@ -1,8 +1,8 @@
 /****************************  vectorf256e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 256-bit floating point vector classes
@@ -1061,7 +1061,7 @@ static inline Vec8f infinite8f() {
 }
 
 // Function nan4f: returns a vector where all elements are +NAN (quiet)
-static inline Vec8f nan8f(int n = 0x10) {
+static inline Vec8f nan8f(uint32_t n = 0x10) {
     return Vec8f(nan4f(n), nan4f(n));
 }
 
@@ -1680,7 +1680,7 @@ static inline Vec4d infinite4d() {
 }
 
 // Function nan2d: returns a vector where all elements are +NAN (quiet)
-static inline Vec4d nan4d(int n = 0x10) {
+static inline Vec4d nan4d(uint32_t n = 0x10) {
     return Vec4d(nan2d(n), nan2d(n));
 }
 

@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -263,7 +263,7 @@ public:
 
 // Members of Vec16b that refer to Vec8b:
 inline Vec16b::Vec16b(Vec8b const x0, Vec8b const x1) {
-    mm = static_cast<__mmask16>(uint8_t(x0) | uint16_t(x1) << 8);
+    mm = __mmask16(uint8_t(x0) | uint16_t(x1) << 8);
 }
 #if INSTRSET >= 10
 inline Vec8b Vec16b::get_low() const {
@@ -295,11 +295,11 @@ public:
     }
     // Constructor to build from all elements:
     Vec4b(bool b0, bool b1, bool b2, bool b3) {
-        mm = static_cast<__mmask8>((uint8_t)b0 | (uint8_t)b1 << 1 | (uint8_t)b2 << 2 | (uint8_t)b3 << 3);
+        mm = Vec8b_masktype((uint8_t)b0 | (uint8_t)b1 << 1 | (uint8_t)b2 << 2 | (uint8_t)b3 << 3);
     }
     // Constructor to broadcast single value:
     Vec4b(bool b) {
-        mm = static_cast<__mmask8>(-int8_t(b) & 0x0F);
+        mm = Vec8b_masktype(-int8_t(b) & 0x0F);
     }
     // Assignment operator to broadcast scalar value:
     Vec4b & operator = (bool b) {
@@ -312,7 +312,7 @@ public:
 
     // Member function to change a bitfield to a boolean vector
     Vec4b & load_bits(uint8_t a) {
-        mm = static_cast<__mmask8>(a & 0x0F);
+        mm = Vec8b_masktype(a & 0x0F);
         return *this;
     }
     // Number of elements
@@ -336,11 +336,11 @@ public:
     }
     // Constructor to build from all elements:
     Vec2b(bool b0, bool b1) {
-        mm = static_cast<__mmask8>((uint8_t)b0 | (uint8_t)b1 << 1);
+        mm = Vec8b_masktype((uint8_t)b0 | (uint8_t)b1 << 1);
     }
     // Constructor to broadcast single value:
     Vec2b(bool b) {
-        mm = static_cast<__mmask8>(-int8_t(b) & 0x03);
+        mm = Vec8b_masktype(-int8_t(b) & 0x03);
     }
     // Assignment operator to broadcast scalar value:
     Vec2b & operator = (bool b) {
@@ -349,7 +349,7 @@ public:
     }
     // Member function to change a bitfield to a boolean vector
     Vec2b & load_bits(uint8_t a) {
-        mm = static_cast<__mmask8>(a & 0x03);
+        mm = Vec8b_masktype(a & 0x03);
         return *this;
     }
     // Number of elements
@@ -360,23 +360,23 @@ public:
 
 // Members of Vec8b that refer to Vec4b:
 inline Vec8b::Vec8b(Vec4b const x0, Vec4b const x1) {
-    mm = static_cast<__mmask8>((uint8_t(x0) & 0x0F) | (uint8_t(x1) << 4));
+    mm = Vec8b_masktype((uint8_t(x0) & 0x0F) | (uint8_t(x1) << 4));
 }
 inline Vec4b Vec8b::get_low() const {
-    return Vec4b().load_bits(static_cast<uint8_t>(mm & 0xF));
+    return Vec4b().load_bits(uint8_t(mm & 0xF));
 }
 inline Vec4b Vec8b::get_high() const {
-    return Vec4b().load_bits(static_cast<uint8_t>(mm >> 4u));
+    return Vec4b().load_bits(uint8_t(mm >> 4u));
 }
 //  Members of Vec4b that refer to Vec2b:
 inline Vec4b::Vec4b(Vec2b const x0, Vec2b const x1) {
-    mm = static_cast<__mmask8>((uint8_t(x0) & 0x03) | (uint8_t(x1) << 2));
+    mm = Vec8b_masktype((uint8_t(x0) & 0x03) | (uint8_t(x1) << 2));
 }
 inline Vec2b Vec4b::get_low() const {
-    return Vec2b().load_bits(static_cast<uint8_t>(mm & 3));
+    return Vec2b().load_bits(uint8_t(mm & 3));
 }
 inline Vec2b Vec4b::get_high() const {
-    return Vec2b().load_bits(static_cast<uint8_t>(mm >> 2u));
+    return Vec2b().load_bits(uint8_t(mm >> 2u));
 }
 
 #endif
@@ -1060,12 +1060,6 @@ public:
 *
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
-
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 class Vec16cb : public Vec16c {
 public:
     // Default constructor
@@ -1135,10 +1129,6 @@ public:
     Vec16cb(int b) = delete;
     Vec16cb & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 typedef Vec16b Vec16cb;  // compact boolean vector
@@ -1581,8 +1571,8 @@ static inline Vec16c rotate_left(Vec16c const a, int b) {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec16c)_mm_rot_epi8(a, _mm_set1_epi8(b));
 #else  // SSE2 instruction set
-    uint8_t mask = 0xFFu << b;                             // mask off overflow bits
-    __m128i m = _mm_set1_epi8(static_cast<char>(mask));
+    int8_t  mask = int8_t(0xFFu << b);                     // mask off overflow bits
+    __m128i m = _mm_set1_epi8(mask);
     __m128i bb = _mm_cvtsi32_si128(b & 7);                 // b modulo 8
     __m128i mbb = _mm_cvtsi32_si128((-b) & 7);             // 8-b modulo 8
     __m128i left = _mm_sll_epi16(a, bb);                   // a << b
@@ -1996,11 +1986,6 @@ public:
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
 
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 class Vec8sb : public Vec8s {
 public:
     // Constructor to build from all elements:
@@ -2055,11 +2040,6 @@ public:
     Vec8sb(int b) = delete;
     Vec8sb & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
-
 #else
 typedef Vec8b Vec8sb;
 #endif
@@ -2924,11 +2904,6 @@ public:
 *****************************************************************************/
 #if INSTRSET < 10   // broad boolean vectors
 
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 class Vec4ib : public Vec4i {
 public:
     // Default constructor:
@@ -2982,10 +2957,6 @@ public:
     Vec4ib(int b) = delete;
     Vec4ib & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 
@@ -3884,11 +3855,6 @@ public:
 
 #if INSTRSET < 10   // broad boolean vectors
 
-#if _MSC_VER
-#pragma warning(push)
-#pragma warning(disable: 6323) // Use of arithmetic operator on Boolean type(s).
-#endif // _MSC_VER
-
 // Definition will be different for the AVX512 instruction set
 class Vec2qb : public Vec2q {
 public:
@@ -3943,10 +3909,6 @@ public:
     Vec2qb(int b) = delete;
     Vec2qb & operator = (int x) = delete;
 };
-
-#if _MSC_VER
-#pragma warning(pop)
-#endif // _MSC_VER
 
 #else
 
@@ -5031,7 +4993,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
             auto eoperm = [](uint8_t const k, int const (&indexs)[16]) constexpr {
                 uint8_t  ix = 0;            // index element
                 uint64_t r = 0;             // return value
-                uint8_t  i = (k >> 1) & 1;  // look at odd indexes if destination is odd
+                uint8_t  i = uint8_t((k >> 1) & 1);  // look at odd indexes if destination is odd
                 for (; i < 16; i += 2) {
                     ix = (indexs[i] >= 0 && ((indexs[i] ^ k) & 1) == 0) ? (uint8_t)indexs[i]/2u : 0xFFu;
                     r |= uint64_t(ix) << (i / 2u * 8u);
@@ -5043,10 +5005,11 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
             constexpr uint64_t ixe2o = eoperm(2, indexs);
             constexpr uint64_t ixo2o = eoperm(3, indexs);
 
-            constexpr bool e2e = ixe2e != -1ll;  // even bytes of source to odd  bytes of destination
-            constexpr bool e2o = ixe2o != -1ll;  // even bytes of source to odd  bytes of destination
-            constexpr bool o2e = ixo2e != -1ll;  // odd  bytes of source to even bytes of destination
-            constexpr bool o2o = ixo2o != -1ll;  // odd  bytes of source to odd  bytes of destination
+            constexpr uint64_t all1 = 0xFFFFFFFFFFFFFFFF;
+            constexpr bool e2e = ixe2e != all1;  // even bytes of source to odd  bytes of destination
+            constexpr bool e2o = ixe2o != all1;  // even bytes of source to odd  bytes of destination
+            constexpr bool o2e = ixo2e != all1;  // odd  bytes of source to even bytes of destination
+            constexpr bool o2o = ixo2o != all1;  // odd  bytes of source to odd  bytes of destination
 
             if constexpr (e2o || o2e) swapped = rotate_left(Vec8s(a), 8); // swap odd and even bytes
 
@@ -6976,12 +6939,12 @@ static inline uint8_t to_bits(Vec8b const x) {
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec4b const x) {
-    return static_cast<uint8_t>(__mmask8(x) & 0x0F);
+    return uint8_t(__mmask8(x) & 0x0F);
 }
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec2b const x) {
-    return static_cast<uint8_t>(__mmask8(x) & 0x03);
+    return uint8_t(__mmask8(x) & 0x03);
 }
 
 #else  // broad boolean vectors
@@ -7016,4 +6979,4 @@ static inline uint8_t to_bits(Vec2qb const x) {
 }
 #endif
 
-#endif // VECTORI128_H
+#endif  // VECTORI128_H

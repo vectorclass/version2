@@ -1,8 +1,8 @@
 /****************************  vectori256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-06-03
-* Version:       2.02.01
+* Last modified: 2023-07-04
+* Version:       2.02.02
 * Project:       vector class library
 * Description:
 * Header file defining integer vector classes as interface to intrinsic
@@ -1013,8 +1013,8 @@ static inline Vec32c abs_saturated(Vec32c const a) {
 // function rotate_left all elements
 // Use negative count to rotate right
 static inline Vec32c rotate_left(Vec32c const a, int b) {
-    uint8_t mask = 0xFFu << b;                             // mask off overflow bits
-    __m256i m     = _mm256_set1_epi8(static_cast<char>(mask));
+    int8_t  mask  = int8_t(0xFFu << b);                    // mask off overflow bits
+    __m256i m     = _mm256_set1_epi8(mask);
     __m128i bb    = _mm_cvtsi32_si128(b & 7);              // b modulo 8
     __m128i mbb   = _mm_cvtsi32_si128((- b) & 7);          // 8-b modulo 8
     __m256i left  = _mm256_sll_epi16(a, bb);               // a << b
@@ -2121,8 +2121,7 @@ static inline uint32_t horizontal_add_x (Vec16us const a) {
     __m128i sum2  = _mm_add_epi32(_mm256_extracti128_si256(sum1,1),_mm256_castsi256_si128(sum1));
     __m128i sum3  = _mm_add_epi32(sum2,_mm_unpackhi_epi64(sum2,sum2));
     __m128i sum4  = _mm_add_epi32(sum3,_mm_shuffle_epi32(sum3,1));
-    const auto retval = (int16_t)_mm_cvtsi128_si32(sum4);               // truncate to 16 bits
-    return static_cast<uint32_t>(retval);
+    return (uint32_t)(uint16_t)_mm_cvtsi128_si32(sum4);    // truncate to 16 bits
 }
 
 // function add_saturated: add element by element, unsigned with saturation
