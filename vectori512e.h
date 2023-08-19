@@ -1847,7 +1847,7 @@ static inline Vec16i lookup(Vec16i const index, void const * table) {
     if constexpr (n <= 16) return lookup16(index, Vec16i().load(table));
     // n > 16. Limit index
     Vec16ui i1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         i1 = index;
     }
     else if constexpr ((n & (n - 1)) == 0) {
@@ -1902,7 +1902,7 @@ static inline Vec8q lookup(Vec8q const index, void const * table) {
     }
     // n > 8. Limit index
     Vec8uq i1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         i1 = index;
     }
     else if constexpr ((n & (n-1)) == 0) {
