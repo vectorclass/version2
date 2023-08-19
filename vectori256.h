@@ -4678,7 +4678,7 @@ static inline Vec32c lookup(Vec32uc const index, void const * table) {
     if constexpr (n <= 32) return lookup32(index, Vec32c().load(table));
     // n > 32. Limit index
     Vec32uc index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = index;
     }
     else if constexpr ((n & (n-1)) == 0) {
@@ -4723,7 +4723,7 @@ static inline Vec16s lookup(Vec16s const index, void const * table) {
     if constexpr (n <= 16) return lookup16(index, Vec16s().load(table));
     // n > 16. Limit index
     Vec16us index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = index;
     }
     else if constexpr ((n & (n-1)) == 0) {
@@ -4760,7 +4760,7 @@ static inline Vec8i lookup(Vec8i const index, void const * table) {
     }
     // n > 16. Limit index
     Vec8ui index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = index;
     }
     else if constexpr ((n & (n-1)) == 0) {
@@ -4783,7 +4783,7 @@ static inline Vec4q lookup(Vec4q const index, int64_t const * table) {
     if constexpr (n <= 0) return 0;
     // n > 0. Limit index
     Vec4uq index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = Vec4uq(index);
     }
     else if constexpr ((n & (n-1)) == 0) {

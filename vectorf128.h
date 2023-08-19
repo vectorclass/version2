@@ -2802,7 +2802,7 @@ static inline Vec4f lookup(Vec4i const index, float const * table) {
     }
     // n > 8. Limit index
     Vec4ui index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = index;
     }
     else if constexpr ((n & (n - 1)) == 0) {
@@ -2857,7 +2857,7 @@ static inline Vec2d lookup(Vec2q const index, double const * table) {
 #endif
     // Limit index
     Vec2uq index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n >= INT_MAX) {
         index1 = index;
     }
     else if constexpr ((n & (n - 1)) == 0) {
