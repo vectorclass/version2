@@ -1,7 +1,7 @@
 /****************************  vectorfp16e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2023-06-03
+* Last modified: 2023-10-19
 * Version:       2.02.01
 * Project:       vector class library
 * Description:
@@ -673,10 +673,10 @@ static inline Vec8h operator - (Vec8h const a, Vec8h const b) {
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec8h operator - (Vec8h const a, float b) {
+static inline Vec8h operator - (Vec8h const a, Float16 b) {
     return a - Vec8h(b);
 }
-static inline Vec8h operator - (float a, Vec8h const b) {
+static inline Vec8h operator - (Float16 a, Vec8h const b) {
     return Vec8h(a) - b;
 }
 

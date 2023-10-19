@@ -223,10 +223,10 @@ static inline Vec8h operator - (Vec8h const a, Vec8h const b) {
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec8h operator - (Vec8h const a, float b) {
+static inline Vec8h operator - (Vec8h const a, _Float16 b) {
     return a - Vec8h(b);
 }
-static inline Vec8h operator - (float a, Vec8h const b) {
+static inline Vec8h operator - (_Float16 a, Vec8h const b) {
     return Vec8h(a) - b;
 }
 
@@ -1739,10 +1739,10 @@ static inline Vec32h operator - (Vec32h const a, Vec32h const b) {
 }
 
 // vector operator - : subtract vector and scalar
-static inline Vec32h operator - (Vec32h const a, float b) {
+static inline Vec32h operator - (Vec32h const a, _Float16 b) {
     return a - Vec32h(b);
 }
-static inline Vec32h operator - (float a, Vec32h const b) {
+static inline Vec32h operator - (_Float16 a, Vec32h const b) {
     return Vec32h(a) - b;
 }
 
