@@ -1,7 +1,7 @@
 /****************************  vectorfp16.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2023-10-19
+* Last modified: 2023-11-07
 * Version:       2.02.02
 * Project:       vector class library
 * Description:
@@ -2375,7 +2375,7 @@ VTYPE exp_h(VTYPE const initial_x) {
 
     if constexpr (BA <= 1) {                     // exp(x)
         const _Float16 ln2f  = _Float16(0.69314718f);   // ln(2)
-        const _Float16 log2e = _Float161.44269504089f); // log2(e)
+        const _Float16 log2e = _Float16(1.44269504089f); // log2(e)
         x = initial_x;
         r = round(initial_x*log2e);
         x = nmul_add(r, VTYPE(ln2f), x);         //  x -= r * ln2f;
@@ -2461,7 +2461,7 @@ VTYPE sincos_h(VTYPE * cosret, VTYPE const xx) {
     const _Float16 P1cosf = _Float16(-1.388731625493765E-3f);
 
     const float pi     = 3.14159265358979323846f;// pi
-    const _Float16 c2_pi  = _Float16((2./3.14159265358979323846);  // 2/pi
+    const _Float16 c2_pi  = _Float16(2./3.14159265358979323846);  // 2/pi
 
     typedef decltype(roundi(xx)) ITYPE;          // integer vector type
     typedef decltype(unsigned_int_type(xx)) UITYPE;// unsigned integer vector type
