@@ -384,10 +384,15 @@ constexpr int bit_scan_reverse_const(uint64_t const n) {
 *****************************************************************************/
 
 // Template class to represent compile-time integer constant
-template <int32_t  n> class Const_int_t {};      // represent compile-time signed integer constant
-template <uint32_t n> class Const_uint_t {};     // represent compile-time unsigned integer constant
-#define const_int(n)  (Const_int_t <n>())        // n must be compile-time integer constant
-#define const_uint(n) (Const_uint_t<n>())        // n must be compile-time unsigned integer constant
+template <int32_t  n> class Const_int_t {};                // represent compile-time signed integer constant
+template <uint32_t n> class Const_uint_t {};               // represent compile-time unsigned integer constant
+#ifdef VCL_NAMESPACE
+#define const_int(n)  (VCL_NAMESPACE::Const_int_t <n>())   // n must be compile-time integer constant
+#define const_uint(n) (VCL_NAMESPACE::Const_uint_t<n>())   // n must be compile-time unsigned integer constant
+#else
+#define const_int(n)  (Const_int_t <n>())                  // n must be compile-time integer constant
+#define const_uint(n) (Const_uint_t<n>())                  // n must be compile-time unsigned integer constant
+#endif
 
 
 // template for producing quiet NAN
