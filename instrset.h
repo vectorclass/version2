@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-07-04
+* Last modified: 2023-12-02
 * Version:       2.02.02
 * Project:       vector class library
 * Description:
@@ -383,11 +383,16 @@ constexpr int bit_scan_reverse_const(uint64_t const n) {
 *
 *****************************************************************************/
 
-// Template class to represent compile-time integer constant
-template <int32_t  n> class Const_int_t {};      // represent compile-time signed integer constant
-template <uint32_t n> class Const_uint_t {};     // represent compile-time unsigned integer constant
-#define const_int(n)  (Const_int_t <n>())        // n must be compile-time integer constant
-#define const_uint(n) (Const_uint_t<n>())        // n must be compile-time unsigned integer constant
+#ifdef VCL_NAMESPACE
+#define NAMESPACEPREFIX VCL_NAMESPACE::
+#else 
+#define NAMESPACEPREFIX
+#endif
+
+template <int32_t  n> class Const_int_t {};                // represent compile-time signed integer constant
+template <uint32_t n> class Const_uint_t {};               // represent compile-time unsigned integer constant
+#define const_int(n)  (NAMESPACEPREFIX Const_int_t <n>())  // n must be compile-time integer constant
+#define const_uint(n) (NAMESPACEPREFIX Const_uint_t<n>())  // n must be compile-time unsigned integer constant
 
 
 // template for producing quiet NAN
