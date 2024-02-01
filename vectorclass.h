@@ -1,7 +1,7 @@
 /****************************  vectorclass.h   ********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
+* Last modified: 2024-02-01
 * Version:       2.02.00
 * Project:       vector class library
 * Home:          https://github.com/vectorclass
@@ -36,6 +36,7 @@
 
 // Determine instruction set, and define platform-dependent functions
 #include "instrset.h"        // Select supported instruction set
+#include "instrset_enum.h" // `enum class` *instrset*
 
 #if INSTRSET < 2             // instruction set SSE2 is the minimum
 #error Please compile for the SSE2 instruction set or higher
