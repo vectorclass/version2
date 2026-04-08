@@ -362,7 +362,7 @@ static inline Vec8h convert4f_8h (Vec4f f) {
 #else
 
 // extend precision: Vec8h -> Vec4f. upper half ignored
-static Vec4f convert8h_4f (Vec8h x) {
+static inline Vec4f convert8h_4f (Vec8h x) {
     // __m128i a = _mm_cvtepu16_epi32(x);                            // SSE4.1
     __m128i a = _mm_unpacklo_epi16(x, _mm_setzero_si128 ());         // zero extend
     __m128i b = _mm_slli_epi32(a, 16);                               // left-justify
@@ -387,7 +387,7 @@ static Vec4f convert8h_4f (Vec8h x) {
 }
 
 // reduce precision: Vec4f -> Vec8h. upper half zero
-static Vec8h convert4f_8h (Vec4f x) {
+static inline Vec8h convert4f_8h (Vec4f x) {
     __m128i a = _mm_castps_si128(x);                                 // bit-cast to integer
     // 23 bit mantissa rounded to 10 bits - nearest or even
     __m128i r = _mm_srli_epi32(a, 12);                               // get first discarded mantissa bit
@@ -449,7 +449,7 @@ static inline Vec8h to_float16 (Vec8f f) {
 #elif INSTRSET >= 8 // __F16C__ not defined, AVX2 supported
 
 // extend precision: Vec8h -> Vec8f
-static Vec8f to_float (Vec8h x) {
+static inline Vec8f to_float (Vec8h x) {
     __m256i a = _mm256_cvtepu16_epi32(x);                            // zero-extend each element to 32 bits
     __m256i b = _mm256_slli_epi32(a, 16);                            // left-justify
     __m256i c = _mm256_and_si256(b, _mm256_set1_epi32(0x80000000));  // isolate sign bit
@@ -473,7 +473,7 @@ static Vec8f to_float (Vec8h x) {
 }
 
 // reduce precision: Vec8f -> Vec8h
-static Vec8h to_float16 (Vec8f x) {
+static inline Vec8h to_float16 (Vec8f x) {
     __m256i a = _mm256_castps_si256(x);                              // bit-cast to integer
     // 23 bit mantissa rounded to 10 bits - nearest or even
     __m256i r = _mm256_srli_epi32(a, 12);                            // get first discarded mantissa bit
@@ -516,7 +516,7 @@ static Vec8h to_float16 (Vec8f x) {
 #else // __F16C__ not defined, AVX2 not supported 
 
 // extend precision: Vec8h -> Vec8f
-static Vec8f to_float (Vec8h x) {
+static inline Vec8f to_float (Vec8h x) {
     Vec8s  xx = __m128i(x);
     Vec4ui a1 = _mm_unpacklo_epi16(xx, _mm_setzero_si128 ());
     Vec4ui a2 = _mm_unpackhi_epi16(xx, _mm_setzero_si128 ());
@@ -558,7 +558,7 @@ static Vec8f to_float (Vec8h x) {
 } 
 
 // reduce precision: Vec8f -> Vec8h
-static Vec8h to_float16 (Vec8f x) {              
+static inline Vec8h to_float16 (Vec8f x) {
     Vec4ui a1 = _mm_castps_si128(x.get_low());             // low half
     Vec4ui a2 = _mm_castps_si128(x.get_high());            // high half
     Vec4ui r1 = a1 >> 12;                                  // get first discarded mantissa bit
