@@ -1,6 +1,9 @@
 Change log for Vector class library
 -----------------------------------
 
+2026-04-14 version 2.02.03
+  * conversions Vec8h <-> Vec8f and Vec16h <-> Vec16f converted to templates in vectorfp16e.h
+
 2023-07-04 version 2.02.02
   * remove various MS compiler warnings
 
