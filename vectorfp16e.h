@@ -1,8 +1,8 @@
 /****************************  vectorfp16e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2023-10-19
-* Version:       2.02.01
+* Last modified: 2026-04-14
+* Version:       2.02.03
 * Project:       vector class library
 * Description:
 * Header file emulating half precision floating point vector classes
@@ -17,7 +17,7 @@
 *
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -96,7 +96,7 @@ namespace VCL_NAMESPACE {
                 uint32_t mant : 23;
                 uint32_t expo : 8;
                 uint32_t sign : 1;
-            };
+            } s;
         } u;
         union {                                  // half precision float as bitfield
             uint16_t h;
@@ -104,34 +104,34 @@ namespace VCL_NAMESPACE {
                 uint16_t mant : 10;
                 uint16_t expo : 5;
                 uint16_t sign : 1;
-            };
+            } s;
         } v;
         u.f = f;
-        v.expo = u.expo - 0x70;                  // convert exponent
-        v.mant = u.mant >> 13;                   // get upper part of mantissa
-        if (u.mant & (1 << 12)) {                // round to nearest or even
-            if ((u.mant & ((1 << 12) - 1)) || (v.mant & 1)) { // round up if odd or remaining bits are nonzero
+        v.s.expo = u.s.expo - 0x70;              // convert exponent
+        v.s.mant = u.s.mant >> 13;               // get upper part of mantissa
+        if (u.s.mant & (1 << 12)) {              // round to nearest or even
+            if ((u.s.mant & ((1 << 12) - 1)) || (v.s.mant & 1)) { // round up if odd or remaining bits are nonzero
                 v.h++;                           // overflow here will give infinity
             }
         }
-        v.sign = u.sign;                         // copy sign bit
-        if (u.expo == 0xFF) {                    // infinity or nan
-            v.expo = 0x1F;
-            if (u.mant != 0) {                   // Nan
-                v.mant = u.mant >> 13;           // NAN payload is left-justified
+        v.s.sign = u.s.sign;                     // copy sign bit
+        if (u.s.expo == 0xFF) {                  // infinity or nan
+            v.s.expo = 0x1F;
+            if (u.s.mant != 0) {                 // NaN
+                v.s.mant = u.s.mant >> 13;       // NaN payload is left-justified
             }
         }
-        else if (u.expo > 0x8E) {
-            v.expo = 0x1F;  v.mant = 0;          // overflow -> inf
+        else if (u.s.expo > 0x8E) {
+            v.s.expo = 0x1F;  v.s.mant = 0;      // overflow -> inf
         }
-        else if (u.expo < 0x71) {
-            v.expo = 0;                          // subnormals are always supported
-            u.expo += 24;
-            u.sign = 0;
+        else if (u.s.expo < 0x71) {
+            v.s.expo = 0;                        // subnormals are always supported
+            u.s.expo += 24;
+            u.s.sign = 0;
             //v.mant = int(u.f) & 0x3FF;
             int mants = _mm_cvt_ss2si(_mm_load_ss(&u.f));
-            v.mant = mants & 0x3FF; // proper rounding of subnormal
-            if (mants == 0x400) v.expo = 1;
+            v.s.mant = mants & 0x3FF; // proper rounding of subnormal
+            if (mants == 0x400) v.s.expo = 1;
         }
         x = v.h;                                 // store result
     }    
@@ -143,7 +143,7 @@ namespace VCL_NAMESPACE {
                 uint32_t mant : 23;
                 uint32_t expo : 8;
                 uint32_t sign : 1;
-            };
+            } s;
         } u;
         u.hhh = (x & 0x7fff) << 13;              // Exponent and mantissa
         u.hhh += 0x38000000;                     // Adjust exponent bias
@@ -152,9 +152,9 @@ namespace VCL_NAMESPACE {
             u.fff *= int(x & 0x3FF);             // subnormal value = mantissa * 2^-24
         }
         if ((x & 0x7C00) == 0x7C00) {            // infinity or nan
-            u.expo = 0xFF;
-            if (x & 0x3FF) {                     // nan
-                u.mant = (x & 0x3FF) << 13;      // NAN payload is left-justified
+            u.s.expo = 0xFF;
+            if (x & 0x3FF) {                     // NaN
+                u.s.mant = (x & 0x3FF) << 13;    // NaN payload is left-justified
             }
         }
         u.hhh |= (x & 0x8000) << 16;             // copy sign bit
@@ -362,7 +362,7 @@ static inline Vec8h convert4f_8h (Vec4f f) {
 #else
 
 // extend precision: Vec8h -> Vec4f. upper half ignored
-static Vec4f convert8h_4f (Vec8h x) {
+static inline Vec4f convert8h_4f (Vec8h x) {
     // __m128i a = _mm_cvtepu16_epi32(x);                            // SSE4.1
     __m128i a = _mm_unpacklo_epi16(x, _mm_setzero_si128 ());         // zero extend
     __m128i b = _mm_slli_epi32(a, 16);                               // left-justify
@@ -387,7 +387,7 @@ static Vec4f convert8h_4f (Vec8h x) {
 }
 
 // reduce precision: Vec4f -> Vec8h. upper half zero
-static Vec8h convert4f_8h (Vec4f x) {
+static inline Vec8h convert4f_8h (Vec4f x) {
     __m128i a = _mm_castps_si128(x);                                 // bit-cast to integer
     // 23 bit mantissa rounded to 10 bits - nearest or even
     __m128i r = _mm_srli_epi32(a, 12);                               // get first discarded mantissa bit
@@ -431,9 +431,16 @@ static Vec8h convert4f_8h (Vec4f x) {
 
 /*****************************************************************************
 *
-*          conversions Vec8h <-> Vec8f
+*          conversions Vec8h <-> Vec8f and Vec16h <-> Vec16f
 *
 *****************************************************************************/
+// These functions are changed to templates in version 2.02.03 because 
+// inlining would be wasteful and static non-inline functions in header files
+// may lead to duplicate definitions when used in multiple modules
+
+
+class Vec16h;
+
 #if defined (__F16C__) && INSTRSET >= 8  // F16C instruction set has conversion instructions
 
 // extend precision: Vec8h -> Vec8f
@@ -446,184 +453,234 @@ static inline Vec8h to_float16 (Vec8f f) {
     return _mm256_cvtps_ph(f, 0);
 }
 
+// extend precision: Vec16h -> Vec16f
+// static inline Vec16f to_float (Vec16h h) // defined below after Vec16h is defined
+
+// reduce precision: Vec16f -> Vec16h
+// static inline Vec16h to_float16 (Vec16f f) // defined below after Vec16h is defined
+
+
 #elif INSTRSET >= 8 // __F16C__ not defined, AVX2 supported
 
 // extend precision: Vec8h -> Vec8f
-static Vec8f to_float (Vec8h x) {
-    __m256i a = _mm256_cvtepu16_epi32(x);                            // zero-extend each element to 32 bits
-    __m256i b = _mm256_slli_epi32(a, 16);                            // left-justify
-    __m256i c = _mm256_and_si256(b, _mm256_set1_epi32(0x80000000));  // isolate sign bit
-    __m256i d = _mm256_andnot_si256(_mm256_set1_epi32(0x80000000),b);// remove sign bit
-    __m256i e = _mm256_srli_epi32(d, 3);                             // put exponent and mantissa in place
-    __m256i f = _mm256_add_epi32(e, _mm256_set1_epi32(0x38000000));  // adjust exponent bias
-    // check for subnormal, INF, and NAN
-    __m256i xx = _mm256_set1_epi32(0x7C00);                          // exponent field in fp16
-    __m256i g  = _mm256_and_si256(a, xx);                            // isolate exponent (low position)
-    __m256i zd = _mm256_cmpeq_epi32(g, _mm256_setzero_si256());      // -1 if x is zero or subnormal
-    __m256i in = _mm256_cmpeq_epi32(g, xx);                          // -1 if x is INF or NAN
-    __m256i ma = _mm256_and_si256(a, _mm256_set1_epi32(0x3FF));      // isolate mantissa
-    __m256  sn = _mm256_mul_ps(_mm256_cvtepi32_ps(ma), _mm256_set1_ps(1.f/16777216.f)); // converted subnormal = mantissa * 2^-24
-    __m256i snm = _mm256_and_si256(_mm256_castps_si256(sn), zd);     // converted subnormal, masked
-    __m256i inm = _mm256_and_si256(in,_mm256_set1_epi32(0x7F800000));// INF or NAN exponent field, masked off if not INF or NAN
-    __m256i fm = _mm256_andnot_si256(zd, f);                         // normal result, masked off if zero or subnormal
-    __m256i r = _mm256_or_si256(fm, c);                              // insert sign bit
-    __m256i s = _mm256_or_si256(snm, inm);                           // combine branches
-    __m256i t = _mm256_or_si256(r, s);                               // combine branches
-    return _mm256_castsi256_ps(t);                                   // cast result to float
+template <typename T>
+auto to_float(T x) {
+    static_assert (T::elementtype() == 15, "wrong argument for to_float");
+    if constexpr (T::size() == 8) { // Vec8h
+
+        //static Vec8f to_float (Vec8h x) {
+        __m256i a = _mm256_cvtepu16_epi32(x);                            // zero-extend each element to 32 bits
+        __m256i b = _mm256_slli_epi32(a, 16);                            // left-justify
+        __m256i c = _mm256_and_si256(b, _mm256_set1_epi32(0x80000000));  // isolate sign bit
+        __m256i d = _mm256_andnot_si256(_mm256_set1_epi32(0x80000000),b);// remove sign bit
+        __m256i e = _mm256_srli_epi32(d, 3);                             // put exponent and mantissa in place
+        __m256i f = _mm256_add_epi32(e, _mm256_set1_epi32(0x38000000));  // adjust exponent bias
+        // check for subnormal, INF, and NAN
+        __m256i xx = _mm256_set1_epi32(0x7C00);                          // exponent field in fp16
+        __m256i g = _mm256_and_si256(a, xx);                             // isolate exponent (low position)
+        __m256i zd = _mm256_cmpeq_epi32(g, _mm256_setzero_si256());      // -1 if x is zero or subnormal
+        __m256i in = _mm256_cmpeq_epi32(g, xx);                          // -1 if x is INF or NAN
+        __m256i ma = _mm256_and_si256(a, _mm256_set1_epi32(0x3FF));      // isolate mantissa
+        __m256  sn = _mm256_mul_ps(_mm256_cvtepi32_ps(ma), _mm256_set1_ps(1.f / 16777216.f)); // converted subnormal = mantissa * 2^-24
+        __m256i snm = _mm256_and_si256(_mm256_castps_si256(sn), zd);     // converted subnormal, masked
+        __m256i inm = _mm256_and_si256(in, _mm256_set1_epi32(0x7F800000));// INF or NAN exponent field, masked off if not INF or NAN
+        __m256i fm = _mm256_andnot_si256(zd, f);                         // normal result, masked off if zero or subnormal
+        __m256i r = _mm256_or_si256(fm, c);                              // insert sign bit
+        __m256i s = _mm256_or_si256(snm, inm);                           // combine branches
+        __m256i t = _mm256_or_si256(r, s);                               // combine branches
+        return Vec8f(_mm256_castsi256_ps(t));                            // cast result to float
+    }
+    else { // Vec16h
+        static_assert(T::size() == 16, "wrong vector size for to_float");        
+        return Vec16f(to_float(x.get_low()), to_float(x.get_high()));
+    }
 }
 
 // reduce precision: Vec8f -> Vec8h
-static Vec8h to_float16 (Vec8f x) {
-    __m256i a = _mm256_castps_si256(x);                              // bit-cast to integer
-    // 23 bit mantissa rounded to 10 bits - nearest or even
-    __m256i r = _mm256_srli_epi32(a, 12);                            // get first discarded mantissa bit
-    __m256i s = _mm256_and_si256(a, _mm256_set1_epi32(0x2FFF));      // 0x2000 indicates if odd, 0x0FFF if remaining bits are nonzero
-    __m256i u = _mm256_cmpeq_epi32(s, _mm256_setzero_si256());       // false if odd or remaining bits nonzero
-    __m256i v = _mm256_andnot_si256(u, r);                           // bit 0 = 1 if we have to round up
-    __m256i w = _mm256_and_si256(v, _mm256_set1_epi32(1));           // = 1 if we need to round up
-    __m256i m = _mm256_srli_epi32(a, 13);                            // get mantissa in place
-    __m256i n = _mm256_and_si256(m, _mm256_set1_epi32(0x3FF));       // mantissa isolated
-    __m256i e = _mm256_and_si256(a, _mm256_set1_epi32(0x7FFFFFFF));  // remove sign bit
-    __m256i f = _mm256_sub_epi32(e, _mm256_set1_epi32(0x70 << 23));  // adjust exponent bias (underflow will be caught by uu below)
-    __m256i g = _mm256_srli_epi32(f, 13);                            // shift exponent into new place
-    __m256i h = _mm256_and_si256(g, _mm256_set1_epi32(0x3FC00));     // isolate exponent 
-    __m256i i = _mm256_or_si256(n, h);                               // combine exponent and mantissa
-    __m256i j = _mm256_add_epi32(i, w);                              // round mantissa. Overflow will carry into exponent
-    // check for overflow and underflow
-    __m256i k = _mm256_cmpgt_epi32(j, _mm256_set1_epi32(0x7BFF));    // overflow
-    __m256i ee = _mm256_srli_epi32(e, 23);                           // exponent at position 0
-    __m256i ii = _mm256_cmpeq_epi32(ee, _mm256_set1_epi32(0xFF));    // check for INF and NAN
-    __m256i uu = _mm256_cmpgt_epi32(_mm256_set1_epi32(0x71), ee);    // check for exponent underflow
-    __m256i pp = _mm256_or_si256(j, _mm256_set1_epi32(0x7C00));      // insert exponent if INF or NAN
-    // compute potential subnormal result
-    __m256i ss = _mm256_add_epi32(e, _mm256_set1_epi32(24 << 23));   // add 24 to exponent
-    __m256i tt = _mm256_cvtps_epi32(_mm256_castsi256_ps(ss));        // convert float to int with rounding
-    __m256i vv = _mm256_and_si256(tt, _mm256_set1_epi32(0x7FF));     // mantissa of subnormal number (possible overflow to normal)
-    // combine results
-    __m256i bb = _mm256_blendv_epi8(j, _mm256_set1_epi32(0x7C00), k);// select INF if overflow
-    __m256i dd = _mm256_blendv_epi8(bb, pp, ii);                     // select INF or NAN    
-    __m256i cc = _mm256_blendv_epi8(dd, vv, uu);                     // select if subnormal or zero or exponent underflow
-    __m256i sa = _mm256_srai_epi32(a, 16);                           // extend sign bit to avoid saturation in pack instruction below
-    __m256i sb = _mm256_and_si256(sa, _mm256_set1_epi32(0xFFFF8000));// isolate sign
-    __m256i sc = _mm256_andnot_si256(_mm256_set1_epi32(0xFFFF8000), cc);// isolate exponent and mantissa
-    __m256i rr = _mm256_or_si256(sb, sc);                            // combine with sign
-    __m128i rl = _mm256_castsi256_si128(rr);                         // low half of results
-    __m128i rh = _mm256_extractf128_si256(rr, 1);                    // high half of results
-    __m128i rc = _mm_packs_epi32(rl, rh);                            // pack into 16-bit words (words are sign extended so they will not saturate)
-    return  rc;                                                      // return as Vec8h
-} 
+
+template <typename T>
+auto to_float16(T x) {
+    static_assert (T::elementtype() == 16, "wrong argument for to_float16");
+    if constexpr (T::size() == 8) { // Vec8f
+
+        //static Vec8h to_float16 (Vec8f x) {
+        __m256i a = _mm256_castps_si256(x);                              // bit-cast to integer
+        // 23 bit mantissa rounded to 10 bits - nearest or even
+        __m256i r = _mm256_srli_epi32(a, 12);                            // get first discarded mantissa bit
+        __m256i s = _mm256_and_si256(a, _mm256_set1_epi32(0x2FFF));      // 0x2000 indicates if odd, 0x0FFF if remaining bits are nonzero
+        __m256i u = _mm256_cmpeq_epi32(s, _mm256_setzero_si256());       // false if odd or remaining bits nonzero
+        __m256i v = _mm256_andnot_si256(u, r);                           // bit 0 = 1 if we have to round up
+        __m256i w = _mm256_and_si256(v, _mm256_set1_epi32(1));           // = 1 if we need to round up
+        __m256i m = _mm256_srli_epi32(a, 13);                            // get mantissa in place
+        __m256i n = _mm256_and_si256(m, _mm256_set1_epi32(0x3FF));       // mantissa isolated
+        __m256i e = _mm256_and_si256(a, _mm256_set1_epi32(0x7FFFFFFF));  // remove sign bit
+        __m256i f = _mm256_sub_epi32(e, _mm256_set1_epi32(0x70 << 23));  // adjust exponent bias (underflow will be caught by uu below)
+        __m256i g = _mm256_srli_epi32(f, 13);                            // shift exponent into new place
+        __m256i h = _mm256_and_si256(g, _mm256_set1_epi32(0x3FC00));     // isolate exponent 
+        __m256i i = _mm256_or_si256(n, h);                               // combine exponent and mantissa
+        __m256i j = _mm256_add_epi32(i, w);                              // round mantissa. Overflow will carry into exponent
+        // check for overflow and underflow
+        __m256i k = _mm256_cmpgt_epi32(j, _mm256_set1_epi32(0x7BFF));    // overflow
+        __m256i ee = _mm256_srli_epi32(e, 23);                           // exponent at position 0
+        __m256i ii = _mm256_cmpeq_epi32(ee, _mm256_set1_epi32(0xFF));    // check for INF and NAN
+        __m256i uu = _mm256_cmpgt_epi32(_mm256_set1_epi32(0x71), ee);    // check for exponent underflow
+        __m256i pp = _mm256_or_si256(j, _mm256_set1_epi32(0x7C00));      // insert exponent if INF or NAN
+        // compute potential subnormal result
+        __m256i ss = _mm256_add_epi32(e, _mm256_set1_epi32(24 << 23));   // add 24 to exponent
+        __m256i tt = _mm256_cvtps_epi32(_mm256_castsi256_ps(ss));        // convert float to int with rounding
+        __m256i vv = _mm256_and_si256(tt, _mm256_set1_epi32(0x7FF));     // mantissa of subnormal number (possible overflow to normal)
+        // combine results
+        __m256i bb = _mm256_blendv_epi8(j, _mm256_set1_epi32(0x7C00), k);// select INF if overflow
+        __m256i dd = _mm256_blendv_epi8(bb, pp, ii);                     // select INF or NAN    
+        __m256i cc = _mm256_blendv_epi8(dd, vv, uu);                     // select if subnormal or zero or exponent underflow
+        __m256i sa = _mm256_srai_epi32(a, 16);                           // extend sign bit to avoid saturation in pack instruction below
+        __m256i sb = _mm256_and_si256(sa, _mm256_set1_epi32(0xFFFF8000));// isolate sign
+        __m256i sc = _mm256_andnot_si256(_mm256_set1_epi32(0xFFFF8000), cc);// isolate exponent and mantissa
+        __m256i rr = _mm256_or_si256(sb, sc);                            // combine with sign
+        __m128i rl = _mm256_castsi256_si128(rr);                         // low half of results
+        __m128i rh = _mm256_extractf128_si256(rr, 1);                    // high half of results
+        __m128i rc = _mm_packs_epi32(rl, rh);                            // pack into 16-bit words (words are sign extended so they will not saturate)
+        return  Vec8h(rc);                                               // return as Vec8h
+    }
+    else { // Vec16f
+        static_assert(T::size() == 16, "wrong vector size for to_float");
+        // static inline Vec16h to_float16 (Vec16f x) {
+        return Vec16h(to_float16(x.get_low()), to_float16(x.get_high()));
+    }
+}
 
 #else // __F16C__ not defined, AVX2 not supported 
 
 // extend precision: Vec8h -> Vec8f
-static Vec8f to_float (Vec8h x) {
-    Vec8s  xx = __m128i(x);
-    Vec4ui a1 = _mm_unpacklo_epi16(xx, _mm_setzero_si128 ());
-    Vec4ui a2 = _mm_unpackhi_epi16(xx, _mm_setzero_si128 ());
-    Vec4ui b1 = a1 << 16;                        // left-justify
-    Vec4ui b2 = a2 << 16;
-    Vec4ui c1 = b1 & 0x80000000;                 // isolate sign bit
-    Vec4ui c2 = b2 & 0x80000000;
-    Vec4ui d1 = _mm_andnot_si128(Vec4ui(0x80000000), b1); // remove sign bit
-    Vec4ui d2 = _mm_andnot_si128(Vec4ui(0x80000000), b2);
-    Vec4ui e1 = d1 >> 3;                         // put exponent and mantissa in place
-    Vec4ui e2 = d2 >> 3;
-    Vec4ui f1 = e1 + 0x38000000;                 // adjust exponent bias
-    Vec4ui f2 = e2 + 0x38000000;
-    Vec4ui g1 = a1 & 0x7C00;                     // isolate exponent (low position)
-    Vec4ui g2 = a2 & 0x7C00;
-    Vec4ib z1 = g1 == 0;                         // true if x is zero or subnormal (broad boolean vector)
-    Vec4ib z2 = g2 == 0;
-    Vec4ib i1 = g1 == 0x7C00;                    // true if x is INF or NAN
-    Vec4ib i2 = g2 == 0x7C00;
-    Vec4ui m1 = a1 & 0x3FF;                      // isolate mantissa (low position)
-    Vec4ui m2 = a2 & 0x3FF;
-    Vec4f  s1 = to_float(m1) * (1.f/16777216.f); // converted subnormal = mantissa * 2^-24
-    Vec4f  s2 = to_float(m2) * (1.f/16777216.f);
-    Vec4ui sm1 = Vec4ui(reinterpret_i(s1)) & Vec4ui(z1); // converted subnormal, masked
-    Vec4ui sm2 = Vec4ui(reinterpret_i(s2)) & Vec4ui(z2);
-    Vec4ui inm1 = Vec4ui(i1) & Vec4ui(0x7F800000); // INF or NAN exponent field, masked off if not INF or NAN 
-    Vec4ui inm2 = Vec4ui(i2) & Vec4ui(0x7F800000);
-    Vec4ui fm1 = _mm_andnot_si128(Vec4ui(z1), f1); // normal result, masked off if zero or subnormal
-    Vec4ui fm2 = _mm_andnot_si128(Vec4ui(z2), f2);
-    Vec4ui r1 = fm1 | c1;                        // insert sign bit
-    Vec4ui r2 = fm2 | c2;
-    Vec4ui q1 = sm1 | inm1;                      // combine branches
-    Vec4ui q2 = sm2 | inm2;
-    Vec4ui t1 = r1  | q1;                        // combine branches
-    Vec4ui t2 = r2  | q2;
-    Vec4f  u1 = reinterpret_f(t1);               // bit-cast to float
-    Vec4f  u2 = reinterpret_f(t2);
-    return Vec8f(u1, u2);                        // combine low and high part
-} 
+template <typename T>
+auto to_float(T x) {
+    static_assert (T::elementtype() == 15, "wrong argument for to_float");
+    if constexpr (T::size() == 8) { // Vec8h
+        //static Vec8f to_float (Vec8h x) {
+        Vec8s  xx = __m128i(x);
+        Vec4ui a1 = _mm_unpacklo_epi16(xx, _mm_setzero_si128());
+        Vec4ui a2 = _mm_unpackhi_epi16(xx, _mm_setzero_si128());
+        Vec4ui b1 = a1 << 16;                        // left-justify
+        Vec4ui b2 = a2 << 16;
+        Vec4ui c1 = b1 & 0x80000000;                 // isolate sign bit
+        Vec4ui c2 = b2 & 0x80000000;
+        Vec4ui d1 = _mm_andnot_si128(Vec4ui(0x80000000), b1); // remove sign bit
+        Vec4ui d2 = _mm_andnot_si128(Vec4ui(0x80000000), b2);
+        Vec4ui e1 = d1 >> 3;                         // put exponent and mantissa in place
+        Vec4ui e2 = d2 >> 3;
+        Vec4ui f1 = e1 + 0x38000000;                 // adjust exponent bias
+        Vec4ui f2 = e2 + 0x38000000;
+        Vec4ui g1 = a1 & 0x7C00;                     // isolate exponent (low position)
+        Vec4ui g2 = a2 & 0x7C00;
+        Vec4ib z1 = g1 == 0;                         // true if x is zero or subnormal (broad boolean vector)
+        Vec4ib z2 = g2 == 0;
+        Vec4ib i1 = g1 == 0x7C00;                    // true if x is INF or NAN
+        Vec4ib i2 = g2 == 0x7C00;
+        Vec4ui m1 = a1 & 0x3FF;                      // isolate mantissa (low position)
+        Vec4ui m2 = a2 & 0x3FF;
+        Vec4f  s1 = to_float(m1) * (1.f / 16777216.f); // converted subnormal = mantissa * 2^-24
+        Vec4f  s2 = to_float(m2) * (1.f / 16777216.f);
+        Vec4ui sm1 = Vec4ui(reinterpret_i(s1)) & Vec4ui(z1); // converted subnormal, masked
+        Vec4ui sm2 = Vec4ui(reinterpret_i(s2)) & Vec4ui(z2);
+        Vec4ui inm1 = Vec4ui(i1) & Vec4ui(0x7F800000); // INF or NAN exponent field, masked off if not INF or NAN 
+        Vec4ui inm2 = Vec4ui(i2) & Vec4ui(0x7F800000);
+        Vec4ui fm1 = _mm_andnot_si128(Vec4ui(z1), f1); // normal result, masked off if zero or subnormal
+        Vec4ui fm2 = _mm_andnot_si128(Vec4ui(z2), f2);
+        Vec4ui r1 = fm1 | c1;                        // insert sign bit
+        Vec4ui r2 = fm2 | c2;
+        Vec4ui q1 = sm1 | inm1;                      // combine branches
+        Vec4ui q2 = sm2 | inm2;
+        Vec4ui t1 = r1 | q1;                        // combine branches
+        Vec4ui t2 = r2 | q2;
+        Vec4f  u1 = reinterpret_f(t1);               // bit-cast to float
+        Vec4f  u2 = reinterpret_f(t2);
+        return Vec8f(u1, u2);                        // combine low and high part
+    }
+    else { // Vec16f
+        static_assert(T::size() == 16, "wrong vector size for to_float");
+        // static inline Vec16h to_float16 (Vec16f x) {
+        return Vec16f(to_float(x.get_low()), to_float(x.get_high()));
+    }
+}
 
 // reduce precision: Vec8f -> Vec8h
-static Vec8h to_float16 (Vec8f x) {              
-    Vec4ui a1 = _mm_castps_si128(x.get_low());             // low half
-    Vec4ui a2 = _mm_castps_si128(x.get_high());            // high half
-    Vec4ui r1 = a1 >> 12;                                  // get first discarded mantissa bit
-    Vec4ui r2 = a2 >> 12;
-    Vec4ui s1 = a1 & 0x2FFF;                               // 0x2000 indicates if odd, 0x0FFF if remaining bits are nonzero
-    Vec4ui s2 = a2 & 0x2FFF;
-    Vec4ib u1 = s1 == 0;                                   // false if odd or remaining bits nonzero
-    Vec4ib u2 = s2 == 0;
-    Vec4ui v1 = _mm_andnot_si128(u1, r1);                  // bit 0 = 1 if we have to round up
-    Vec4ui v2 = _mm_andnot_si128(u2, r2);
-    Vec4ui w1 = v1 & 1;                                    // = 1 if we need to round up
-    Vec4ui w2 = v2 & 1;
-    Vec4ui m1 = a1 >> 13;                                  // get mantissa in place
-    Vec4ui m2 = a2 >> 13;
-    Vec4ui n1 = m1 & 0x3FF;                                // mantissa isolated
-    Vec4ui n2 = m2 & 0x3FF;
-    Vec4ui e1 = a1 & 0x7FFFFFFF;                           // remove sign bit
-    Vec4ui e2 = a2 & 0x7FFFFFFF;
-    Vec4ui f1 = e1 - (0x70 << 23);                         // adjust exponent bias
-    Vec4ui f2 = e2 - (0x70 << 23);
-    Vec4ui g1 = f1 >> 13;                                  // shift exponent into new place
-    Vec4ui g2 = f2 >> 13;
-    Vec4ui h1 = g1 & 0x3FC00;                              // isolate exponent 
-    Vec4ui h2 = g2 & 0x3FC00;
-    Vec4ui i1 = n1 | h1;                                   // combine exponent and mantissa
-    Vec4ui i2 = n2 | h2;
-    Vec4ui j1 = i1 + w1;                                   // round mantissa. Overflow will carry into exponent
-    Vec4ui j2 = i2 + w2;
-    // check for overflow and underflow
-    Vec4ib k1 = j1 > 0x7BFF;                               // overflow
-    Vec4ib k2 = j2 > 0x7BFF;
-    Vec4ui ee1 = e1 >> 23;                                 // exponent at position 0
-    Vec4ui ee2 = e2 >> 23;
-    Vec4ib ii1 = ee1 == 0xFF;                              // check for INF and NAN
-    Vec4ib ii2 = ee2 == 0xFF;
-    Vec4ib uu1 = ee1 < 0x71;                               // exponent underflow
-    Vec4ib uu2 = ee2 < 0x71;
-    Vec4i  pp1 = Vec4i(0x7C00) | j1;                       // insert exponent if INF or NAN
-    Vec4i  pp2 = Vec4i(0x7C00) | j2;
-    // compute potential subnormal result
-    Vec4ui ss1 = e1 + (24 << 23);                          // add 24 to exponent
-    Vec4ui ss2 = e2 + (24 << 23);
-    Vec4ui tt1 = _mm_cvtps_epi32(_mm_castsi128_ps(ss1));   // convert float to int with rounding
-    Vec4ui tt2 = _mm_cvtps_epi32(_mm_castsi128_ps(ss2));
-    Vec4ui vv1 = tt1 & 0x7FF;                              // mantissa of subnormal number (possible overflow to normal)
-    Vec4ui vv2 = tt2 & 0x7FF;
-    // combine results
-    Vec4i  bb1 = select(k1, 0x7C00, j1);                   // select INF if overflow
-    Vec4i  bb2 = select(k2, 0x7C00, j2);
-    Vec4i  dd1 = select(ii1, pp1, bb1);                    // select INF or NAN    
-    Vec4i  dd2 = select(ii2, pp2, bb2);
-    Vec4i  cc1 = select(uu1, vv1, dd1);                    // select if subnormal or zero or exponent underflow
-    Vec4i  cc2 = select(uu2, vv2, dd2);
-    // get sign bit
-    Vec4i  sa1 = Vec4i(a1) >> 16;                          // extend sign bit to avoid saturation in pack instruction below
-    Vec4i  sa2 = Vec4i(a2) >> 16;
-    Vec4i  const smask = 0xFFFF8000;                       // extended sign mask
-    Vec4i  sb1 = sa1 & smask;                              // isolate sign
-    Vec4i  sb2 = sa2 & smask;
-    Vec4i  sc1 = _mm_andnot_si128(smask, cc1);             // isolate exponent and mantissa
-    Vec4i  sc2 = _mm_andnot_si128(smask, cc2);
-    Vec4i  rr1 = sb1 | sc1;                                // combine with sign
-    Vec4i  rr2 = sb2 | sc2;
-    Vec4i  rc  = _mm_packs_epi32(rr1, rr2);                // pack into 16-bit words (words are sign extended so they will not saturate)
-    return (__m128i)rc;                                    // return as Vec8h
+template <typename T>
+auto to_float16(T x) {
+    static_assert (T::elementtype() == 16, "wrong argument for to_float16");
+    if constexpr (T::size() == 8) { // Vec8f
+        //static Vec8h to_float16 (Vec8f x) {
+        Vec4ui a1 = _mm_castps_si128(x.get_low());             // low half
+        Vec4ui a2 = _mm_castps_si128(x.get_high());            // high half
+        Vec4ui r1 = a1 >> 12;                                  // get first discarded mantissa bit
+        Vec4ui r2 = a2 >> 12;
+        Vec4ui s1 = a1 & 0x2FFF;                               // 0x2000 indicates if odd, 0x0FFF if remaining bits are nonzero
+        Vec4ui s2 = a2 & 0x2FFF;
+        Vec4ib u1 = s1 == 0;                                   // false if odd or remaining bits nonzero
+        Vec4ib u2 = s2 == 0;
+        Vec4ui v1 = _mm_andnot_si128(u1, r1);                  // bit 0 = 1 if we have to round up
+        Vec4ui v2 = _mm_andnot_si128(u2, r2);
+        Vec4ui w1 = v1 & 1;                                    // = 1 if we need to round up
+        Vec4ui w2 = v2 & 1;
+        Vec4ui m1 = a1 >> 13;                                  // get mantissa in place
+        Vec4ui m2 = a2 >> 13;
+        Vec4ui n1 = m1 & 0x3FF;                                // mantissa isolated
+        Vec4ui n2 = m2 & 0x3FF;
+        Vec4ui e1 = a1 & 0x7FFFFFFF;                           // remove sign bit
+        Vec4ui e2 = a2 & 0x7FFFFFFF;
+        Vec4ui f1 = e1 - (0x70 << 23);                         // adjust exponent bias
+        Vec4ui f2 = e2 - (0x70 << 23);
+        Vec4ui g1 = f1 >> 13;                                  // shift exponent into new place
+        Vec4ui g2 = f2 >> 13;
+        Vec4ui h1 = g1 & 0x3FC00;                              // isolate exponent 
+        Vec4ui h2 = g2 & 0x3FC00;
+        Vec4ui i1 = n1 | h1;                                   // combine exponent and mantissa
+        Vec4ui i2 = n2 | h2;
+        Vec4ui j1 = i1 + w1;                                   // round mantissa. Overflow will carry into exponent
+        Vec4ui j2 = i2 + w2;
+        // check for overflow and underflow
+        Vec4ib k1 = j1 > 0x7BFF;                               // overflow
+        Vec4ib k2 = j2 > 0x7BFF;
+        Vec4ui ee1 = e1 >> 23;                                 // exponent at position 0
+        Vec4ui ee2 = e2 >> 23;
+        Vec4ib ii1 = ee1 == 0xFF;                              // check for INF and NAN
+        Vec4ib ii2 = ee2 == 0xFF;
+        Vec4ib uu1 = ee1 < 0x71;                               // exponent underflow
+        Vec4ib uu2 = ee2 < 0x71;
+        Vec4i  pp1 = Vec4i(0x7C00) | j1;                       // insert exponent if INF or NAN
+        Vec4i  pp2 = Vec4i(0x7C00) | j2;
+        // compute potential subnormal result
+        Vec4ui ss1 = e1 + (24 << 23);                          // add 24 to exponent
+        Vec4ui ss2 = e2 + (24 << 23);
+        Vec4ui tt1 = _mm_cvtps_epi32(_mm_castsi128_ps(ss1));   // convert float to int with rounding
+        Vec4ui tt2 = _mm_cvtps_epi32(_mm_castsi128_ps(ss2));
+        Vec4ui vv1 = tt1 & 0x7FF;                              // mantissa of subnormal number (possible overflow to normal)
+        Vec4ui vv2 = tt2 & 0x7FF;
+        // combine results
+        Vec4i  bb1 = select(k1, 0x7C00, j1);                   // select INF if overflow
+        Vec4i  bb2 = select(k2, 0x7C00, j2);
+        Vec4i  dd1 = select(ii1, pp1, bb1);                    // select INF or NAN    
+        Vec4i  dd2 = select(ii2, pp2, bb2);
+        Vec4i  cc1 = select(uu1, vv1, dd1);                    // select if subnormal or zero or exponent underflow
+        Vec4i  cc2 = select(uu2, vv2, dd2);
+        // get sign bit
+        Vec4i  sa1 = Vec4i(a1) >> 16;                          // extend sign bit to avoid saturation in pack instruction below
+        Vec4i  sa2 = Vec4i(a2) >> 16;
+        Vec4i  const smask = 0xFFFF8000;                       // extended sign mask
+        Vec4i  sb1 = sa1 & smask;                              // isolate sign
+        Vec4i  sb2 = sa2 & smask;
+        Vec4i  sc1 = _mm_andnot_si128(smask, cc1);             // isolate exponent and mantissa
+        Vec4i  sc2 = _mm_andnot_si128(smask, cc2);
+        Vec4i  rr1 = sb1 | sc1;                                // combine with sign
+        Vec4i  rr2 = sb2 | sc2;
+        Vec4i  rc = _mm_packs_epi32(rr1, rr2);                // pack into 16-bit words (words are sign extended so they will not saturate)
+        return (__m128i)rc;                                    // return as Vec8h
+
+    }
+    else { // Vec16f
+        static_assert(T::size() == 16, "wrong vector size for to_float");
+        // static inline Vec16h to_float16 (Vec16f x) {
+        return Vec16h(to_float16(x.get_low()), to_float16(x.get_high()));
+    }
 }
 
 #endif  // __F16C__
@@ -1345,35 +1402,32 @@ public:
     }
 };
 
-/*****************************************************************************
-*
-*          conversions Vec16h <-> Vec16f
-*
-*****************************************************************************/
 #if INSTRSET >= 9    // AVX512F instruction set has conversion instructions
 
 // extend precision: Vec16h -> Vec16f
-Vec16f to_float (Vec16h h) {
+static inline Vec16f to_float (Vec16h h) {
     return _mm512_cvtph_ps(h);
 }
 
 // reduce precision: Vec16f -> Vec16h
-Vec16h to_float16 (Vec16f f) {
+static inline Vec16h to_float16 (Vec16f f) {
     return _mm512_cvtps_ph(f, 0);
 }
 
-#else
+#elif INSTRSET == 8 && defined (__F16C__)  // use 256 bit conversion instructions
 
 // extend precision: Vec16h -> Vec16f
-Vec16f to_float (Vec16h h) {
+static inline Vec16f to_float (Vec16h h) {
     return Vec16f(to_float(h.get_low()), to_float(h.get_high()));
 }
 
 // reduce precision: Vec16f -> Vec16h
-Vec16h to_float16 (Vec16f f) {
+static inline Vec16h to_float16 (Vec16f f) {
     return Vec16h(to_float16(f.get_low()), to_float16(f.get_high()));
 }
 
+#else
+// using templates defined above
 #endif
 
 /*****************************************************************************

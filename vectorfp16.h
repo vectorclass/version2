@@ -1,8 +1,8 @@
 /****************************  vectorfp16.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2023-11-07
-* Version:       2.02.02
+* Last modified: 2026-04-14
+* Version:       2.02.03
 * Project:       vector class library
 * Description:
 * Header file defining half precision floating point vector classes
@@ -23,7 +23,7 @@
 * g++ version 12.1 with binutils version 2.34
 * Intel c++ compiler version 2022.0
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -905,17 +905,17 @@ public:
 #if INSTRSET >= 10 && defined (__AVX512VBMI2__)
         __m256i x = _mm256_maskz_compress_epi16(__mmask16(1u << index), _mm256_castph_si256(ymm));
         return _mm256_cvtsh_h(_mm256_castsi256_ph(x));
-#elif 0
+#else
         union {
             __m256h v;
             _Float16 f[16];
         } y;
         y.v = ymm;
         return y.f[index & 15];
-#else
+        /* requires AVX512VL
         Vec8ui x = _mm256_maskz_compress_epi32(__mmask16(1u << (index >> 1)), _mm256_castph_si256(ymm));  // extract int32_t
         x >>= uint32_t((index & 1) << 4);  // get upper 16 bits if index odd
-        return _mm256_cvtsh_h(_mm256_castsi256_ph(x));
+        return _mm256_cvtsh_h(_mm256_castsi256_ph(x));*/
 #endif
     }
     // Extract a single element. Use store function if extracting more than one element.

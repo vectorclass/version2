@@ -1,8 +1,8 @@
 /****************************  vectorclass.h   ********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2026-04-14
+* Version:       2.02.03
 * Project:       vector class library
 * Home:          https://github.com/vectorclass
 * Description:
@@ -22,12 +22,12 @@
 * This header file includes the appropriate header files depending on the
 * selected instruction set.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
 #ifndef VECTORCLASS_H
-#define VECTORCLASS_H  20200
+#define VECTORCLASS_H  20203
 
 // Maximum vector size, bits. Allowed values are 128, 256, 512
 #ifndef MAX_VECTOR_SIZE
