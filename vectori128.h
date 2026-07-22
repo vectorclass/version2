@@ -4076,7 +4076,7 @@ static inline Vec2q operator * (Vec2q const a, Vec2q const b) {
     int64_t aa[2], bb[2];
     a.store(aa);                                           // split into elements
     b.store(bb);
-    return Vec2q(aa[0] * bb[0], aa[1] * bb[1]);            // multiply elements separetely
+    return Vec2q(aa[0] * bb[0], aa[1] * bb[1]);            // multiply elements separately
 #endif
 }
 

@@ -140,7 +140,7 @@ public:
     but apparently the problem has come back. The aliasing of vector types has been reported on
     __apple_build_version__ = 8000042
     We have to make switches here when - hopefully - the error some day has been fixed.
-    We need different version checks with and whithout __apple_build_version__
+    We need different version checks with and without __apple_build_version__
     */
 #ifndef FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
     // Type cast operator to convert to type Vec4ib used as Boolean for integer vectors
@@ -1404,7 +1404,7 @@ static inline Vec4f exp2(Vec4i const n) {
 //static Vec4f exp2(Vec4f const x);    // defined in vectormath_exp.h
 
 
-// Control word manipulaton
+// Control word manipulation
 // ------------------------
 // The MXCSR control word has the following bits:
 //  0:    Invalid Operation Flag

@@ -1546,7 +1546,7 @@ static inline Vec64c permute64(Vec64c const a) {
                     EList<uint16_t, 32> u = {{0}};       // list to return
                     for (int i = 0; i < 64; i += 2) {    // loop through even indexes
                         uint16_t ix = indexs[i] & 63;
-                        // source bytes with odd position are in opposite 16-bit word becase of 32-bit rotation
+                        // source bytes with odd position are in opposite 16-bit word because of 32-bit rotation
                         u.a[i>>1] = ((ix >> 1) ^ (ix & 1)) | (((ix & 1) ^ 1) << 5);
                     }
                     return u;
@@ -2077,7 +2077,7 @@ static inline Vec32s operator / (Vec32s const a, Divisor_s const d) {
     __m512i sgn = _mm512_broadcastq_epi64(d.getsign());    // broadcast sign of d
     __m512i t1  = _mm512_mulhi_epi16(a, m);                // multiply high signed words
     __m512i t2  = _mm512_add_epi16(t1,a);                  // + a
-    __m512i t3  = _mm512_sra_epi16(t2,d.gets1());          // shift right artihmetic
+    __m512i t3  = _mm512_sra_epi16(t2,d.gets1());          // shift right arithmetic
     __m512i t4  = _mm512_srai_epi16(a,15);                 // sign of a
     __m512i t5  = _mm512_sub_epi16(t4,sgn);                // sign of a - sign of d
     __m512i t6  = _mm512_sub_epi16(t3,t5);                 // + 1 if a < 0, -1 if d < 0
