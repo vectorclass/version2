@@ -105,7 +105,7 @@
 // Header files for non-vector intrinsic functions including _BitScanReverse(int), __cpuid(int[4],int), _xgetbv(int)
 #ifdef _MSC_VER                        // Microsoft compiler or compatible Intel compiler
 #include <intrin.h>
-#pragma warning(disable: 6323 4514 4710 4711) // Diasble annoying warnings
+#pragma warning(disable: 6323 4514 4710 4711) // Disable annoying warnings
 #else
 #include <x86intrin.h>                 // Gcc or Clang compiler
 #endif
@@ -182,7 +182,7 @@ Additional problem: The version number is not consistent across platforms. The A
 different version numbers. We have to rely on __apple_build_version__ on the Mac platform:
 http://llvm.org/bugs/show_bug.cgi?id=12643
 We have to make switches here when - hopefully - the error some day has been fixed.
-We need different version checks with and whithout __apple_build_version__
+We need different version checks with and without __apple_build_version__
 */
 #if (defined (__clang__) || defined(__apple_build_version__)) && !defined(__INTEL_COMPILER)
 #define FIX_CLANG_VECTOR_ALIAS_AMBIGUITY
@@ -1235,7 +1235,7 @@ constexpr uint64_t blend_flags(int const (&a)[V::size()]) {
 // blend_perm_indexes: return an Indexlist for implementing a blend function as
 // two permutations. N = vector size.
 // dozero = 0: let unused elements be don't care. The two permutation results must be blended
-// dozero = 1: zero unused elements in each permuation. The two permutation results can be OR'ed
+// dozero = 1: zero unused elements in each permutation. The two permutation results can be OR'ed
 // dozero = 2: indexes that are -1 or V_DC are preserved
 template <int N, int dozero>
 constexpr EList<int, 2*N> blend_perm_indexes(int const (&a)[N]) {
@@ -1321,7 +1321,7 @@ constexpr EList<int, N/2> largeblock_indexes(int const (&a)[N]) {
 *
 ****************************************************************************************/
 
-// Make dummy blend function templates to avoid error messages when the blend funtions are not yet defined
+// Make dummy blend function templates to avoid error messages when the blend functions are not yet defined
 template <typename dummy> void blend2(){}
 template <typename dummy> void blend4(){}
 template <typename dummy> void blend8(){}
@@ -1331,7 +1331,7 @@ template <typename dummy> void blend32(){}
 // blend_half_indexes: return an Indexlist for emulating a blend function as
 // blends or permutations from multiple sources
 // dozero = 0: let unused elements be don't care. Multiple permutation results must be blended
-// dozero = 1: zero unused elements in each permuation. Multiple permutation results can be OR'ed
+// dozero = 1: zero unused elements in each permutation. Multiple permutation results can be OR'ed
 // dozero = 2: indexes that are -1 or V_DC are preserved
 // src1, src2: sources to blend in a partial implementation
 template <int N, int dozero, int src1, int src2>

@@ -6,7 +6,7 @@
 * Project:       vector class library
 * Description:
 * Header file for conversion between different vector classes with different
-* sizes. Also includes verious generic template functions.
+* sizes. Also includes various generic template functions.
 *
 * (c) Copyright 2012-2022 Agner Fog.
 * Apache License version 2.0 or later.
