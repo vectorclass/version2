@@ -1,8 +1,8 @@
 /****************************  vectorfp16e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2026-04-14
-* Version:       2.02.03
+* Last modified: 2026-09-02
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file emulating half precision floating point vector classes
@@ -879,7 +879,7 @@ static inline Vec8h & operator ^= (Vec8h & a, Vec8h const b) {
 
 // vector operator ! : logical not. Returns Boolean vector
 static inline Vec8hb operator ! (Vec8h const a) {
-    return a == Vec8h(0.0);
+    return a == Vec8h(Float16(0.f));
 }
 
 
@@ -1250,7 +1250,7 @@ static inline Vec8h lookup16(Vec8s const index, Vec8h const table0, Vec8h const 
 }
 
 template <int n>
-Vec8h lookup(Vec8s const index, void const * table) {
+Vec8h lookup(Vec8s const index, Float16 const * table) {
     return __m128i(lookup<n>(index, (void const *)(table)));
 }
 
@@ -1296,7 +1296,7 @@ static inline Vec16hb Vec16fb2hb (Vec16fb const a) {
 
 /*****************************************************************************
 *
-*          Vec16h: Vector of 16 single precision floating point values
+*          Vec16h: Vector of 16 half precision floating point values
 *
 *****************************************************************************/
 
@@ -1440,7 +1440,6 @@ static inline Vec16h to_float16 (Vec16f f) {
 static inline Vec16h operator + (Vec16h const a, Vec16h const b) {
     return to_float16(to_float(a) + to_float(b));
 }
-
 
 static inline Vec16h operator + (Float16 a, Vec16h const b) {
     return Vec16h(a) + b;
@@ -2053,7 +2052,7 @@ static inline Vec16h lookup16 (Vec16s const index, Vec16h const table) {
 }
 
 template <int n>
-static inline Vec16h lookup(Vec16s const index, void const * table) {
+static inline Vec16h lookup(Vec16s const index, Float16 const * table) {
     return reinterpret_h(lookup<n>(index, (void const *)(table)));
 }
 
@@ -2092,7 +2091,7 @@ typedef Vec32sb Vec32hb;  // broad boolean vector
  
 /*****************************************************************************
 *
-*          Vec32h: Vector of 4 single precision floating point values
+*          Vec32h: Vector of 32 half precision floating point values
 *
 *****************************************************************************/
 
@@ -2444,7 +2443,7 @@ static inline __m512i reinterpret_h(__m512i const x) {
 
 #if defined(__GNUC__) && __GNUC__ <= 9 // GCC v. 9 is missing the _mm512_zextsi256_si512 intrinsic
 static inline Vec32h extend_z(Vec16h a) {
-    return Vec32h(a, Vec16h(0));
+    return Vec32h(a, Vec16h(0.f));
 }
 #else
 static inline Vec32h extend_z(Vec16h a) {
@@ -2841,13 +2840,14 @@ static inline Vec32h blend32(Vec32h const a, Vec32h const b) {
 *****************************************************************************/
 
 static inline Vec32h lookup32 (Vec32s const index, Vec32h const table) {
-    return reinterpret_h(lookup32(index, Vec32s(reinterpret_i(table))));
+    return reinterpret_h(lookup32(index, Vec32s(table)));
 }
-
+ 
+/*  Not supported
 template <int n>
-static inline Vec32h lookup(Vec32s const index, void const * table) {
+static inline Vec32h lookup(Vec32s const index, Float16 const * table) {
     return reinterpret_h(lookup<n>(index, (void const *)(table)));
-}
+} */
 
 // prevent implicit type conversions
 bool horizontal_and(Vec32h x) = delete;

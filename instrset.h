@@ -1,8 +1,8 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-12-02
-* Version:       2.02.02
+* Last modified: 2026-09-02
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file for various compiler-specific tasks as well as common
@@ -16,7 +16,7 @@
 *
 * For instructions, see vcl_manual.pdf
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 

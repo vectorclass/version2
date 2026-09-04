@@ -6642,7 +6642,7 @@ static inline Vec4i divide_by_i(Vec4i const x) {
 
 // define Vec4i a / const_int(d)
 template <int32_t d>
-static inline Vec4i operator / (Vec4i const a, Const_int_t<d>) {
+static inline Vec4i operator / (Vec4i const a, NAMESPACEPREFIX Const_int_t<d>) {
     return divide_by_i<d>(a);
 }
 
@@ -6962,6 +6962,7 @@ static inline uint8_t to_bits(Vec8sb const x) {
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec4ib const x) {
+    // to do: _mm_movemask_ps
     __m128i a = _mm_packs_epi32(x, x);  // 32-bit dwords to 16-bit words
     __m128i b = _mm_packs_epi16(a, a);  // 16-bit words to bytes
     return uint8_t(_mm_movemask_epi8(b) & 0xF);
@@ -6969,6 +6970,7 @@ static inline uint8_t to_bits(Vec4ib const x) {
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec2qb const x) {
+    // to do: _mm_movemask_pd
     uint32_t a = (uint32_t)_mm_movemask_epi8(x);
     return (a & 1) | ((a >> 7) & 2);
 }

@@ -1,6 +1,9 @@
 Change log for Vector class library
 -----------------------------------
 
+2026-09-02 version 2.02.04
+  * Fixed syntax problem with half precision lookup<n> functions
+
 2026-04-14 version 2.02.03
   * conversions Vec8h <-> Vec8f and Vec16h <-> Vec16f converted to templates in vectorfp16e.h
 
@@ -17,7 +20,7 @@ Change log for Vector class library
   * functions extend_z and concatenate2
   * functions compress_saturated with one integer parameter
   * support for Intel compiler
-  * fix bug for NAN inputs in operator > and >=
+  * fix bug for NaN inputs in operator > and >=
   * fix bug for underflow in pow function
   * fix unsafe optimization in store_partial function
   * new add-on package with container class and matrix class templates
