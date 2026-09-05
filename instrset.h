@@ -1,7 +1,7 @@
 /****************************  instrset.h   **********************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2026-09-02
+* Last modified: 2026-09-05
 * Version:       2.02.04
 * Project:       vector class library
 * Description:
@@ -55,14 +55,18 @@
 // 8:  AVX2
 // 9:  AVX512F
 // 10: AVX512BW/DQ/VL
-// In the future, INSTRSET = 11 may include AVX512VBMI and AVX512VBMI2, but this
-// decision cannot be made before the market situation for CPUs with these
-// instruction sets is better known
+// 11: AVX512VBMI and AVX512VBMI2
+// 12: AVX512FP16
 
 // Find instruction set from compiler macros if INSTRSET is not defined.
 // Note: Some of these macros are not defined in Microsoft compilers
 #ifndef INSTRSET
-#if defined ( __AVX512VL__ ) && defined ( __AVX512BW__ ) && defined ( __AVX512DQ__ )
+
+#if defined ( __AVX512VBMI__ ) && defined ( __AVX512VBMI2__ ) && defined ( __AVX512FP16__ )
+#define INSTRSET 12
+#elif defined ( __AVX512VBMI__ ) && defined ( __AVX512VBMI2__ )
+#define INSTRSET 11
+#elif defined ( __AVX512VL__ ) && defined ( __AVX512BW__ ) && defined ( __AVX512DQ__ )
 #define INSTRSET 10
 #elif defined ( __AVX512F__ ) || defined ( __AVX512__ )
 #define INSTRSET 9

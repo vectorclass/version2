@@ -1,7 +1,8 @@
 Change log for Vector class library
 -----------------------------------
 
-2026-09-02 version 2.02.04
+2026-09-05 version 2.02.04
+  * instrset_detect() supports AVX512VBMI, AVX512VBMI2, and AVX512_FP16
   * Fixed syntax problem with half precision lookup<n> functions
 
 2026-04-14 version 2.02.03

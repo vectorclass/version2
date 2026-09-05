@@ -1,13 +1,13 @@
 /**************************  instrset_detect.cpp   ****************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2026-09-05
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Functions for checking which instruction sets are supported.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -59,6 +59,9 @@ static inline uint64_t xgetbv (int ctr) {
     8  or above = AVX2
     9  or above = AVX512F
    10  or above = AVX512VL, AVX512BW, AVX512DQ
+   11  or above = AVX512VBMI and AVX512VBMI2
+   12  or above = AVX512_FP16
+
 */
 int instrset_detect(void) {
 
@@ -103,6 +106,11 @@ int instrset_detect(void) {
     if ((abcd[1] & (1 << 31)) == 0) return iset;           // no AVX512VL
     if ((abcd[1] & 0x40020000) != 0x40020000) return iset; // no AVX512BW, AVX512DQ
     iset = 10;
+    if ((abcd[2] & (1 << 1)) == 0)  return iset;           // no AVX512VBMI
+    if ((abcd[2] & (1 << 6)) == 0)  return iset;           // no AVX512VBMI2
+    iset = 11;
+    if ((abcd[3] & (1 << 23)) == 0) return iset;           // no AVX512_FP16
+    iset = 12;
     return iset;
 }
 
