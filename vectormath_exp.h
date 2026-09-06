@@ -1,8 +1,8 @@
 /****************************  vectormath_exp.h   ******************************
 * Author:        Agner Fog
 * Date created:  2014-04-18
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2026-09-06
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file containing inline vector functions of logarithms, exponential
@@ -22,16 +22,21 @@
 * Theory, methods and inspiration based partially on these sources:
 * > Moshier, Stephen Lloyd Baluk: Methods and programs for mathematical functions.
 *   Ellis Horwood, 1989.
-* > VDT library developed on CERN by Danilo Piparo, Thomas Hauth and Vincenzo Innocente,
-*   2012, https://root.cern.ch/doc/v606_/md_math_vdt_ReadMe.html
+* > VDT library developed on CERN by Danilo Piparo, Thomas Hauth and Vincenzo Innocente, 2012.
 * > Cephes math library by Stephen L. Moshier 1992,
 *   http://www.netlib.org/cephes/
 *
 * For detailed instructions see vcl_manual.pdf
 *
-* (c) Copyright 2014-2022 Agner Fog.
+* (c) Copyright 2014-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
+
+/* Note
+* The instruction set __AVX512ER__ providing fast exponential functions is supported
+* only in the obsolete Intel Xeon Phi (Knights Landing & Knights Mill) processors.
+* The code for __AVX512ER__ may be removed.
+*/
 
 #ifndef VECTORMATH_EXP_H
 #define VECTORMATH_EXP_H  202
