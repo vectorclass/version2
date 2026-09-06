@@ -1,7 +1,7 @@
 /**************************  instrset_detect.cpp   ****************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2026-09-05
+* Last modified: 2026-09-06
 * Version:       2.02.04
 * Project:       vector class library
 * Description:
@@ -138,14 +138,6 @@ bool hasXOP(void) {
     return ((abcd[2] & (1 << 11)) != 0);                   // ecx bit 11 indicates XOP
 }
 
-// detect if CPU supports the AVX512ER instruction set
-bool hasAVX512ER(void) {
-    if (instrset_detect() < 9) return false;               // must have AVX512F
-    int abcd[4];                                           // cpuid results
-    cpuid(abcd, 7);                                        // call cpuid function 7
-    return ((abcd[1] & (1 << 27)) != 0);                   // ebx bit 27 indicates AVX512ER
-}
-
 // detect if CPU supports the AVX512VBMI instruction set
 bool hasAVX512VBMI(void) {
     if (instrset_detect() < 10) return false;              // must have AVX512BW
@@ -178,6 +170,15 @@ bool hasAVX512FP16(void) {
     return ((abcd[3] & (1 << 23)) != 0);                   // edx bit 23 indicates AVX512_FP16
 }
 
+// Detect if CPU supports the AVX512ER instruction set.
+// The instruction set AVX512ER providing fast exponential functions is supported
+// only by the obsolete Intel Xeon Phi (Knights Landing & Knights Mill) processors.
+bool hasAVX512ER(void) {
+    if (instrset_detect() < 9) return false;               // must have AVX512F
+    int abcd[4];                                           // cpuid results
+    cpuid(abcd, 7);                                        // call cpuid function 7
+    return ((abcd[1] & (1 << 27)) != 0);                   // ebx bit 27 indicates AVX512ER
+}
 
 #ifdef VCL_NAMESPACE
 }
