@@ -1,8 +1,8 @@
 /****************************  vectori256.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-07-04
-* Version:       2.02.02
+* Last modified: 2026-09-09
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file defining integer vector classes as interface to intrinsic
@@ -28,7 +28,7 @@
 * Each vector object is represented internally in the CPU as a 256-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -5836,14 +5836,13 @@ static inline uint16_t to_bits(Vec16sb const x) {
 }
 
 static inline uint8_t to_bits(Vec8ib const x) {
-    __m128i a = _mm_packs_epi32(x.get_low(), x.get_high());  // 32-bit dwords to 16-bit words
-    __m128i b = _mm_packs_epi16(a, a);  // 16-bit words to bytes
-    return (uint8_t)_mm_movemask_epi8(b);
+    int r = _mm256_movemask_ps(_mm256_castsi256_ps(x));
+    return r;
 }
 
 static inline uint8_t to_bits(Vec4qb const x) {
-    uint32_t a = (uint32_t)_mm256_movemask_epi8(x);
-    return ((a & 1) | ((a >> 7) & 2)) | (((a >> 14) & 4) | ((a >> 21) & 8));
+    int r = _mm256_movemask_pd(_mm256_castsi256_pd(x));
+    return r;
 }
 
 #endif

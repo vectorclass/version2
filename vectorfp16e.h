@@ -1,7 +1,7 @@
 /****************************  vectorfp16e.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2026-09-02
+* Last modified: 2026-09-08
 * Version:       2.02.04
 * Project:       vector class library
 * Description:
@@ -2056,6 +2056,7 @@ static inline Vec16h lookup(Vec16s const index, Float16 const * table) {
     return reinterpret_h(lookup<n>(index, (void const *)(table)));
 }
 
+
 // prevent implicit type conversions
 bool horizontal_and(Vec16h x) = delete;
 bool horizontal_or(Vec16h x) = delete;
@@ -2843,11 +2844,10 @@ static inline Vec32h lookup32 (Vec32s const index, Vec32h const table) {
     return reinterpret_h(lookup32(index, Vec32s(table)));
 }
  
-/*  Not supported
 template <int n>
 static inline Vec32h lookup(Vec32s const index, Float16 const * table) {
     return reinterpret_h(lookup<n>(index, (void const *)(table)));
-} */
+}
 
 // prevent implicit type conversions
 bool horizontal_and(Vec32h x) = delete;

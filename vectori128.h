@@ -1,8 +1,8 @@
 /****************************  vectori128.h   *******************************
 * Author:        Agner Fog
 * Date created:  2012-05-30
-* Last modified: 2023-07-04
-* Version:       2.02.02
+* Last modified: 2026-09-09
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file defining 128-bit integer vector classes
@@ -27,7 +27,7 @@
 * Each vector object is represented internally in the CPU as a 128-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
@@ -6962,17 +6962,14 @@ static inline uint8_t to_bits(Vec8sb const x) {
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec4ib const x) {
-    // to do: _mm_movemask_ps
-    __m128i a = _mm_packs_epi32(x, x);  // 32-bit dwords to 16-bit words
-    __m128i b = _mm_packs_epi16(a, a);  // 16-bit words to bytes
-    return uint8_t(_mm_movemask_epi8(b) & 0xF);
+    int r = _mm_movemask_ps(_mm_castsi128_ps(x));
+    return r & 0x0F;
 }
 
 // to_bits: convert boolean vector to integer bitfield
 static inline uint8_t to_bits(Vec2qb const x) {
-    // to do: _mm_movemask_pd
-    uint32_t a = (uint32_t)_mm_movemask_epi8(x);
-    return (a & 1) | ((a >> 7) & 2);
+    int r = _mm_movemask_pd(_mm_castsi128_pd(x));
+    return r & 3;
 }
 
 #endif

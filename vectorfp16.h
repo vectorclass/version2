@@ -1,7 +1,7 @@
 /****************************  vectorfp16.h   *******************************
 * Author:        Agner Fog
 * Date created:  2022-05-03
-* Last modified: 2026-09-02
+* Last modified: 2026-09-08
 * Version:       2.02.04
 * Project:       vector class library
 * Description:
@@ -2303,11 +2303,10 @@ static inline Vec32h lookup32 (Vec32s const index, Vec32h const table) {
     return _mm512_castsi512_ph(lookup32(index, Vec32s(_mm512_castph_si512(table))));
 }
 
-/* Not supported
 template <int n>
 static inline Vec32h lookup(Vec32s const index, Float16 const * table) {
     return _mm512_castsi512_ph(lookup<n>(index, (void const *)(table)));
-}*/
+}
 
 #endif // MAX_VECTOR_SIZE >= 512
 

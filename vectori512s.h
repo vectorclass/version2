@@ -1,8 +1,8 @@
 /****************************  vectori512s.h   ********************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2023-07-04
-* Version:       2.02.02
+* Last modified: 2026-09-08
+* Version:       2.02.04
 * Project:       vector classes
 * Description:
 * Header file defining 512-bit integer vector classes for 8 and 16 bit integers.
@@ -22,7 +22,7 @@
 * Each vector object is represented internally in the CPU as a 512-bit register.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2023 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -1809,6 +1809,48 @@ static inline Vec32s lookup128(Vec32s const index, Vec32s const table1, Vec32s c
     Vec32s d12 = _mm512_permutex2var_epi16(table1, index, table2);
     Vec32s d34 = _mm512_permutex2var_epi16(table3, index, table4);
     return select((index >> 6) != 0, d34, d12);
+}
+
+// lookup in array table
+template <int n>
+static inline Vec32s lookup(Vec32s const index, void const * table) {
+    if constexpr (n <=  0) return 0;
+    if constexpr (n <= 32) {  // vector size table
+        return lookup32(index, Vec32s().load(table));
+    }
+    if constexpr (n <= 64) {  // 2 * vector size table
+        Vec32s t1 = Vec32s().load(table);
+        Vec32s t2 = Vec32s().load((Vec32s*)table+1);
+        return lookup64(index, t1, t2);
+    }
+    if constexpr (n <= 128) {  // 4 * vector size table
+        Vec32s t1 = Vec32s().load(table);
+        Vec32s t2 = Vec32s().load((Vec32s*)table+1);
+        Vec32s t3 = Vec32s().load((Vec32s*)table+2);
+        Vec32s t4 = Vec32s().load((Vec32s*)table+3);
+        return lookup128(index, t1, t2, t3, t4);
+    }
+    // n > 128. Limit index
+    Vec32us index0;
+    if constexpr (n == INT_MAX) {  // no limit
+        index0 = index;
+    }
+    else if constexpr ((n & (n-1)) == 0) {
+        // n is a power of 2, make index modulo n
+        index0 = Vec32us(index) & (n-1);
+    }
+    else {
+        // n is not a power of 2, limit to n-1
+        index0 = min(Vec32us(index), n-1);
+    }
+    Vec16ui index1 = Vec16ui(index0) & 0x0000FFFF;   // even position indexes
+    Vec16ui index2 = _mm512_srli_epi32(index0, 16);  // odd  position indexes
+    Vec32s  t1 = _mm512_i32gather_epi32(index1, (const int *)table, 2);  // gather even positions, scale = 2
+    Vec16ui t2 = _mm512_i32gather_epi32(index2, (const int *)table, 2);  // gather odd  positions, scale = 2
+    t2 = t2 << 16; // shift to odd positions
+    Vec32s r = _mm512_mask_blend_epi16(0xAAAAAAAA, t1, t2);    // blend even and odd positions. 
+    // (an optimizing compiler may merge the blend into the above shift, applying the mask)
+    return r;
 }
 
 

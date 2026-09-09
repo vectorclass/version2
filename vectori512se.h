@@ -1,8 +1,8 @@
 /****************************  vectori512se.h   *******************************
 * Author:        Agner Fog
 * Date created:  2019-04-20
-* Last modified: 2022-07-20
-* Version:       2.02.00
+* Last modified: 2026-09-08
+* Version:       2.02.04
 * Project:       vector class library
 * Description:
 * Header file defining 512-bit integer vector classes for 8 and 16 bit integers.
@@ -22,7 +22,7 @@
 * Each vector object is represented internally in the CPU as two 256-bit registers.
 * This header file defines operators and functions for these vectors.
 *
-* (c) Copyright 2012-2022 Agner Fog.
+* (c) Copyright 2012-2026 Agner Fog.
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
@@ -1748,6 +1748,15 @@ static inline Vec32s lookup128(Vec32s const index, Vec32s const table1, Vec32s c
     table1.store(table);  table2.store(table+32);  table3.store(table+64);  table4.store(table+96);
     for (int i=0; i<32; i++) result[i] = table[index[i] & 127];
     return Vec32s().load(result);
+}
+
+// lookup in array table
+// (no reason to make a version for AVX512F without AVX512BW, because this combination is extermely rare)
+template <int n>
+static inline Vec32s lookup(Vec32s const index, void const * table) {
+    Vec16s r1 = lookup<n>(index.get_low(), table);
+    Vec16s r2 = lookup<n>(index.get_high(), table);
+    return Vec32s(r1, r2);
 }
 
 
