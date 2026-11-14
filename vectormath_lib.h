@@ -24,6 +24,10 @@
 // check combination of header files
 #ifndef VECTORMATH_LIB_H
 #define VECTORMATH_LIB_H  202
+#include "vcl_config.h"
+#if VCL_ARCH_ARM64
+#error Intel SVML requires x86; use the supported in-tree math headers with the compatibility backend
+#else
 
 #ifdef VECTORMATH_COMMON_H
 #error conflicting header files. More than one implementation of mathematical functions included
@@ -2208,4 +2212,5 @@ static inline Vec8d cdfnorminv (Vec8d const x) {  // inverse cumulative normal d
 
 #endif   // VECTORMATH_COMMON_H
 
+#endif // architecture
 #endif   // VECTORMATH_LIB_H

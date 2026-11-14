@@ -26,12 +26,13 @@
 * Apache License version 2.0 or later.
 ******************************************************************************/
 
-#ifndef VECTORI512SE_H
-#define VECTORI512SE_H
-
 #ifndef VECTORCLASS_H
 #include "vectorclass.h"
 #endif
+
+#ifndef VECTORI512SE_H
+#define VECTORI512SE_H
+
 
 #if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
@@ -1610,6 +1611,11 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
     int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32s permute32(Vec32s const a) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 32) return false; }
+        return true;
+    }(), "Index out of range in permute function");
     return Vec32s(
         blend16<i0, i1, i2 ,i3 ,i4 ,i5 ,i6 ,i7, i8, i9, i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()),
         blend16<i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31> (a.get_low(), a.get_high()));
@@ -1631,6 +1637,11 @@ template <
     int i48, int i49, int i50, int i51, int i52, int i53, int i54, int i55,
     int i56, int i57, int i58, int i59, int i60, int i61, int i62, int i63 >
     static inline Vec64c permute64(Vec64c const a) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32,i33,i34,i35,i36,i37,i38,i39,i40,i41,i42,i43,i44,i45,i46,i47,i48,i49,i50,i51,i52,i53,i54,i55,i56,i57,i58,i59,i60,i61,i62,i63};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 64) return false; }
+        return true;
+    }(), "Index out of range in permute function");
     return Vec64c(
         blend32 <
         i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
@@ -1653,6 +1664,11 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
     int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32s blend32(Vec32s const& a, Vec32s const& b) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 64) return false; }
+        return true;
+    }(), "Index out of range in blend function");
     Vec16s x0 = blend_half<Vec32s, i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     Vec16s x1 = blend_half<Vec32s, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31>(a, b);
     return Vec32s(x0, x1);
@@ -1674,6 +1690,11 @@ template <
     int i48, int i49, int i50, int i51, int i52, int i53, int i54, int i55,
     int i56, int i57, int i58, int i59, int i60, int i61, int i62, int i63 >
     static inline Vec64c blend64(Vec64c const a, Vec64c const b) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31,i32,i33,i34,i35,i36,i37,i38,i39,i40,i41,i42,i43,i44,i45,i46,i47,i48,i49,i50,i51,i52,i53,i54,i55,i56,i57,i58,i59,i60,i61,i62,i63};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 128) return false; }
+        return true;
+    }(), "Index out of range in blend function");
     Vec32c x0 = blend_half < Vec64c,
         i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15,
         i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31 > (a, b);

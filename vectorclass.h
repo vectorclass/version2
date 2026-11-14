@@ -34,6 +34,21 @@
 #define MAX_VECTOR_SIZE 512
 #endif
 
+#include "vcl_config.h"
+#if VCL_BACKEND == VCL_BACKEND_NEON
+#include "vectori128_neon.h"
+#include "vectorf128_neon.h"
+#if MAX_VECTOR_SIZE >= 256
+#include "vectori256e.h"
+#include "vectorf256e.h"
+#endif
+#if MAX_VECTOR_SIZE >= 512
+#include "vectori512e.h"
+#include "vectorf512e.h"
+#include "vectori512se.h"
+#endif
+#include "vector_convert.h"
+#else
 // Determine instruction set, and define platform-dependent functions
 #include "instrset.h"        // Select supported instruction set
 
@@ -77,6 +92,8 @@
 
 #endif  // INSTRSET >= 2
 
+
+#endif // backend
 
 #else   // VECTORCLASS_H
 

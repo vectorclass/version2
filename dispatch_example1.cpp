@@ -71,6 +71,17 @@ Apache License version 2.0 or later.
 #include <stdio.h>
 #include "vectorclass.h"
 
+#if VCL_ARCH_ARM64
+// AArch64 has one baseline Neon implementation; no x86 runtime dispatch.
+int main() {
+    float const values[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    Vec4f total(0.f);
+    for (int i = 0; i < 16; i += 4) { Vec4f v; v.load(values+i); total += v; }
+    printf("sum = %.2f\n", horizontal_add(total));
+    return horizontal_add(total) == 136.f ? 0 : 1;
+}
+#else
+
 // Define function type
 // Change this to fit the entry function. Should not contain vector types:
 typedef float MyFuncType(float const []);
@@ -187,3 +198,4 @@ int main() {
 }
 
 #endif  // INSTRSET == 2
+#endif // architecture

@@ -32,12 +32,13 @@
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
-#ifndef VECTORI256E_H
-#define VECTORI256E_H 1
-
 #ifndef VECTORCLASS_H
 #include "vectorclass.h"
 #endif
+
+#ifndef VECTORI256E_H
+#define VECTORI256E_H 1
+
 
 #if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
@@ -60,53 +61,69 @@ namespace VCL_NAMESPACE {
 *
 *****************************************************************************/
 
+#if VCL_BACKEND == VCL_BACKEND_NEON
+using Vcl256IntegerHalf = Vec128b;
+#else
+using Vcl256IntegerHalf = __m128i;
+#endif
+
+inline Vcl256IntegerHalf vcl256_load_aligned_half(void const* p) {
+    Vec16c value; value.load_a(p); return value;
+}
+
+template<int Limit,int... I> constexpr bool vcl256_valid_indexes() {
+    return (((I>=0 && I<Limit) || I==-1 || I==V_DC) && ...);
+}
+
 class Vec256b {
 protected:
-    __m128i y0;                        // low half
-    __m128i y1;                        // high half
+    Vcl256IntegerHalf y0;                        // low half
+    Vcl256IntegerHalf y1;                        // high half
 public:
     // Default constructor:
     Vec256b() = default;
+    #if VCL_BACKEND != VCL_BACKEND_NEON
     Vec256b(__m128i x0, __m128i x1) {  // constructor to build from two __m128i
         y0 = x0;  y1 = x1;
     }
+    #endif
     // Constructor to build from two Vec128b:
     Vec256b(Vec128b const a0, Vec128b const a1) {
         y0 = a0;  y1 = a1;
     }
     // Member function to load from array (unaligned)
     Vec256b & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 32, but there is hardly any speed advantage of load_a on modern processors
     Vec256b & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to store into array (unaligned)
     void store(void * p) const {
-        _mm_storeu_si128((__m128i*)p,     y0);
-        _mm_storeu_si128((__m128i*)p + 1, y1);
+        Vec128b(y0).store(p);
+        Vec128b(y1).store(static_cast<char*>(p) + 16);
     }
     // Member function to store into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 32, but there is hardly any speed advantage of load_a on modern processors
     void store_a(void * p) const {
-        _mm_store_si128((__m128i*)p,     y0);
-        _mm_store_si128((__m128i*)p + 1, y1);
+        Vec128b(y0).store_a(p);
+        Vec128b(y1).store_a(static_cast<char*>(p) + 16);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // This may be more efficient than store_a when storing large blocks of memory if it 
     // is unlikely that the data will stay in the cache until it is read again.
     // Note: Will generate runtime error if p is not aligned by 32
     void store_nt(void * p) const {
-        _mm_stream_si128((__m128i*)p,     y0);
-        _mm_stream_si128((__m128i*)p + 1, y1);
+        Vec128b(y0).store_nt(p);
+        Vec128b(y1).store_nt(static_cast<char*>(p) + 16);
     }
     // Member functions to split into two Vec128b:
     Vec128b get_low() const {
@@ -213,15 +230,15 @@ public:
     Vec32c() = default;
     // Constructor to broadcast the same value into all elements:
     Vec32c(int i) {
-        y1 = y0 = _mm_set1_epi8((char)i);
+        y1 = y0 = Vec16c((char)i);
     }
     // Constructor to build from all elements:
     Vec32c(int8_t i0, int8_t i1, int8_t i2, int8_t i3, int8_t i4, int8_t i5, int8_t i6, int8_t i7,
         int8_t i8, int8_t i9, int8_t i10, int8_t i11, int8_t i12, int8_t i13, int8_t i14, int8_t i15,
         int8_t i16, int8_t i17, int8_t i18, int8_t i19, int8_t i20, int8_t i21, int8_t i22, int8_t i23,
         int8_t i24, int8_t i25, int8_t i26, int8_t i27, int8_t i28, int8_t i29, int8_t i30, int8_t i31) {
-        y0 = _mm_setr_epi8(i0,  i1,  i2,  i3,  i4,  i5,  i6,  i7,  i8,  i9,  i10, i11, i12, i13, i14, i15);
-        y1 = _mm_setr_epi8(i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31);
+        y0 = Vec16c(i0,  i1,  i2,  i3,  i4,  i5,  i6,  i7,  i8,  i9,  i10, i11, i12, i13, i14, i15);
+        y1 = Vec16c(i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31);
     }
     // Constructor to build from two Vec16c:
     Vec32c(Vec16c const a0, Vec16c const a1) {
@@ -240,14 +257,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec32c & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec32c & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
@@ -318,10 +335,10 @@ public:
     }
     // Member functions to split into two Vec16c:
     Vec16c get_low() const {
-        return y0;
+        return Vec16c(y0);
     }
     Vec16c get_high() const {
-        return y1;
+        return Vec16c(y1);
     }
     static constexpr int size() {
         return 32;
@@ -366,10 +383,10 @@ public:
     }
     // Member functions to split into two Vec16c:
     Vec16cb get_low() const {
-        return y0;
+        return Vec16cb(y0);
     }
     Vec16cb get_high() const {
-        return y1;
+        return Vec16cb(y1);
     }
     Vec32cb & insert (int index, bool a) {
         Vec32c::insert(index, -(int)a);
@@ -730,15 +747,15 @@ public:
     Vec32uc() = default;
     // Constructor to broadcast the same value into all elements:
     Vec32uc(uint32_t i) {
-        y1 = y0 = _mm_set1_epi8((char)i);
+        y1 = y0 = Vec16c((char)i);
     }
     // Constructor to build from all elements:
     Vec32uc(uint8_t i0, uint8_t i1, uint8_t i2, uint8_t i3, uint8_t i4, uint8_t i5, uint8_t i6, uint8_t i7,
         uint8_t i8, uint8_t i9, uint8_t i10, uint8_t i11, uint8_t i12, uint8_t i13, uint8_t i14, uint8_t i15,
         uint8_t i16, uint8_t i17, uint8_t i18, uint8_t i19, uint8_t i20, uint8_t i21, uint8_t i22, uint8_t i23,
         uint8_t i24, uint8_t i25, uint8_t i26, uint8_t i27, uint8_t i28, uint8_t i29, uint8_t i30, uint8_t i31) {
-        y0 = _mm_setr_epi8((int8_t)i0,  (int8_t)i1,  (int8_t)i2,  (int8_t)i3,  (int8_t)i4,  (int8_t)i5,  (int8_t)i6,  (int8_t)i7,  (int8_t)i8,  (int8_t)i9,  (int8_t)i10, (int8_t)i11, (int8_t)i12, (int8_t)i13, (int8_t)i14, (int8_t)i15);
-        y1 = _mm_setr_epi8((int8_t)i16, (int8_t)i17, (int8_t)i18, (int8_t)i19, (int8_t)i20, (int8_t)i21, (int8_t)i22, (int8_t)i23, (int8_t)i24, (int8_t)i25, (int8_t)i26, (int8_t)i27, (int8_t)i28, (int8_t)i29, (int8_t)i30, (int8_t)i31);
+        y0 = Vec16c((int8_t)i0,  (int8_t)i1,  (int8_t)i2,  (int8_t)i3,  (int8_t)i4,  (int8_t)i5,  (int8_t)i6,  (int8_t)i7,  (int8_t)i8,  (int8_t)i9,  (int8_t)i10, (int8_t)i11, (int8_t)i12, (int8_t)i13, (int8_t)i14, (int8_t)i15);
+        y1 = Vec16c((int8_t)i16, (int8_t)i17, (int8_t)i18, (int8_t)i19, (int8_t)i20, (int8_t)i21, (int8_t)i22, (int8_t)i23, (int8_t)i24, (int8_t)i25, (int8_t)i26, (int8_t)i27, (int8_t)i28, (int8_t)i29, (int8_t)i30, (int8_t)i31);
     }
     // Constructor to build from two Vec16uc:
     Vec32uc(Vec16uc const a0, Vec16uc const a1) {
@@ -755,14 +772,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec32uc & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec32uc & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to change a single element in vector
@@ -781,10 +798,10 @@ public:
     }
     // Member functions to split into two Vec16uc:
     Vec16uc get_low() const {
-        return y0;
+        return Vec16uc(y0);
     }
     Vec16uc get_high() const {
-        return y1;
+        return Vec16uc(y1);
     }
     static constexpr int elementtype() {
         return 5;
@@ -961,13 +978,13 @@ public:
     Vec16s() = default;
     // Constructor to broadcast the same value into all elements:
     Vec16s(int i) {
-        y1 = y0 = _mm_set1_epi16((int16_t)i);
+        y1 = y0 = Vec8s((int16_t)i);
     }
     // Constructor to build from all elements:
     Vec16s(int16_t i0, int16_t i1, int16_t i2,  int16_t i3,  int16_t i4,  int16_t i5,  int16_t i6,  int16_t i7,
            int16_t i8, int16_t i9, int16_t i10, int16_t i11, int16_t i12, int16_t i13, int16_t i14, int16_t i15) {
-        y0 = _mm_setr_epi16(i0, i1, i2,  i3,  i4,  i5,  i6,  i7);
-        y1 = _mm_setr_epi16(i8, i9, i10, i11, i12, i13, i14, i15);
+        y0 = Vec8s(i0, i1, i2,  i3,  i4,  i5,  i6,  i7);
+        y1 = Vec8s(i8, i9, i10, i11, i12, i13, i14, i15);
     }
     // Constructor to build from two Vec8s:
     Vec16s(Vec8s const a0, Vec8s const a1) {
@@ -984,14 +1001,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec16s & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec16s & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
@@ -1057,10 +1074,10 @@ public:
     }
     // Member functions to split into two Vec8s:
     Vec8s get_low() const {
-        return y0;
+        return Vec8s(y0);
     }
     Vec8s get_high() const {
-        return y1;
+        return Vec8s(y1);
     }
     static constexpr int size() {
         return 16;
@@ -1109,10 +1126,10 @@ public:
     }
     // Member functions to split into two Vec8s:
     Vec8sb get_low() const {
-        return y0;
+        return Vec8sb(y0);
     }
     Vec8sb get_high() const {
-        return y1;
+        return Vec8sb(y1);
     }
     Vec16sb & insert (int index, bool a) {
         Vec16s::insert(index, -(int)a);
@@ -1469,13 +1486,13 @@ public:
     Vec16us() = default;
     // Constructor to broadcast the same value into all elements:
     Vec16us(uint32_t i) {
-        y1 = y0 = _mm_set1_epi16((int16_t)i);
+        y1 = y0 = Vec8s((int16_t)i);
     }
     // Constructor to build from all elements:
     Vec16us(uint16_t i0, uint16_t i1, uint16_t i2,  uint16_t i3,  uint16_t i4,  uint16_t i5,  uint16_t i6,  uint16_t i7,
             uint16_t i8, uint16_t i9, uint16_t i10, uint16_t i11, uint16_t i12, uint16_t i13, uint16_t i14, uint16_t i15) {
-        y0 = _mm_setr_epi16((int16_t)i0, (int16_t)i1, (int16_t)i2,  (int16_t)i3,  (int16_t)i4,  (int16_t)i5,  (int16_t)i6,  (int16_t)i7);
-        y1 = _mm_setr_epi16((int16_t)i8, (int16_t)i9, (int16_t)i10, (int16_t)i11, (int16_t)i12, (int16_t)i13, (int16_t)i14, (int16_t)i15);
+        y0 = Vec8s((int16_t)i0, (int16_t)i1, (int16_t)i2,  (int16_t)i3,  (int16_t)i4,  (int16_t)i5,  (int16_t)i6,  (int16_t)i7);
+        y1 = Vec8s((int16_t)i8, (int16_t)i9, (int16_t)i10, (int16_t)i11, (int16_t)i12, (int16_t)i13, (int16_t)i14, (int16_t)i15);
     }
     // Constructor to build from two Vec8us:
     Vec16us(Vec8us const a0, Vec8us const a1) {
@@ -1492,14 +1509,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec16us & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec16us & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to change a single element in vector
@@ -1518,10 +1535,10 @@ public:
     }
     // Member functions to split into two Vec8us:
     Vec8us get_low() const {
-        return y0;
+        return Vec8us(y0);
     }
     Vec8us get_high() const {
-        return y1;
+        return Vec8us(y1);
     }
     static constexpr int elementtype() {
         return 7;
@@ -1698,12 +1715,12 @@ public:
     Vec8i() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8i(int i) {
-        y1 = y0 = _mm_set1_epi32(i);
+        y1 = y0 = Vec4i(i);
     }
     // Constructor to build from all elements:
     Vec8i(int32_t i0, int32_t i1, int32_t i2, int32_t i3, int32_t i4, int32_t i5, int32_t i6, int32_t i7) {
-        y0 = _mm_setr_epi32(i0, i1, i2, i3);
-        y1 = _mm_setr_epi32(i4, i5, i6, i7);
+        y0 = Vec4i(i0, i1, i2, i3);
+        y1 = Vec4i(i4, i5, i6, i7);
     }
     // Constructor to build from two Vec4i:
     Vec8i(Vec4i const a0, Vec4i const a1) {
@@ -1720,14 +1737,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec8i & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec8i & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
@@ -1793,10 +1810,10 @@ public:
     }
     // Member functions to split into two Vec4i:
     Vec4i get_low() const {
-        return y0;
+        return Vec4i(y0);
     }
     Vec4i get_high() const {
-        return y1;
+        return Vec4i(y1);
     }
     static constexpr int size() {
         return 8;
@@ -1843,10 +1860,10 @@ public:
     }
     // Member functions to split into two Vec4i:
     Vec4ib get_low() const {
-        return y0;
+        return Vec4ib(y0);
     }
     Vec4ib get_high() const {
-        return y1;
+        return Vec4ib(y1);
     }
     Vec8ib & insert (int index, bool a) {
         Vec8i::insert(index, -(int)a);
@@ -2206,12 +2223,12 @@ public:
     Vec8ui() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8ui(uint32_t i) {
-        y1 = y0 = _mm_set1_epi32(int32_t(i));
+        y1 = y0 = Vec4i(int32_t(i));
     }
     // Constructor to build from all elements:
     Vec8ui(uint32_t i0, uint32_t i1, uint32_t i2, uint32_t i3, uint32_t i4, uint32_t i5, uint32_t i6, uint32_t i7) {
-        y0 = _mm_setr_epi32((int32_t)i0, (int32_t)i1, (int32_t)i2, (int32_t)i3);
-        y1 = _mm_setr_epi32((int32_t)i4, (int32_t)i5, (int32_t)i6, (int32_t)i7);
+        y0 = Vec4i((int32_t)i0, (int32_t)i1, (int32_t)i2, (int32_t)i3);
+        y1 = Vec4i((int32_t)i4, (int32_t)i5, (int32_t)i6, (int32_t)i7);
     }
     // Constructor to build from two Vec4ui:
     Vec8ui(Vec4ui const a0, Vec4ui const a1) {
@@ -2228,14 +2245,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec8ui & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec8ui & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to change a single element in vector
@@ -2254,10 +2271,10 @@ public:
     }
     // Member functions to split into two Vec4ui:
     Vec4ui get_low() const {
-        return y0;
+        return Vec4ui(y0);
     }
     Vec4ui get_high() const {
-        return y1;
+        return Vec4ui(y1);
     }
     static constexpr int elementtype() {
         return 9;
@@ -2461,14 +2478,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec4q & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec4q & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Partial load. Load n elements and set the rest to 0
@@ -2534,10 +2551,10 @@ public:
     }
     // Member functions to split into two Vec2q:
     Vec2q get_low() const {
-        return y0;
+        return Vec2q(y0);
     }
     Vec2q get_high() const {
-        return y1;
+        return Vec2q(y1);
     }
     static constexpr int size() {
         return 4;
@@ -2584,10 +2601,10 @@ public:
     }
     // Member functions to split into two Vec2qb:
     Vec2qb get_low() const {
-        return y0;
+        return Vec2qb(y0);
     }
     Vec2qb get_high() const {
-        return y1;
+        return Vec2qb(y1);
     }
     Vec4qb & insert (int index, bool a) {
         Vec4q::insert(index, -(int64_t)a);
@@ -2944,14 +2961,14 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec4uq & load(void const * p) {
-        y0 = _mm_loadu_si128((__m128i const*)p);
-        y1 = _mm_loadu_si128((__m128i const*)p + 1);
+        y0 = Vec128b().load(p);
+        y1 = Vec128b().load(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to load from array, aligned by 32
     Vec4uq & load_a(void const * p) {
-        y0 = _mm_load_si128((__m128i const*)p);
-        y1 = _mm_load_si128((__m128i const*)p + 1);
+        y0 = vcl256_load_aligned_half(p);
+        y1 = vcl256_load_aligned_half(static_cast<char const*>(p) + 16);
         return *this;
     }
     // Member function to change a single element in vector
@@ -2970,10 +2987,10 @@ public:
     }
     // Member functions to split into two Vec2uq:
     Vec2uq get_low() const {
-        return y0;
+        return Vec2uq(y0);
     }
     Vec2uq get_high() const {
-        return y1;
+        return Vec2uq(y1);
     }
     static constexpr int elementtype() {
         return 11;
@@ -3125,12 +3142,14 @@ static inline Vec4uq min(Vec4uq const a, Vec4uq const b) {
 // Index -1 gives 0, index V_DC means don't care.
 template <int i0, int i1, int i2, int i3 >
 static inline Vec4q permute4(Vec4q const a) {
+    static_assert(vcl256_valid_indexes<4,i0,i1,i2,i3>(), "Index out of range in permute function");
     return Vec4q(blend2<i0,i1> (a.get_low(), a.get_high()),
                  blend2<i2,i3> (a.get_low(), a.get_high()));
 }
 
 template <int i0, int i1, int i2, int i3>
 static inline Vec4uq permute4(Vec4uq const a) {
+    static_assert(vcl256_valid_indexes<4,i0,i1,i2,i3>(), "Index out of range in permute function");
     return Vec4uq (permute4<i0,i1,i2,i3> (Vec4q(a)));
 }
 
@@ -3138,12 +3157,14 @@ static inline Vec4uq permute4(Vec4uq const a) {
 // Index -1 gives 0, index V_DC means don't care.
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7 >
 static inline Vec8i permute8(Vec8i const a) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in permute function");
     return Vec8i(blend4<i0,i1,i2,i3> (a.get_low(), a.get_high()),
                  blend4<i4,i5,i6,i7> (a.get_low(), a.get_high()));
 }
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7 >
 static inline Vec8ui permute8(Vec8ui const a) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in permute function");
     return Vec8ui (permute8<i0,i1,i2,i3,i4,i5,i6,i7> (Vec8i(a)));
 }
 
@@ -3152,6 +3173,7 @@ static inline Vec8ui permute8(Vec8ui const a) {
 template <int i0, int i1, int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16s permute16(Vec16s const a) {
+    static_assert(vcl256_valid_indexes<16,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15>(), "Index out of range in permute function");
     return Vec16s(blend8<i0,i1,i2 ,i3 ,i4 ,i5 ,i6 ,i7 > (a.get_low(), a.get_high()),
                   blend8<i8,i9,i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()));
 }
@@ -3159,6 +3181,7 @@ static inline Vec16s permute16(Vec16s const a) {
 template <int i0, int i1, int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16us permute16(Vec16us const a) {
+    static_assert(vcl256_valid_indexes<16,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15>(), "Index out of range in permute function");
     return Vec16us (permute16<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15> (Vec16s(a)));
 }
 
@@ -3167,6 +3190,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
           int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
 static inline Vec32c permute32(Vec32c const a) {
+    static_assert(vcl256_valid_indexes<32,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31>(), "Index out of range in permute function");
     return Vec32c(blend16<i0, i1, i2 ,i3 ,i4 ,i5 ,i6 ,i7, i8, i9, i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()),
                   blend16<i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31> (a.get_low(), a.get_high()));
 }
@@ -3176,6 +3200,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
           int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32uc permute32(Vec32uc const a) {
+    static_assert(vcl256_valid_indexes<32,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31>(), "Index out of range in permute function");
         return Vec32uc (permute32<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,
             i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31> (Vec32c(a)));
 }
@@ -3190,6 +3215,7 @@ template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
 // blend vectors Vec4q
 template <int i0, int i1, int i2, int i3>
 static inline Vec4q blend4(Vec4q const& a, Vec4q const& b) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3>(), "Index out of range in blend function");
     Vec2q x0 = blend_half<Vec4q, i0, i1>(a, b);
     Vec2q x1 = blend_half<Vec4q, i2, i3>(a, b);
     return Vec4q(x0, x1);
@@ -3198,6 +3224,7 @@ static inline Vec4q blend4(Vec4q const& a, Vec4q const& b) {
 // blend vectors Vec8i
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8i blend8(Vec8i const& a, Vec8i const& b) {
+    static_assert(vcl256_valid_indexes<16,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in blend function");
     Vec4i x0 = blend_half<Vec8i, i0, i1, i2, i3>(a, b);
     Vec4i x1 = blend_half<Vec8i, i4, i5, i6, i7>(a, b);
     return Vec8i(x0, x1);
@@ -3207,6 +3234,7 @@ static inline Vec8i blend8(Vec8i const& a, Vec8i const& b) {
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16s blend16(Vec16s const& a, Vec16s const& b) {
+    static_assert(vcl256_valid_indexes<32,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15>(), "Index out of range in blend function");
     Vec8s x0 = blend_half<Vec16s, i0, i1, i2, i3, i4, i5, i6, i7>(a, b);
     Vec8s x1 = blend_half<Vec16s, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     return Vec16s(x0, x1);
@@ -3217,6 +3245,7 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
     int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32c blend32(Vec32c const& a, Vec32c const& b) {
+    static_assert(vcl256_valid_indexes<64,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31>(), "Index out of range in blend function");
     Vec16c x0 = blend_half<Vec32c, i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     Vec16c x1 = blend_half<Vec32c, i16, i17, i18, i19, i20, i21, i22, i23, i24, i25, i26, i27, i28, i29, i30, i31>(a, b);
     return Vec32c(x0, x1);
@@ -3226,17 +3255,20 @@ template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 
 template <int i0, int i1, int i2, int i3>
 static inline Vec4uq blend4(Vec4uq const a, Vec4uq const b) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3>(), "Index out of range in blend function");
     return Vec4uq( blend4<i0,i1,i2,i3> (Vec4q(a),Vec4q(b)));
 }
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8ui blend8(Vec8ui const a, Vec8ui const b) {
+    static_assert(vcl256_valid_indexes<16,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in blend function");
     return Vec8ui( blend8<i0,i1,i2,i3,i4,i5,i6,i7> (Vec8i(a),Vec8i(b)));
 }
 
 template <int i0, int i1, int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16us blend16(Vec16us const a, Vec16us const b) {
+    static_assert(vcl256_valid_indexes<32,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15>(), "Index out of range in blend function");
     return Vec16us( blend16<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15> (Vec16s(a),Vec16s(b)));
 }
 
@@ -3246,6 +3278,7 @@ template <
     int i16, int i17, int i18, int i19, int i20, int i21, int i22, int i23,
     int i24, int i25, int i26, int i27, int i28, int i29, int i30, int i31 >
     static inline Vec32uc blend32(Vec32uc const a, Vec32uc const b) {
+    static_assert(vcl256_valid_indexes<64,i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31>(), "Index out of range in blend function");
         return Vec32uc (blend32<i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15,
             i16,i17,i18,i19,i20,i21,i22,i23,i24,i25,i26,i27,i28,i29,i30,i31> (Vec32c(a), Vec32c(b)));
 }
@@ -3276,33 +3309,8 @@ static inline Vec32c lookup32(Vec32c const index, Vec32c const table) {
 
 template <int n>
 static inline Vec32c lookup(Vec32uc const index, void const * table) {
-    if constexpr (n <=  0) return 0;
-    if constexpr (n <= 16) {
-        Vec16c tt = Vec16c().load(table);
-        Vec16c r0 = lookup16(index.get_low(),  tt);
-        Vec16c r1 = lookup16(index.get_high(), tt);
-        return Vec32c(r0, r1);
-    }
-    if constexpr (n <= 32) return lookup32(index, Vec32c().load(table));
-    // n > 32. Limit index
-    Vec32uc index1;
-    if constexpr (n == INT_MAX) {
-        index1 = index;
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        index1 = Vec32uc(index) & uint8_t(n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        index1 = min(Vec32uc(index), uint8_t(n-1));
-    }
-    uint8_t ii[32];  index1.store(ii);
-    int8_t  rr[32];
-    for (int j = 0; j < 32; j++) {
-        rr[j] = ((int8_t*)table)[ii[j]];
-    }
-    return Vec32c().load(rr);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec32c(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 template <int n>
@@ -3318,30 +3326,8 @@ static inline Vec16s lookup16(Vec16s const index, Vec16s const table) {
 
 template <int n>
 static inline Vec16s lookup(Vec16s const index, void const * table) {
-    if constexpr (n <=  0) return 0;
-    if constexpr (n <=  8) {
-        Vec8s table1 = Vec8s().load(table);
-        return Vec16s(
-            lookup8 (index.get_low(),  table1),
-            lookup8 (index.get_high(), table1));
-    }
-    if constexpr (n <= 16) return lookup16(index, Vec16s().load(table));
-    // n > 16. Limit index
-    Vec16us i1;
-    if constexpr (n == INT_MAX) {
-        i1 = index;
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        i1 = Vec16us(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        i1 = min(Vec16us(index), n-1);
-    }
-    int16_t const * t = (int16_t const *)table;
-    return Vec16s(t[i1[0]],t[i1[1]],t[i1[2]],t[i1[3]],t[i1[4]],t[i1[5]],t[i1[6]],t[i1[7]],
-        t[i1[8]],t[i1[9]],t[i1[10]],t[i1[11]],t[i1[12]],t[i1[13]],t[i1[14]],t[i1[15]]);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec16s(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 static inline Vec8i lookup8(Vec8i const index, Vec8i const table) {
@@ -3352,31 +3338,8 @@ static inline Vec8i lookup8(Vec8i const index, Vec8i const table) {
 
 template <int n>
 static inline Vec8i lookup(Vec8i const index, void const * table) {
-    if constexpr (n <= 0) return 0;
-    if constexpr (n <= 4) {
-        Vec4i table1 = Vec4i().load(table);
-        return Vec8i(
-            lookup4 (index.get_low(),  table1),
-            lookup4 (index.get_high(), table1));
-    }
-    if constexpr (n <= 8) {
-        return lookup8(index, Vec8i().load(table));
-    }
-    // n > 8. Limit index
-    Vec8ui i1;
-    if constexpr (n == INT_MAX) {
-        i1 = index;
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        i1 = Vec8ui(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        i1 = min(Vec8ui(index), n-1);
-    }
-    int32_t const * t = (int32_t const *)table;
-    return Vec8i(t[i1[0]],t[i1[1]],t[i1[2]],t[i1[3]],t[i1[4]],t[i1[5]],t[i1[6]],t[i1[7]]);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec8i(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 static inline Vec4q lookup4(Vec4q const index, Vec4q const table) {
@@ -3385,25 +3348,8 @@ static inline Vec4q lookup4(Vec4q const index, Vec4q const table) {
 
 template <int n>
 static inline Vec4q lookup(Vec4q const index, void const * table) {
-    if constexpr (n <= 0) return 0;
-    // n > 0. Limit index
-    Vec4uq index1;
-    if constexpr (n == INT_MAX) {
-        index1 = index;
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        index1 = Vec4uq(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1.
-        // There is no 64-bit min instruction, but we can use the 32-bit unsigned min,
-        // since n is a 32-bit integer
-        index1 = Vec4uq(min(Vec8ui(index), Vec8ui(n-1, 0, n-1, 0, n-1, 0, n-1, 0)));
-    }
-    uint32_t ii[8];  index1.store(ii);  // use only lower 32 bits of each index
-    int64_t const * tt = (int64_t const *)table;
-    return Vec4q(tt[ii[0]], tt[ii[2]], tt[ii[4]], tt[ii[6]]);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec4q(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 
@@ -3446,73 +3392,12 @@ static inline Vec32c shift_bytes_down(Vec32c const a) {
 // Load elements from array a with indices i0, i1, i2, i3, i4, i5, i6, i7
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8i gather8i(void const * a) {
-    int constexpr indexs[8] = { i0, i1, i2, i3, i4, i5, i6, i7 }; // indexes as array
-    constexpr int imin = min_index(indexs);
-    constexpr int imax = max_index(indexs);
-    static_assert(imin >= 0, "Negative index in gather function");
-
-    if constexpr (imax - imin <= 7) {
-        // load one contiguous block and permute
-        if constexpr (imax > 7) {
-            // make sure we don't read past the end of the array
-            Vec8i b = Vec8i().load((int32_t const *)a + imax-7);
-            return permute8<i0-imax+7, i1-imax+7, i2-imax+7, i3-imax+7, i4-imax+7, i5-imax+7, i6-imax+7, i7-imax+7>(b);
-        }
-        else {
-            Vec8i b = Vec8i().load((int32_t const *)a + imin);
-            return permute8<i0-imin, i1-imin, i2-imin, i3-imin, i4-imin, i5-imin, i6-imin, i7-imin>(b);
-        }
-    }
-    if constexpr ((i0<imin+8 || i0>imax-8) && (i1<imin+8 || i1>imax-8) && (i2<imin+8 || i2>imax-8) && (i3<imin+8 || i3>imax-8)
-    &&  (i4<imin+8 || i4>imax-8) && (i5<imin+8 || i5>imax-8) && (i6<imin+8 || i6>imax-8) && (i7<imin+8 || i7>imax-8)) {
-        // load two contiguous blocks and blend
-        Vec8i b = Vec8i().load((int32_t const *)a + imin);
-        Vec8i c = Vec8i().load((int32_t const *)a + imax-7);
-        const int j0 = i0<imin+8 ? i0-imin : 15-imax+i0;
-        const int j1 = i1<imin+8 ? i1-imin : 15-imax+i1;
-        const int j2 = i2<imin+8 ? i2-imin : 15-imax+i2;
-        const int j3 = i3<imin+8 ? i3-imin : 15-imax+i3;
-        const int j4 = i4<imin+8 ? i4-imin : 15-imax+i4;
-        const int j5 = i5<imin+8 ? i5-imin : 15-imax+i5;
-        const int j6 = i6<imin+8 ? i6-imin : 15-imax+i6;
-        const int j7 = i7<imin+8 ? i7-imin : 15-imax+i7;
-        return blend8<j0, j1, j2, j3, j4, j5, j6, j7>(b, c);
-    }
-    // use lookup function
-    return lookup<imax+1>(Vec8i(i0,i1,i2,i3,i4,i5,i6,i7), a);
+    return Vec8i(gather4i<i0,i1,i2,i3>(a), gather4i<i4,i5,i6,i7>(a));
 }
 
 template <int i0, int i1, int i2, int i3>
 static inline Vec4q gather4q(void const * a) {
-    int constexpr indexs[4] = { i0, i1, i2, i3 }; // indexes as array
-    constexpr int imin = min_index(indexs);
-    constexpr int imax = max_index(indexs);
-    static_assert(imin >= 0, "Negative index in gather function");
-
-    if constexpr (imax - imin <= 3) {
-        // load one contiguous block and permute
-        if constexpr (imax > 3) {
-            // make sure we don't read past the end of the array
-            Vec4q b = Vec4q().load((int64_t const *)a + imax-3);
-            return permute4<i0-imax+3, i1-imax+3, i2-imax+3, i3-imax+3>(b);
-        }
-        else {
-            Vec4q b = Vec4q().load((int64_t const *)a + imin);
-            return permute4<i0-imin, i1-imin, i2-imin, i3-imin>(b);
-        }
-    }
-    if constexpr ((i0<imin+4 || i0>imax-4) && (i1<imin+4 || i1>imax-4) && (i2<imin+4 || i2>imax-4) && (i3<imin+4 || i3>imax-4)) {
-        // load two contiguous blocks and blend
-        Vec4q b = Vec4q().load((int64_t const *)a + imin);
-        Vec4q c = Vec4q().load((int64_t const *)a + imax-3);
-        const int j0 = i0<imin+4 ? i0-imin : 7-imax+i0;
-        const int j1 = i1<imin+4 ? i1-imin : 7-imax+i1;
-        const int j2 = i2<imin+4 ? i2-imin : 7-imax+i2;
-        const int j3 = i3<imin+4 ? i3-imin : 7-imax+i3;
-        return blend4<j0, j1, j2, j3>(b, c);
-    }
-    // use lookup function
-    return lookup<imax+1>(Vec4q(i0,i1,i2,i3), a);
+    return Vec4q(gather2q<i0,i1>(a), gather2q<i2,i3>(a));
 }
 
 /*****************************************************************************
@@ -3723,41 +3608,41 @@ static inline Vec8ui compress_saturated (Vec4uq const low, Vec4uq const high) {
 
 // extend vectors to double size by adding zeroes
 static inline Vec32c extend_z(Vec16c a) {
-    return Vec32c(a, _mm_setzero_si128());
+    return Vec32c(a, Vec16c(0));
 }
 static inline Vec32uc extend_z(Vec16uc a) {
-    return Vec32uc(a, _mm_setzero_si128());
+    return Vec32uc(a, Vec16uc(0));
 }
 static inline Vec16s extend_z(Vec8s a) {
-    return Vec16s(a, _mm_setzero_si128());
+    return Vec16s(a, Vec8s(0));
 }
 static inline Vec16us extend_z(Vec8us a) {
-    return Vec16us(a, _mm_setzero_si128());
+    return Vec16us(a, Vec8us(0));
 }
 static inline Vec8i extend_z(Vec4i a) {
-    return Vec8i(a, _mm_setzero_si128());
+    return Vec8i(a, Vec4i(0));
 }
 static inline Vec8ui extend_z(Vec4ui a) {
-    return Vec8ui(a, _mm_setzero_si128());
+    return Vec8ui(a, Vec4ui(0));
 }
 static inline Vec4q extend_z(Vec2q a) {
-    return Vec4q(a, _mm_setzero_si128());
+    return Vec4q(a, Vec2q(0));
 }
 static inline Vec4uq extend_z(Vec2uq a) {
-    return Vec4uq(a, _mm_setzero_si128());
+    return Vec4uq(a, Vec2uq(0));
 } 
 
 static inline Vec32cb extend_z(Vec16cb a) {
-    return Vec32cb(a, _mm_setzero_si128());
+    return Vec32cb(a, Vec16cb(false));
 }
 static inline Vec16sb extend_z(Vec8sb a) {
-    return Vec16sb(a, _mm_setzero_si128());
+    return Vec16sb(a, Vec8sb(false));
 }
 static inline Vec8ib extend_z(Vec4ib a) {
-    return Vec8ib(a, _mm_setzero_si128());
+    return Vec8ib(a, Vec4ib(false));
 }
 static inline Vec4qb extend_z(Vec2qb a) {
-    return Vec4qb(a, _mm_setzero_si128());
+    return Vec4qb(a, Vec2qb(false));
 }
 
 

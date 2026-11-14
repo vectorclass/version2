@@ -1300,6 +1300,7 @@ static inline Vec16c & operator *= (Vec16c & a, Vec16c const b) {
 
 // vector operator << : shift left all elements
 static inline Vec16c operator << (Vec16c const a, int b) {
+    if (uint32_t(b) >= 8) return _mm_setzero_si128();
     uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;         // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));// remove bits that will overflow
     __m128i res = _mm_sll_epi16(am, _mm_cvtsi32_si128(b));// 16-bit shifts
@@ -1313,6 +1314,7 @@ static inline Vec16c & operator <<= (Vec16c & a, int b) {
 
 // vector operator >> : shift right arithmetic all elements
 static inline Vec16c operator >> (Vec16c const a, int b) {
+    if (uint32_t(b) >= 8) b = 8;
     __m128i aeven = _mm_slli_epi16(a, 8);                  // even numbered elements of a. get sign bit in position
     aeven = _mm_sra_epi16(aeven, _mm_cvtsi32_si128(b + 8));// shift arithmetic, back to position
     __m128i aodd = _mm_sra_epi16(a, _mm_cvtsi32_si128(b)); // shift odd numbered elements arithmetic
@@ -1571,10 +1573,10 @@ static inline Vec16c rotate_left(Vec16c const a, int b) {
 #ifdef __XOP__  // AMD XOP instruction set
     return (Vec16c)_mm_rot_epi8(a, _mm_set1_epi8(b));
 #else  // SSE2 instruction set
-    int8_t  mask = int8_t(0xFFu << b);                     // mask off overflow bits
+    int8_t  mask = int8_t(0xFFu << (uint32_t(b) & 7));                     // mask off overflow bits
     __m128i m = _mm_set1_epi8(mask);
     __m128i bb = _mm_cvtsi32_si128(b & 7);                 // b modulo 8
-    __m128i mbb = _mm_cvtsi32_si128((-b) & 7);             // 8-b modulo 8
+    __m128i mbb = _mm_cvtsi32_si128((uint32_t(0) - uint32_t(b)) & 7);             // 8-b modulo 8
     __m128i left = _mm_sll_epi16(a, bb);                   // a << b
     __m128i right = _mm_srl_epi16(a, mbb);                 // a >> 8-b
     left  = _mm_and_si128(m, left);                        // mask off overflow bits
@@ -1646,6 +1648,7 @@ public:
 
 // vector operator << : shift left all elements
 static inline Vec16uc operator << (Vec16uc const a, uint32_t b) {
+    if (b >= 8) return _mm_setzero_si128();
     uint32_t mask = (uint32_t)0xFF >> (uint32_t)b;               // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));  // remove bits that will overflow
     __m128i res = _mm_sll_epi16(am, _mm_cvtsi32_si128((int)b)); // 16-bit shifts
@@ -1659,6 +1662,7 @@ static inline Vec16uc operator << (Vec16uc const a, int32_t b) {
 
 // vector operator >> : shift right logical all elements
 static inline Vec16uc operator >> (Vec16uc const a, uint32_t b) {
+    if (b >= 8) return _mm_setzero_si128();
     uint32_t mask = (uint32_t)0xFF << (uint32_t)b;               // mask to remove bits that are shifted out
     __m128i am = _mm_and_si128(a, _mm_set1_epi8((char)mask));  // remove bits that will overflow
     __m128i res = _mm_srl_epi16(am, _mm_cvtsi32_si128((int)b)); // 16-bit shifts
@@ -2455,7 +2459,7 @@ static inline Vec8s rotate_left(Vec8s const a, int b) {
     return (Vec8s)_mm_rot_epi16(a, _mm_set1_epi16(b));
 #else  // SSE2 instruction set
     __m128i left  = _mm_sll_epi16(a, _mm_cvtsi32_si128(b & 0x0F));     // a << b
-    __m128i right = _mm_srl_epi16(a, _mm_cvtsi32_si128((-b) & 0x0F));  // a >> (16 - b)
+    __m128i right = _mm_srl_epi16(a, _mm_cvtsi32_si128((uint32_t(0) - uint32_t(b)) & 0x0F));  // a >> (16 - b)
     __m128i rot   = _mm_or_si128(left, right);                         // or
     return  rot;
 #endif
@@ -3422,7 +3426,7 @@ static inline Vec4i rotate_left(Vec4i const a, int b) {
     return _mm_rot_epi32(a, _mm_set1_epi32(b));
 #else  // SSE2 instruction set
     __m128i left = _mm_sll_epi32(a, _mm_cvtsi32_si128(b & 0x1F));    // a << b
-    __m128i right = _mm_srl_epi32(a, _mm_cvtsi32_si128((-b) & 0x1F));// a >> (32 - b)
+    __m128i right = _mm_srl_epi32(a, _mm_cvtsi32_si128((uint32_t(0) - uint32_t(b)) & 0x1F));// a >> (32 - b)
     __m128i rot = _mm_or_si128(left, right);                         // or
     return  rot;
 #endif
@@ -4073,10 +4077,12 @@ static inline Vec2q operator * (Vec2q const a, Vec2q const b) {
     __m128i prod = _mm_add_epi64(prodll, prodlh3);         // a0Lb0L+(a0Lb0H+a0Hb0L)<<32, a1Lb1L+(a1Lb1H+a1Hb1L)<<32
     return  prod;
 #else               // SSE2
-    int64_t aa[2], bb[2];
-    a.store(aa);                                           // split into elements
-    b.store(bb);
-    return Vec2q(aa[0] * bb[0], aa[1] * bb[1]);            // multiply elements separetely
+    // Low 64 product bits from unsigned 32-bit partial products.
+    // SSE2 has no packed qword multiply; avoid overflowing signed scalars.
+    __m128i ah = _mm_srli_epi64(a, 32);
+    __m128i bh = _mm_srli_epi64(b, 32);
+    __m128i cross = _mm_add_epi64(_mm_mul_epu32(ah, b), _mm_mul_epu32(a, bh));
+    return _mm_add_epi64(_mm_mul_epu32(a, b), _mm_slli_epi64(cross, 32));
 #endif
 }
 
@@ -4350,7 +4356,7 @@ static inline Vec2q rotate_left(Vec2q const a, int b) {
     return (Vec2q)_mm_rot_epi64(a, Vec2q(b));
 #else  // SSE2 instruction set
     __m128i left = _mm_sll_epi64(a, _mm_cvtsi32_si128(b & 0x3F));    // a << b
-    __m128i right = _mm_srl_epi64(a, _mm_cvtsi32_si128((-b) & 0x3F));// a >> (64 - b)
+    __m128i right = _mm_srl_epi64(a, _mm_cvtsi32_si128((uint32_t(0) - uint32_t(b)) & 0x3F));// a >> (64 - b)
     __m128i rot = _mm_or_si128(left, right);                         // or
     return  (Vec2q)rot;
 #endif
@@ -5544,11 +5550,12 @@ static inline Vec16c lookup32(Vec16c const index, Vec16c const table0, Vec16c co
 template <int n>
 static inline Vec16c lookup(Vec16c const index, void const * table) {
     if constexpr (n <= 0) return 0;
-    if constexpr (n <= 16) return lookup16(index, Vec16c().load(table));
-    if constexpr (n <= 32) return lookup32(index, Vec16c().load(table), Vec16c().load((int8_t*)table + 16));
+    else {
+    if constexpr (n <= 16) return lookup16(index, Vec16c().load_partial(n < 16 ? n : 16, table));
+    if constexpr (n <= 32) return lookup32(index, Vec16c().load_partial(n < 16 ? n : 16, table), Vec16c().load_partial(n - 16, (int8_t const*)table + 16));
     // n > 32. Limit index
     Vec16uc index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n == INT_MAX || n > 256) {
         index1 = index;
     }
     else if constexpr ((n & (n - 1)) == 0) {
@@ -5565,6 +5572,7 @@ static inline Vec16c lookup(Vec16c const index, void const * table) {
         rr[j] = ((int8_t*)table)[ii[j]];
     }
     return Vec16c().load(rr);
+    } // n > 0
 }
 
 static inline Vec8s lookup8(Vec8s const index, Vec8s const table) {
@@ -5586,9 +5594,9 @@ static inline Vec8s lookup16(Vec8s const index, Vec8s const table0, Vec8s const 
     Vec8s r1 = _mm_shuffle_epi8(table1, Vec16c(index * 0x202 ^ 0x1010) + Vec16c(Vec8s(0x7170)));
     return r0 | r1;
 #else
-    int16_t ii[16], tt[32], rr[16];
+    int16_t ii[8], tt[16], rr[8];
     table0.store(tt);  table1.store(tt + 8);  index.store(ii);
-    for (int j = 0; j < 16; j++) rr[j] = tt[ii[j] & 0x1F];
+    for (int j = 0; j < 8; j++) rr[j] = tt[ii[j] & 0x0F];
     return Vec8s().load(rr);
 #endif
 }
@@ -5596,11 +5604,12 @@ static inline Vec8s lookup16(Vec8s const index, Vec8s const table0, Vec8s const 
 template <int n>
 static inline Vec8s lookup(Vec8s const index, void const * table) {
     if constexpr (n <= 0) return 0;
-    if constexpr (n <= 8) return lookup8(index, Vec8s().load(table));
-    if constexpr (n <= 16) return lookup16(index, Vec8s().load(table), Vec8s().load((int16_t*)table + 8));
+    else {
+    if constexpr (n <= 8) return lookup8(index, Vec8s().load_partial(n < 8 ? n : 8, table));
+    if constexpr (n <= 16) return lookup16(index, Vec8s().load_partial(n < 8 ? n : 8, table), Vec8s().load_partial(n - 8, (int16_t const*)table + 8));
     // n > 16. Limit index
     Vec8us index1;
-    if constexpr (n == INT_MAX) {
+    if constexpr (n == INT_MAX || n > 65536) {
         index1 = index;
     }
     else if constexpr ((n & (n - 1)) == 0) {
@@ -5620,6 +5629,7 @@ static inline Vec8s lookup(Vec8s const index, void const * table) {
     return Vec8s(((int16_t*)table)[ii[0]], ((int16_t*)table)[ii[1]], ((int16_t*)table)[ii[2]], ((int16_t*)table)[ii[3]],
         ((int16_t*)table)[ii[4]], ((int16_t*)table)[ii[5]], ((int16_t*)table)[ii[6]], ((int16_t*)table)[ii[7]]);
 #endif
+    } // n > 0
 }
 
 
@@ -5685,8 +5695,9 @@ static inline Vec4i lookup16(Vec4i const index, Vec4i const table0, Vec4i const 
 template <int n>
 static inline Vec4i lookup(Vec4i const index, void const * table) {
     if constexpr (n <= 0) return 0;
-    if constexpr (n <= 4) return lookup4(index, Vec4i().load(table));
-    if constexpr (n <= 8) return lookup8(index, Vec4i().load(table), Vec4i().load((int32_t*)table + 4));
+    else {
+    if constexpr (n <= 4) return lookup4(index, Vec4i().load_partial(n < 4 ? n : 4, table));
+    if constexpr (n <= 8) return lookup8(index, Vec4i().load_partial(n < 4 ? n : 4, table), Vec4i().load_partial(n - 4, (int32_t const*)table + 4));
     // n > 8. Limit index
     Vec4ui index1;
     if constexpr (n == INT_MAX) {
@@ -5706,6 +5717,7 @@ static inline Vec4i lookup(Vec4i const index, void const * table) {
     uint32_t ii[4];  index1.store(ii);
     return Vec4i(((int32_t*)table)[ii[0]], ((int32_t*)table)[ii[1]], ((int32_t*)table)[ii[2]], ((int32_t*)table)[ii[3]]);
 #endif
+    } // n > 0
 }
 
 
@@ -5722,6 +5734,7 @@ static inline Vec2q lookup2(Vec2q const index, Vec2q const table) {
 template <int n>
 static inline Vec2q lookup(Vec2q const index, void const * table) {
     if constexpr (n <= 0) return 0;
+    else {
     // n > 0. Limit index
     Vec2uq index1;
     if constexpr (n == INT_MAX) {
@@ -5740,6 +5753,7 @@ static inline Vec2q lookup(Vec2q const index, void const * table) {
     uint32_t ii[4];  index1.store(ii);  // use only lower 32 bits of each index
     int64_t const * tt = (int64_t const *)table;
     return Vec2q(tt[ii[0]], tt[ii[2]]);
+    } // n > 0
 }
 
 
@@ -5753,7 +5767,7 @@ static inline Vec2q lookup(Vec2q const index, void const * table) {
 template <unsigned int b>
 static inline Vec16c shift_bytes_up(Vec16c const a) {
 #if INSTRSET >= 4    // SSSE3
-    if (b < 16) {
+    if constexpr (b < 16) {
         return _mm_alignr_epi8(a, _mm_setzero_si128(), 16 - b);
     }
     else {
@@ -5761,7 +5775,7 @@ static inline Vec16c shift_bytes_up(Vec16c const a) {
     }
 #else
     int8_t dat[32];
-    if (b < 16) {
+    if constexpr (b < 16) {
         Vec16c(0).store(dat);
         a.store(dat + b);
         return Vec16c().load(dat);
@@ -5774,7 +5788,7 @@ static inline Vec16c shift_bytes_up(Vec16c const a) {
 template <unsigned int b>
 static inline Vec16c shift_bytes_down(Vec16c const a) {
 #if INSTRSET >= 4    // SSSE3
-    if (b < 16) {
+    if constexpr (b < 16) {
         return _mm_alignr_epi8(_mm_setzero_si128(), a, b);
     }
     else {
@@ -5782,7 +5796,7 @@ static inline Vec16c shift_bytes_down(Vec16c const a) {
     }
 #else
     int8_t dat[32];
-    if (b < 16) {
+    if constexpr (b < 16) {
         a.store(dat);
         Vec16c(0).store(dat + 16);
         return Vec16c().load(dat + b);
@@ -5832,7 +5846,7 @@ static inline Vec4i gather4i(void const * a) {
             return permute4<i0 - imax + 3, i1 - imax + 3, i2 - imax + 3, i3 - imax + 3>(b);
         }
         else {
-            Vec4i b = Vec4i().load((int32_t const *)a + imin);
+            Vec4i b = Vec4i().load_partial(imax - imin + 1, (int32_t const *)a + imin);
             return permute4<i0 - imin, i1 - imin, i2 - imin, i3 - imin>(b);
         }
     }
@@ -5869,7 +5883,7 @@ static inline Vec2q gather2q(void const * a) {
             return permute2<i0 - imax + 1, i1 - imax + 1>(b);
         }
         else {
-            Vec2q b = Vec2q().load((int64_t const *)a + imin);
+            Vec2q b = Vec2q().load_partial(imax - imin + 1, (int64_t const *)a + imin);
             return permute2<i0 - imin, i1 - imin>(b);
         }
     }
@@ -5905,12 +5919,12 @@ static inline Vec2q gather2q(void const * a) {
 template <int i0, int i1, int i2, int i3>
 static inline void scatter(Vec4i const data, void * destination) {
 #if INSTRSET >= 10 // AVX512VL
-    __m128i indx = constant4ui<i0, i1, i2, i3>();
+    __m128i indx = constant4ui<uint32_t(i0), uint32_t(i1), uint32_t(i2), uint32_t(i3)>();
     __mmask8 mask = uint8_t((i0 >= 0) | ((i1 >= 0) << 1) | ((i2 >= 0) << 2) | ((i3 >= 0) << 3));
     _mm_mask_i32scatter_epi32((int*)destination, mask, indx, data, 4);
 
 #elif INSTRSET >= 9  //  AVX512F
-    __m512i indx = _mm512_castsi128_si512(constant4ui<i0, i1, i2, i3>());
+    __m512i indx = _mm512_castsi128_si512(constant4ui<uint32_t(i0), uint32_t(i1), uint32_t(i2), uint32_t(i3)>());
     __mmask16 mask = uint16_t((i0 >= 0) | ((i1 >= 0) << 1) | ((i2 >= 0) << 2) | ((i3 >= 0) << 3));
     _mm512_mask_i32scatter_epi32(destination, mask, indx, _mm512_castsi128_si512(data), 4);
 
@@ -6299,7 +6313,7 @@ public:
     }
     void set(int32_t d) {                                  // Set or change divisor, calculate parameters
         int32_t sh, m;
-        const int32_t d1 = ::abs(d);
+        const uint32_t d1 = d < 0 ? uint32_t(0) - uint32_t(d) : uint32_t(d);
         if (uint32_t(d) == 0x80000000u) {                  // fix overflow for this special case
             m = 0x80000001;
             sh = 30;
@@ -6359,7 +6373,7 @@ public:
             break;
         default:                                           // general case for d > 2
             L = bit_scan_reverse(d - 1) + 1;               // ceil(log2(d))
-            L2 = uint32_t(L < 32 ? 1 << L : 0);            // 2^L, overflow to 0 if L = 32
+            L2 = L < 32 ? uint32_t(1) << L : uint32_t(0);            // 2^L, overflow to 0 if L = 32
             m = 1 + uint32_t((uint64_t(L2 - d) << 32) / d);// multiplier
             sh1 = 1;  sh2 = L - 1;                         // shift counts
         }
@@ -6396,7 +6410,7 @@ public:
         sign = _mm_set1_epi32(sgn);
     }
     void set(int16_t d) {                                  // Set or change divisor, calculate parameters
-        const int32_t d1 = ::abs(d);
+        const uint32_t d1 = d < 0 ? uint32_t(0) - uint32_t(d) : uint32_t(d);
         int32_t sh, m;
         if (uint16_t(d) == 0x8000u) {                      // fix overflow for this special case
             m = 0x8001;
@@ -6621,7 +6635,7 @@ static inline Vec4i divide_by_i(Vec4i const x) {
     if constexpr (d == 1) return  x;
     if constexpr (d == -1) return -x;
     if constexpr (uint32_t(d) == 0x80000000u) return Vec4i(x == Vec4i(0x80000000)) & 1; // prevent overflow when changing sign
-    constexpr uint32_t d1 = d > 0 ? uint32_t(d) : uint32_t(-d);// compile-time abs(d). (force GCC compiler to treat d as 32 bits, not 64 bits)
+    constexpr uint32_t d1 = d > 0 ? uint32_t(d) : uint32_t(0) - uint32_t(d);// compile-time abs(d). (force GCC compiler to treat d as 32 bits, not 64 bits)
     if constexpr ((d1 & (d1 - 1)) == 0) {
         // d1 is a power of 2. use shift
         constexpr int k = bit_scan_reverse_const(d1);
@@ -6747,7 +6761,7 @@ static inline Vec8s divide_by_i(Vec8s const x) {
     if constexpr (d0 == -1) return -x;                     // divide by -1
     if constexpr (uint16_t(d0) == 0x8000u) return Vec8s(x == Vec8s(0x8000)) & 1;// prevent overflow when changing sign
     // if (d > 0x7FFF || d < -0x8000) return 0;            // not relevant when d truncated to 16 bits
-    const uint32_t d1 = d > 0 ? uint32_t(d) : uint32_t(-d);// compile-time abs(d). (force GCC compiler to treat d as 32 bits, not 64 bits)
+    const uint32_t d1 = d0 > 0 ? uint32_t(d0) : uint32_t(0) - uint32_t(d0);// compile-time abs(d). (force GCC compiler to treat d as 32 bits, not 64 bits)
     if constexpr ((d1 & (d1 - 1)) == 0) {
         // d is a power of 2. use shift
         constexpr int k = bit_scan_reverse_const(uint32_t(d1));

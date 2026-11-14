@@ -23,12 +23,13 @@
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
-#ifndef VECTORF256E_H
-#define VECTORF256E_H  1
-
 #ifndef VECTORCLASS_H
 #include "vectorclass.h"
 #endif
+
+#ifndef VECTORF256E_H
+#define VECTORF256E_H  1
+
 
 #if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
@@ -49,20 +50,28 @@ namespace VCL_NAMESPACE {
 *
 *****************************************************************************/
 
+#if VCL_BACKEND == VCL_BACKEND_NEON
+using Vcl256FloatHalf = Vec4f;
+using Vcl256DoubleHalf = Vec2d;
+#else
+using Vcl256FloatHalf = __m128;
+using Vcl256DoubleHalf = __m128d;
+#endif
+
 // base class to replace __m256 when AVX is not supported
 class Vec256fe {
 protected:
-    __m128 y0;                         // low half
-    __m128 y1;                         // high half
+    Vcl256FloatHalf y0;                         // low half
+    Vcl256FloatHalf y1;                         // high half
 public:
     Vec256fe() = default;              // default constructor
-    Vec256fe(__m128 x0, __m128 x1) {   // constructor to build from two __m128
+    Vec256fe(Vcl256FloatHalf x0, Vcl256FloatHalf x1) {   // constructor to build from two Vcl256FloatHalf
         y0 = x0;  y1 = x1;
     }
-    __m128 get_low() const {           // get low half
+    Vcl256FloatHalf get_low() const {           // get low half
         return y0;
     }
-    __m128 get_high() const {          // get high half
+    Vcl256FloatHalf get_high() const {          // get high half
         return y1;
     }
 };
@@ -71,18 +80,18 @@ public:
 class Vec256de {
 public:
     Vec256de() = default;              // default constructor
-    Vec256de(__m128d x0, __m128d x1) { // constructor to build from two __m128d
+    Vec256de(Vcl256DoubleHalf x0, Vcl256DoubleHalf x1) { // constructor to build from two Vcl256DoubleHalf
         y0 = x0;  y1 = x1;
     }
-    __m128d get_low() const {          // get low half
+    Vcl256DoubleHalf get_low() const {          // get low half
         return y0;
     }
-    __m128d get_high() const {         // get high half
+    Vcl256DoubleHalf get_high() const {         // get high half
         return y1;
     }
 protected:
-    __m128d y0;                        // low half
-    __m128d y1;                        // high half
+    Vcl256DoubleHalf y0;                        // low half
+    Vcl256DoubleHalf y1;                        // high half
 };
 
 
@@ -91,12 +100,16 @@ protected:
 *          select functions
 *
 *****************************************************************************/
+#if VCL_BACKEND == VCL_BACKEND_NEON
+inline Vec4f selectf(Vec4f mask,Vec4f a,Vec4f b) { return select(Vec4fb(Vec4ib(reinterpret_i(mask))),a,b); }
+inline Vec2d selectd(Vec2d mask,Vec2d a,Vec2d b) { return select(Vec2db(Vec2qb(reinterpret_i(mask))),a,b); }
+#endif
 // Select between two Vec256fe sources, element by element using broad boolean vector.
 // Used in various functions and operators. Corresponds to this pseudocode:
 // for (int i = 0; i < 8; i++) result[i] = s[i] ? a[i] : b[i];
 // Each element in s must be either 0 (false) or 0xFFFFFFFF (true).
 static inline Vec256fe selectf (Vec256fe const s, Vec256fe const a, Vec256fe const b) {
-    return Vec256fe(selectf(b.get_low(), a.get_low(), s.get_low()), selectf(b.get_high(), a.get_high(), s.get_high()));
+    return Vec256fe(selectf(s.get_low(), a.get_low(), b.get_low()), selectf(s.get_high(), a.get_high(), b.get_high()));
 }
 
 // Same, with two Vec256de sources.
@@ -105,7 +118,7 @@ static inline Vec256fe selectf (Vec256fe const s, Vec256fe const a, Vec256fe con
 // Each element in s must be either 0 (false) or 0xFFFFFFFFFFFFFFFF (true). No other
 // values are allowed.
 static inline Vec256de selectd (Vec256de const s, Vec256de const a, Vec256de const b) {
-    return Vec256de(selectd(b.get_low(), a.get_low(), s.get_low()), selectd(b.get_high(), a.get_high(), s.get_high()));
+    return Vec256de(selectd(s.get_low(), a.get_low(), b.get_low()), selectd(s.get_high(), a.get_high(), b.get_high()));
 }
 
 
@@ -121,12 +134,12 @@ public:
     Vec8fb() = default;
     // Constructor to build from all elements:
     Vec8fb(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7) {
-        y0 = Vec4fb(b0, b1, b2, b3);
-        y1 = Vec4fb(b4, b5, b6, b7);
+        y0 = reinterpret_f(Vec4fb(b0, b1, b2, b3));
+        y1 = reinterpret_f(Vec4fb(b4, b5, b6, b7));
     }
     // Constructor to build from two Vec4fb:
     Vec8fb(Vec4fb const a0, Vec4fb const a1) {
-        y0 = a0;  y1 = a1;
+        y0 = reinterpret_f(a0);  y1 = reinterpret_f(a1);
     }
     // Constructor to convert from type Vec256fe
     Vec8fb(Vec256fe const x) {
@@ -134,7 +147,7 @@ public:
     }
     // Constructor to broadcast scalar value:
     Vec8fb(bool b) {
-        y0 = y1 = Vec4fb(b);
+        y0 = y1 = reinterpret_f(Vec4fb(b));
     }
     // Assignment operator to convert from type Vec256fe
     Vec8fb & operator = (Vec256fe const x) {
@@ -143,42 +156,42 @@ public:
     }
     // Constructor to convert from type Vec8ib used as Boolean for integer vectors
     Vec8fb(Vec8ib const x) {
-        y0 = _mm_castsi128_ps(Vec8i(x).get_low());
-        y1 = _mm_castsi128_ps(Vec8i(x).get_high());
+        y0 = reinterpret_f(Vec8i(x).get_low());
+        y1 = reinterpret_f(Vec8i(x).get_high());
     }
     // Assignment operator to convert from type Vec8ib used as Boolean for integer vectors
     Vec8fb & operator = (Vec8ib const x) {
-        y0 = _mm_castsi128_ps(Vec8i(x).get_low());
-        y1 = _mm_castsi128_ps(Vec8i(x).get_high());
+        y0 = reinterpret_f(Vec8i(x).get_low());
+        y1 = reinterpret_f(Vec8i(x).get_high());
         return *this;
     }
     // Assignment operator to broadcast scalar value:
     Vec8fb & operator = (bool b) {
-        y0 = y1 = Vec4fb(b);
+        y0 = y1 = reinterpret_f(Vec4fb(b));
         return *this;
     }
     // Type cast operator to convert to type Vec8ib used as Boolean for integer vectors
     operator Vec8ib() const {
-        return Vec8i(_mm_castps_si128(y0), _mm_castps_si128(y1));
+        return Vec8i(Vec4i(reinterpret_i(y0)), Vec4i(reinterpret_i(y1)));
     }
 
     // Member function to change a single element in vector
     Vec8fb const insert(int index, bool value) {
         if ((uint32_t)index < 4) {
-            y0 = Vec4fb(y0).insert(index, value);
+            y0 = reinterpret_f(Vec4fb(Vec4ib(reinterpret_i(y0))).insert(index, value));
         }
         else {
-            y1 = Vec4fb(y1).insert(index-4, value);
+            y1 = reinterpret_f(Vec4fb(Vec4ib(reinterpret_i(y1))).insert(index-4, value));
         }
         return *this;
     }
     // Member function extract a single element from vector
     bool extract(int index) const {
         if ((uint32_t)index < 4) {
-            return Vec4fb(y0).extract(index);
+            return Vec4fb(Vec4ib(reinterpret_i(y0))).extract(index);
         }
         else {
-            return Vec4fb(y1).extract(index-4);
+            return Vec4fb(Vec4ib(reinterpret_i(y1))).extract(index-4);
         }
     }
     // Extract a single element. Operator [] can only read an element, not write.
@@ -187,15 +200,15 @@ public:
     }
     // Member functions to split into two Vec4fb:
     Vec4fb get_low() const {
-        return y0;
+        return Vec4fb(Vec4ib(reinterpret_i(y0)));
     }
     Vec4fb get_high() const {
-        return y1;
+        return Vec4fb(Vec4ib(reinterpret_i(y1)));
     }
     // Member function to change a bitfield to a boolean vector
     Vec8fb & load_bits(uint8_t a) {
-        y0 = Vec4fb().load_bits(a);
-        y1 = Vec4fb().load_bits(uint8_t(a>>4u));
+        y0 = reinterpret_f(Vec4fb().load_bits(a));
+        y1 = reinterpret_f(Vec4fb().load_bits(uint8_t(a>>4u)));
         return *this;
     }
     static constexpr int size() {
@@ -308,12 +321,12 @@ public:
     Vec4db() = default;
     // Constructor to build from all elements:
     Vec4db(bool b0, bool b1, bool b2, bool b3) {
-        y0 = Vec2db(b0, b1);
-        y1 = Vec2db(b2, b3);
+        y0 = reinterpret_d(Vec2db(b0, b1));
+        y1 = reinterpret_d(Vec2db(b2, b3));
     }
     // Constructor to build from two Vec2db:
     Vec4db(Vec2db const a0, Vec2db const a1) {
-        y0 = a0;  y1 = a1;
+        y0 = reinterpret_d(a0);  y1 = reinterpret_d(a1);
     }
     // Constructor to convert from type Vec256de
     Vec4db(Vec256de const x) {
@@ -321,7 +334,7 @@ public:
     }
     // Constructor to broadcast scalar value:
     Vec4db(bool b) {
-        y0 = y1 = Vec2db(b);
+        y0 = y1 = reinterpret_d(Vec2db(b));
     }
     // Assignment operator to convert from type Vec256de
     Vec4db & operator = (Vec256de const x) {
@@ -331,42 +344,42 @@ public:
 
     // Constructor to convert from type Vec4qb used as Boolean for integer vectors
     Vec4db(Vec4qb const x) {
-        y0 = _mm_castsi128_pd(Vec4q(x).get_low());
-        y1 = _mm_castsi128_pd(Vec4q(x).get_high());
+        y0 = reinterpret_d(Vec4q(x).get_low());
+        y1 = reinterpret_d(Vec4q(x).get_high());
     }
     // Assignment operator to convert from type Vec4qb used as Boolean for integer vectors
     Vec4db & operator = (Vec4qb const x) {
-        y0 = _mm_castsi128_pd(Vec4q(x).get_low());
-        y1 = _mm_castsi128_pd(Vec4q(x).get_high());
+        y0 = reinterpret_d(Vec4q(x).get_low());
+        y1 = reinterpret_d(Vec4q(x).get_high());
         return *this;
     }
     // Assignment operator to broadcast scalar value:
     Vec4db & operator = (bool b) {
-        y0 = y1 = Vec2db(b);
+        y0 = y1 = reinterpret_d(Vec2db(b));
         return *this;
     }
     // Type cast operator to convert to type Vec4qb used as Boolean for integer vectors
     operator Vec4qb() const {
-        return Vec4q(_mm_castpd_si128(y0), _mm_castpd_si128(y1));
+        return Vec4q(Vec2q(reinterpret_i(y0)), Vec2q(reinterpret_i(y1)));
     }
 
     // Member function to change a single element in vector
     Vec4db const insert(int index, bool value) {
         if ((uint32_t)index < 2) {
-            y0 = Vec2db(y0).insert(index, value);
+            y0 = reinterpret_d(Vec2db(Vec2qb(reinterpret_i(y0))).insert(index, value));
         }
         else {
-            y1 = Vec2db(y1).insert(index - 2, value);
+            y1 = reinterpret_d(Vec2db(Vec2qb(reinterpret_i(y1))).insert(index - 2, value));
         }
         return *this;
     }
     // Member function extract a single element from vector
     bool extract(int index) const {
         if ((uint32_t)index < 2) {
-            return Vec2db(y0).extract(index);
+            return Vec2db(Vec2qb(reinterpret_i(y0))).extract(index);
         }
         else {
-            return Vec2db(y1).extract(index - 2);
+            return Vec2db(Vec2qb(reinterpret_i(y1))).extract(index - 2);
         }
     }
     // Extract a single element. Operator [] can only read an element, not write.
@@ -375,15 +388,15 @@ public:
     }
     // Member functions to split into two Vec4fb:
     Vec2db get_low() const {
-        return y0;
+        return Vec2db(Vec2qb(reinterpret_i(y0)));
     }
     Vec2db get_high() const {
-        return y1;
+        return Vec2db(Vec2qb(reinterpret_i(y1)));
     }
     // Member function to change a bitfield to a boolean vector
     Vec4db & load_bits(uint8_t a) {
-        y0 = Vec2db().load_bits(a);
-        y1 = Vec2db().load_bits(uint8_t(a>>2u));
+        y0 = reinterpret_d(Vec2db().load_bits(a));
+        y1 = reinterpret_d(Vec2db().load_bits(uint8_t(a>>2u)));
         return *this;
     }
     static constexpr int size() {
@@ -495,12 +508,12 @@ public:
     Vec8f() = default;
     // Constructor to broadcast the same value into all elements:
     Vec8f(float f) {
-        y1 = y0 = _mm_set1_ps(f);
+        y1 = y0 = Vec4f(f);
     }
     // Constructor to build from all elements:
     Vec8f(float f0, float f1, float f2, float f3, float f4, float f5, float f6, float f7) {
-        y0 = _mm_setr_ps(f0, f1, f2, f3);
-        y1 = _mm_setr_ps(f4, f5, f6, f7);
+        y0 = Vec4f(f0, f1, f2, f3);
+        y1 = Vec4f(f4, f5, f6, f7);
     }
     // Constructor to build from two Vec4f:
     Vec8f(Vec4f const a0, Vec4f const a1) {
@@ -517,44 +530,44 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec8f & load(float const * p) {
-        y0 = _mm_loadu_ps(p);
-        y1 = _mm_loadu_ps(p+4);
+        y0 = Vec4f().load(p);
+        y1 = Vec4f().load(p+4);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address divisible by 32.
     Vec8f & load_a(float const * p) {
-        y0 = _mm_load_ps(p);
-        y1 = _mm_load_ps(p+4);
+        y0 = Vec4f().load_a(p);
+        y1 = Vec4f().load_a(p+4);
         return *this;
     }
     // Member function to store into array (unaligned)
     void store(float * p) const {
-        _mm_storeu_ps(p,   y0);
-        _mm_storeu_ps(p+4, y1);
+        Vec4f(y0).store(p);
+        Vec4f(y1).store(p+4);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address divisible by 32.
     void store_a(float * p) const {
-        _mm_store_ps(p,   y0);
-        _mm_store_ps(p+4, y1);
+        Vec4f(y0).store_a(p);
+        Vec4f(y1).store_a(p+4);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // Note: Will generate runtime error if p is not aligned by 32
     void store_nt(float * p) const {
-        _mm_stream_ps(p,   y0);
-        _mm_stream_ps(p+4, y1);
+        Vec4f(y0).store_nt(p);
+        Vec4f(y1).store_nt(p+4);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec8f & load_partial(int n, float const * p) {
         if (n > 0 && n <= 4) {
-            *this = Vec8f(Vec4f().load_partial(n, p),_mm_setzero_ps());
+            *this = Vec8f(Vec4f().load_partial(n, p),Vec4f(0));
         }
         else if (n > 4 && n <= 8) {
             *this = Vec8f(Vec4f().load(p), Vec4f().load_partial(n - 4, p + 4));
         }
         else {
-            y1 = y0 = _mm_setzero_ps();
+            y1 = y0 = Vec4f(0);
         }
         return *this;
     }
@@ -1088,12 +1101,12 @@ public:
     Vec4d() = default;
     // Constructor to broadcast the same value into all elements:
     Vec4d(double d) {
-        y1 = y0 = _mm_set1_pd(d);
+        y1 = y0 = Vec2d(d);
     }
     // Constructor to build from all elements:
     Vec4d(double d0, double d1, double d2, double d3) {
-        y0 = _mm_setr_pd(d0, d1);
-        y1 = _mm_setr_pd(d2, d3);
+        y0 = Vec2d(d0, d1);
+        y1 = Vec2d(d2, d3);
     }
     // Constructor to build from two Vec4f:
     Vec4d(Vec2d const a0, Vec2d const a1) {
@@ -1112,46 +1125,46 @@ public:
     }
     // Member function to load from array (unaligned)
     Vec4d & load(double const * p) {
-        y0 = _mm_loadu_pd(p);
-        y1 = _mm_loadu_pd(p+2);
+        y0 = Vec2d().load(p);
+        y1 = Vec2d().load(p+2);
         return *this;
     }
     // Member function to load from array, aligned by 32
     // You may use load_a instead of load if you are certain that p points to an address
     // divisible by 32
     Vec4d & load_a(double const * p) {
-        y0 = _mm_load_pd(p);
-        y1 = _mm_load_pd(p+2);
+        y0 = Vec2d().load_a(p);
+        y1 = Vec2d().load_a(p+2);
         return *this;
     }
     // Member function to store into array (unaligned)
     void store(double * p) const {
-        _mm_storeu_pd(p,   y0);
-        _mm_storeu_pd(p+2, y1);
+        Vec2d(y0).store(p);
+        Vec2d(y1).store(p+2);
     }
     // Member function storing into array, aligned by 32
     // You may use store_a instead of store if you are certain that p points to an address
     // divisible by 32
     void store_a(double * p) const {
-        _mm_store_pd(p,   y0);
-        _mm_store_pd(p+2, y1);
+        Vec2d(y0).store_a(p);
+        Vec2d(y1).store_a(p+2);
     }
     // Member function storing to aligned uncached memory (non-temporal store).
     // Note: Will generate runtime error if p is not aligned by 32
     void store_nt(double * p) const {
-        _mm_stream_pd(p,   y0);
-        _mm_stream_pd(p+2, y1);
+        Vec2d(y0).store_nt(p);
+        Vec2d(y1).store_nt(p+2);
     }
     // Partial load. Load n elements and set the rest to 0
     Vec4d & load_partial(int n, double const * p) {
         if (n > 0 && n <= 2) {
-            *this = Vec4d(Vec2d().load_partial(n, p), _mm_setzero_pd());
+            *this = Vec4d(Vec2d().load_partial(n, p), Vec2d(0));
         }
         else if (n > 2 && n <= 4) {
             *this = Vec4d(Vec2d().load(p), Vec2d().load_partial(n - 2, p + 2));
         }
         else {
-            y1 = y0 = _mm_setzero_pd();
+            y1 = y0 = Vec2d(0);
         }
         return *this;
     }
@@ -1534,9 +1547,7 @@ static inline Vec4i truncate_to_int32(Vec4d const a) {
 
 // function truncatei: round towards zero. (inefficient)
 static inline Vec4q truncatei(Vec4d const a) {
-    double aa[4];
-    a.store(aa);
-    return Vec4q(int64_t(aa[0]), int64_t(aa[1]), int64_t(aa[2]), int64_t(aa[3]));
+    return Vec4q(truncatei(a.get_low()), truncatei(a.get_high()));
 }
 
 // function roundi: round to nearest or even. (inefficient)
@@ -1739,10 +1750,10 @@ static inline Vec256de reinterpret_d (Vec256de const x) {
 
 // extend vectors to double size by adding zeroes
 static inline Vec8f extend_z(Vec4f a) {
-    return Vec8f(a, _mm_setzero_ps());
+    return Vec8f(a, Vec4f(0));
 }
 static inline Vec4d extend_z(Vec2d a) {
-    return Vec4d(a, _mm_setzero_pd());
+    return Vec4d(a, Vec2d(0));
 }
 
 static inline Vec8fb extend_z(Vec4fb a) {
@@ -1767,6 +1778,7 @@ static inline Vec4db extend_z(Vec2db a) {
 // permute vector Vec4d
 template <int i0, int i1, int i2, int i3>
 static inline Vec4d permute4(Vec4d const a) {
+    static_assert(vcl256_valid_indexes<4,i0,i1,i2,i3>(), "Index out of range in permute function");
     return Vec4d(blend2<i0,i1> (a.get_low(), a.get_high()),
            blend2<i2,i3> (a.get_low(), a.get_high()));
 }
@@ -1774,6 +1786,7 @@ static inline Vec4d permute4(Vec4d const a) {
 // permute vector Vec8f
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8f permute8(Vec8f const a) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in permute function");
     return Vec8f(blend4<i0,i1,i2,i3> (a.get_low(), a.get_high()),
         blend4<i4,i5,i6,i7> (a.get_low(), a.get_high()));
 }
@@ -1782,6 +1795,7 @@ static inline Vec8f permute8(Vec8f const a) {
 // blend vectors Vec4d
 template <int i0, int i1, int i2, int i3>
 static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
+    static_assert(vcl256_valid_indexes<8,i0,i1,i2,i3>(), "Index out of range in blend function");
     Vec2d x0 = blend_half<Vec4d, i0, i1>(a, b);
     Vec2d x1 = blend_half<Vec4d, i2, i3>(a, b);
     return Vec4d(x0, x1);
@@ -1790,6 +1804,7 @@ static inline Vec4d blend4(Vec4d const a, Vec4d const b) {
 // blend vectors Vec8f
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8f blend8(Vec8f const a, Vec8f const b) {
+    static_assert(vcl256_valid_indexes<16,i0,i1,i2,i3,i4,i5,i6,i7>(), "Index out of range in blend function");
     Vec4f x0 = blend_half<Vec8f, i0, i1, i2, i3>(a, b);
     Vec4f x1 = blend_half<Vec8f, i4, i5, i6, i7>(a, b);
     return Vec8f(x0, x1);
@@ -1815,31 +1830,8 @@ static inline Vec8f lookup8(Vec8i const index, Vec8f const table) {
 
 template <int n>
 static inline Vec8f lookup(Vec8i const index, float const * table) {
-    if constexpr (n <= 0) return 0;
-    if constexpr (n <= 4) {
-        Vec4f table1 = Vec4f().load(table);
-        return Vec8f(
-            lookup4 (index.get_low(),  table1),
-            lookup4 (index.get_high(), table1));
-    }
-    if constexpr (n <= 8) {
-        return lookup8(index, Vec8f().load(table));
-    }
-    // Limit index
-    Vec8ui index1;
-    if constexpr (n == INT_MAX) {
-        index1 = index;
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        index1 = Vec8ui(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        index1 = min(Vec8ui(index), n-1);
-    }
-    return Vec8f(table[index1[0]],table[index1[1]],table[index1[2]],table[index1[3]],
-    table[index1[4]],table[index1[5]],table[index1[6]],table[index1[7]]);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec8f(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 static inline Vec4d lookup4(Vec4q const index, Vec4d const table) {
@@ -1850,28 +1842,8 @@ static inline Vec4d lookup4(Vec4q const index, Vec4d const table) {
 
 template <int n>
 static inline Vec4d lookup(Vec4q const index, double const * table) {
-    if constexpr (n <= 0) return 0;
-    if constexpr (n <= 2) {
-        Vec2d table1 = Vec2d().load(table);
-        return Vec4d(
-            lookup2 (index.get_low(),  table1),
-            lookup2 (index.get_high(), table1));
-    }
-    // Limit index
-    Vec8ui index1;
-    if constexpr (n == INT_MAX) {
-        index1 = Vec8ui(index);
-    }
-    else if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        index1 = Vec8ui(index) & Vec8ui(n-1, 0, n-1, 0, n-1, 0, n-1, 0);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        index1 = min(Vec8ui(index), Vec8ui(n-1, 0, n-1, 0, n-1, 0, n-1, 0));
-    }
-    Vec4q index2 = Vec4q(index1);
-    return Vec4d(table[index2[0]],table[index2[1]],table[index2[2]],table[index2[3]]);
+    // Reuse bounded half-vector reads, including tiny tables and n<=0.
+    return Vec4d(lookup<n>(index.get_low(),table), lookup<n>(index.get_high(),table));
 }
 
 

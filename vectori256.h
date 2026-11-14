@@ -4669,6 +4669,7 @@ static inline Vec32c lookup32(Vec32c const index, Vec32c const table) {
 template <int n>
 static inline Vec32c lookup(Vec32uc const index, void const * table) {
     if constexpr (n <=  0) return 0;
+    else {
     if constexpr (n <= 16) {
         Vec16c tt = Vec16c().load(table);
         Vec16c r0 = lookup16(index.get_low(),  tt);
@@ -4699,6 +4700,7 @@ static inline Vec32c lookup(Vec32uc const index, void const * table) {
     t2 = _mm256_slli_epi32(t2 & Vec32c(mask0), 16);
     t3 = _mm256_slli_epi32(t3,         24);
     return (t0 | t3) | (t1 | t2);
+    } // n > 0
 }
 
 template <int n>
@@ -4714,6 +4716,7 @@ static inline Vec16s lookup16(Vec16s const index, Vec16s const table) {
 template <int n>
 static inline Vec16s lookup(Vec16s const index, void const * table) {
     if constexpr (n <=  0) return 0;
+    else {
     if constexpr (n <=  8) {
         Vec8s table1 = Vec8s().load(table);
         return Vec16s(
@@ -4737,6 +4740,7 @@ static inline Vec16s lookup(Vec16s const index, void const * table) {
     Vec16s t1 = _mm256_i32gather_epi32((const int *)table, __m256i(Vec8ui(index1) & 0x0000FFFF), 2);  // even positions
     Vec16s t2 = _mm256_i32gather_epi32((const int *)table, _mm256_srli_epi32(index1, 16) , 2);        // odd  positions
     return blend16<0,16,2,18,4,20,6,22,8,24,10,26,12,28,14,30>(t1, t2);
+    } // n > 0
 }
 
 static inline Vec8i lookup8(Vec8i const index, Vec8i const table) {
@@ -4746,6 +4750,7 @@ static inline Vec8i lookup8(Vec8i const index, Vec8i const table) {
 template <int n>
 static inline Vec8i lookup(Vec8i const index, void const * table) {
     if constexpr (n <= 0) return 0;
+    else {
     if constexpr (n <= 8) {
         Vec8i table1 = Vec8i().load(table);
         return lookup8(index, table1);
@@ -4772,6 +4777,7 @@ static inline Vec8i lookup(Vec8i const index, void const * table) {
         index1 = min(Vec8ui(index), n-1);
     }
     return _mm256_i32gather_epi32((const int *)table, index1, 4);
+    } // n > 0
 }
 
 static inline Vec4q lookup4(Vec4q const index, Vec4q const table) {
@@ -4781,6 +4787,7 @@ static inline Vec4q lookup4(Vec4q const index, Vec4q const table) {
 template <int n>
 static inline Vec4q lookup(Vec4q const index, int64_t const * table) {
     if constexpr (n <= 0) return 0;
+    else {
     // n > 0. Limit index
     Vec4uq index1;
     if constexpr (n == INT_MAX) {
@@ -4808,6 +4815,7 @@ static inline Vec4q lookup(Vec4q const index, int64_t const * table) {
 */
     return _mm256_i64gather_epi64((const long long *)table, index1, 8);
 //#endif
+    } // n > 0
 }
 
 

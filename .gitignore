@@ -1,0 +1,7 @@
+/port-tmp/
+/build/
+/build-*/
+/.vscode/
+/CMakeUserPresets.json
+__pycache__/
+.DS_Store

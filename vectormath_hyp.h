@@ -61,7 +61,8 @@ static inline VTYPE sinh_d(VTYPE const x0) {
     const double q3 =  1.0;
 
     // data vectors
-    VTYPE  x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x = abs(x0);
     auto x_small = x <= 1.0;                     // use Pade approximation if abs(x) <= 1
@@ -116,7 +117,8 @@ static inline VTYPE sinh_f(VTYPE const x0) {
     const float r2 = 2.03721912945E-4f;
 
     // data vectors
-    VTYPE x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x = abs(x0);
     auto x_small = x <= 1.0f;                    // use polynomial approximation if abs(x) <= 1
@@ -243,7 +245,8 @@ static inline VTYPE tanh_d(VTYPE const x0) {
     const double q3 =  1.0;
 
     // data vectors
-    VTYPE  x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x = abs(x0);
     auto x_small = x <= 0.625;                   // use Pade approximation if abs(x) <= 5/8
@@ -300,7 +303,8 @@ static inline VTYPE tanh_f(VTYPE const x0) {
     const float r4 = -5.70498872745E-3f;
 
     // data vectors
-    VTYPE x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x = abs(x0);
     auto x_small = x <= 0.625f;                  // use polynomial approximation if abs(x) <= 5/8
@@ -367,7 +371,8 @@ static inline VTYPE asinh_d(VTYPE const x0) {
     const double q4 =  1.0;
 
     // data vectors
-    VTYPE  x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x2 = x0 * x0;
     x  = abs(x0);
@@ -426,7 +431,8 @@ static inline VTYPE asinh_f(VTYPE const x0) {
     const float r3 =  2.0122003309E-2f;
 
     // data vectors
-    VTYPE  x, x2, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x2 = x0 * x0;
     x  = abs(x0);
@@ -491,7 +497,8 @@ static inline VTYPE acosh_d(VTYPE const x0) {
     const double q5 = 1.0;
 
     // data vectors
-    VTYPE  x1, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x1, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x1      = x0 - 1.0;
     auto undef   = x0 < 1.0;                     // result is NAN
@@ -549,7 +556,8 @@ static inline VTYPE acosh_f(VTYPE const x0) {
     const float r4 =  1.7596881071E-3f;
 
     // data vectors
-    VTYPE  x1, y1, y2;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x1, y1 = VTYPE(0), y2 = VTYPE(0);
 
     x1      = x0 - 1.0f;
     auto undef   = x0 < 1.0f;                    // result is NAN
@@ -614,7 +622,8 @@ static inline VTYPE atanh_d(VTYPE const x0) {
     const double q5 =  1.0;
 
     // data vectors
-    VTYPE  x, x2, y1, y2, y3;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0), y3;
 
     x  = abs(x0);
     auto x_small = x < 0.5;                      // use Pade approximation if abs(x) < 0.5
@@ -670,7 +679,8 @@ static inline VTYPE atanh_f(VTYPE const x0) {
     const float r4 = 1.81740078349E-1f;
 
     // data vectors
-    VTYPE  x, x2, y1, y2, y3;
+    // Both operands of select must be initialized, even on uniform branches.
+    VTYPE  x, x2, y1 = VTYPE(0), y2 = VTYPE(0), y3;
 
     x  = abs(x0);
     auto x_small = x < 0.5f;                     // use polynomial approximation if abs(x) < 0.5

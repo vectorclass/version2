@@ -118,16 +118,14 @@ static inline Vec4f to_float (Vec4d const a) {
 
 // float to double
 static inline Vec4d to_double (Vec4f const a) {
-    Vec2d lo = _mm_cvtps_pd(a);
-    Vec2d hi = _mm_cvtps_pd(_mm_movehl_ps(a, a));
+    Vec2d lo = extend_low(a);
+    Vec2d hi = extend_high(a);
     return Vec4d(lo,hi);
 }
 
 // double to float
 static inline Vec4f to_float (Vec4d const a) {
-    Vec4f lo = _mm_cvtpd_ps(a.get_low());
-    Vec4f hi = _mm_cvtpd_ps(a.get_high());
-    return _mm_movelh_ps(lo, hi);
+    return compress(a.get_low(), a.get_high());
 }
 
 #endif
@@ -498,7 +496,11 @@ static inline Vec8f to_float (Vec8d const a) {
 
 // double to float
 static inline Vec4f to_float (Vec2d const a) {
+#if VCL_BACKEND == VCL_BACKEND_NEON
+    return Vec4f(vcombine_f32(vcvt_f32_f64(a.native()),vdup_n_f32(0)));
+#else
     return _mm_cvtpd_ps(a);
+#endif
 }
 
 
@@ -694,7 +696,7 @@ static inline V fremainder(V const numerator, double const denominator) {
     static_assert(V::elementtype() == 16 || V::elementtype() == 17, "wrong vector type"); // supports only float and double
     if (denominator > 0.) {                                // denominator must be positive
         if constexpr (V::elementtype() == 16) {            // float
-#ifdef __FMA__
+#if defined(__FMA__) || VCL_BACKEND == VCL_BACKEND_NEON
             float recipd = float(1.0 / denominator);       // reciprocal denominator
             float fd = float(denominator);                 // denominator rounded to single precision
             float d2 = float(denominator - fd);            // remaining bits for double precision
@@ -722,7 +724,7 @@ static inline V fremainder(V const numerator, double const denominator) {
             return m;
         }
         else if constexpr (V::elementtype() == 17) {       // double precision
-#ifdef __FMA__
+#if defined(__FMA__) || VCL_BACKEND == VCL_BACKEND_NEON
             double recipd = 1.0 / denominator;             // reciprocal
             V q = round(numerator * recipd);               // divide and round
             V m = nmul_add(q, denominator, numerator);     // nmul_add has extended precision
@@ -762,7 +764,7 @@ static inline V fmodulo(V const numerator, double const denominator) {
     static_assert(V::elementtype() == 16 || V::elementtype() == 17, "wrong vector type"); // supports only float and double
     if (denominator > 0.) {                                // denominator must be positive
         if constexpr (V::elementtype() == 16) {            // float
-#ifdef __FMA__
+#if defined(__FMA__) || VCL_BACKEND == VCL_BACKEND_NEON
             float recipd = float(1.0 / denominator);       // reciprocal denominator
             float fd = float(denominator);                 // denominator rounded to single precision
             float d2 = float(denominator - fd);            // remaining bits for double precision
@@ -790,7 +792,7 @@ static inline V fmodulo(V const numerator, double const denominator) {
             return m;
         }
         else if constexpr (V::elementtype() == 17) {       // double precision
-#ifdef __FMA__
+#if defined(__FMA__) || VCL_BACKEND == VCL_BACKEND_NEON
             double recipd = 1.0 / denominator;             // reciprocal
             V q = floor(numerator * recipd);               // divide and floor
             V m = nmul_add(q, denominator, numerator);     // nmul_add has extended precision

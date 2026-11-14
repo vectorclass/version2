@@ -23,12 +23,13 @@
 * Apache License version 2.0 or later.
 *****************************************************************************/
 
-#ifndef VECTORF512E_H
-#define VECTORF512E_H
-
 #ifndef VECTORCLASS_H
 #include "vectorclass.h"
 #endif
+
+#ifndef VECTORF512E_H
+#define VECTORF512E_H
+
 
 #if VECTORCLASS_H < 20200
 #error Incompatible versions of vector class library mixed
@@ -378,6 +379,15 @@ public:
     }
     // Partial load. Load n elements and set the rest to 0
     Vec16f & load_partial(int n, float const * p) {
+#if VCL_BACKEND == VCL_BACKEND_NEON && MAX_VECTOR_SIZE >= 512
+        if (unsigned(n) <= 16) {
+            float32x4x4_t data;
+            neon_detail::partial_load_f32x4(n, p, data);
+            z0 = Vec8f(Vec4f(data.val[0]), Vec4f(data.val[1]));
+            z1 = Vec8f(Vec4f(data.val[2]), Vec4f(data.val[3]));
+            return *this;
+        }
+#endif
         if (n < 8) {
             z0 = Vec8f().load_partial(n, p);
             z1 = Vec8f(0.f);
@@ -390,6 +400,14 @@ public:
     }
     // Partial store. Store n elements
     void store_partial(int n, float * p) const {
+#if VCL_BACKEND == VCL_BACKEND_NEON && MAX_VECTOR_SIZE >= 512
+        if (unsigned(n) <= 16) {
+            const float32x4x4_t data = {{get_low().get_low().native(), get_low().get_high().native(),
+                                      get_high().get_low().native(), get_high().get_high().native()}};
+            neon_detail::partial_store_f32x4(n, p, data);
+            return;
+        }
+#endif
         if (n < 8) {
             Vec8f(z0).store_partial(n, p);
         }
@@ -1666,6 +1684,11 @@ static inline Vec8db extend_z(Vec4db a) {
 // Index -1 gives 0, index -256 means don't care.
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8d permute8(Vec8d const a) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 8) return false; }
+        return true;
+    }(), "Index out of range in permute function");
     return Vec8d(blend4<i0,i1,i2,i3> (a.get_low(), a.get_high()),
                  blend4<i4,i5,i6,i7> (a.get_low(), a.get_high()));
 }
@@ -1674,6 +1697,11 @@ static inline Vec8d permute8(Vec8d const a) {
 // Index -1 gives 0, index -256 means don't care.
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7, int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16f permute16(Vec16f const a) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 16) return false; }
+        return true;
+    }(), "Index out of range in permute function");
     return Vec16f(blend8<i0,i1,i2 ,i3 ,i4 ,i5 ,i6 ,i7 > (a.get_low(), a.get_high()),
                   blend8<i8,i9,i10,i11,i12,i13,i14,i15> (a.get_low(), a.get_high()));
 }
@@ -1688,6 +1716,11 @@ static inline Vec16f permute16(Vec16f const a) {
 // blend vectors Vec8d
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 16) return false; }
+        return true;
+    }(), "Index out of range in blend function");
     Vec4d x0 = blend_half<Vec8d, i0, i1, i2, i3>(a, b);
     Vec4d x1 = blend_half<Vec8d, i4, i5, i6, i7>(a, b);
     return Vec8d(x0, x1);
@@ -1696,6 +1729,11 @@ static inline Vec8d blend8(Vec8d const a, Vec8d const b) {
 template <int i0,  int i1,  int i2,  int i3,  int i4,  int i5,  int i6,  int i7,
           int i8,  int i9,  int i10, int i11, int i12, int i13, int i14, int i15 >
 static inline Vec16f blend16(Vec16f const a, Vec16f const b) {
+    static_assert([]() constexpr {
+        constexpr int vcl512_indexes[] = {i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15};
+        for (int i : vcl512_indexes) { if (i < 0 ? (i != -1 && i != V_DC) : i >= 32) return false; }
+        return true;
+    }(), "Index out of range in blend function");
     Vec8f x0 = blend_half<Vec16f, i0, i1, i2, i3, i4, i5, i6, i7>(a, b);
     Vec8f x1 = blend_half<Vec16f, i8, i9, i10, i11, i12, i13, i14, i15>(a, b);
     return Vec16f(x0, x1);
@@ -1723,21 +1761,7 @@ static inline Vec16f lookup16(Vec16i const index, Vec16f const table) {
 
 template <int n>
 static inline Vec16f lookup(Vec16i const index, float const * table) {
-    if constexpr (n <=  0) return 0;
-    if constexpr (n <= 16) return lookup16(index, Vec16f().load(table));
-    // n > 16. Limit index
-    Vec16ui i1;
-    if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        i1 = Vec16ui(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        i1 = min(Vec16ui(index), n-1);
-    }
-    float const * t = table;
-    return Vec16f(t[i1[0]],t[i1[1]],t[i1[2]],t[i1[3]],t[i1[4]],t[i1[5]],t[i1[6]],t[i1[7]],
-        t[i1[8]],t[i1[9]],t[i1[10]],t[i1[11]],t[i1[12]],t[i1[13]],t[i1[14]],t[i1[15]]);
+    return Vec16f(lookup<n>(index.get_low(), table), lookup<n>(index.get_high(), table));
 }
 
 static inline Vec8d lookup8(Vec8q const index, Vec8d const table) {
@@ -1750,22 +1774,7 @@ static inline Vec8d lookup8(Vec8q const index, Vec8d const table) {
 
 template <int n>
 static inline Vec8d lookup(Vec8q const index, double const * table) {
-    if constexpr (n <= 0) return 0;
-    if constexpr (n <= 8) {
-        return lookup8(index, Vec8d().load(table));
-    }
-    // n > 8. Limit index
-    Vec8uq i1;
-    if constexpr ((n & (n-1)) == 0) {
-        // n is a power of 2, make index modulo n
-        i1 = Vec8uq(index) & (n-1);
-    }
-    else {
-        // n is not a power of 2, limit to n-1
-        i1 = min(Vec8uq(index), n-1);
-    }
-    double const * t = table;
-    return Vec8d(t[i1[0]],t[i1[1]],t[i1[2]],t[i1[3]],t[i1[4]],t[i1[5]],t[i1[6]],t[i1[7]]);
+    return Vec8d(lookup<n>(index.get_low(), table), lookup<n>(index.get_high(), table));
 }
 
 /*****************************************************************************
@@ -1778,91 +1787,13 @@ static inline Vec8d lookup(Vec8q const index, double const * table) {
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7,
 int i8, int i9, int i10, int i11, int i12, int i13, int i14, int i15>
 static inline Vec16f gather16f(void const * a) {
-    int constexpr indexs[16] = { i0, i1, i2, i3, i4, i5, i6, i7, i8, i9, i10, i11, i12, i13, i14, i15 };
-    constexpr int imin = min_index(indexs);
-    constexpr int imax = max_index(indexs);
-    static_assert(imin >= 0, "Negative index in gather function");
-
-    if constexpr (imax - imin <= 15) {
-        // load one contiguous block and permute
-        if constexpr (imax > 15) {
-            // make sure we don't read past the end of the array
-            Vec16f b = Vec16f().load((float const *)a + imax-15);
-            return permute16<i0-imax+15, i1-imax+15, i2-imax+15, i3-imax+15, i4-imax+15, i5-imax+15, i6-imax+15, i7-imax+15,
-                i8-imax+15, i9-imax+15, i10-imax+15, i11-imax+15, i12-imax+15, i13-imax+15, i14-imax+15, i15-imax+15> (b);
-        }
-        else {
-            Vec16f b = Vec16f().load((float const *)a + imin);
-            return permute16<i0-imin, i1-imin, i2-imin, i3-imin, i4-imin, i5-imin, i6-imin, i7-imin,
-                i8-imin, i9-imin, i10-imin, i11-imin, i12-imin, i13-imin, i14-imin, i15-imin> (b);
-        }
-    }
-    if constexpr ((i0<imin+16  || i0>imax-16)  && (i1<imin+16  || i1>imax-16)  && (i2<imin+16  || i2>imax-16)  && (i3<imin+16  || i3>imax-16)
-    &&  (i4<imin+16  || i4>imax-16)  && (i5<imin+16  || i5>imax-16)  && (i6<imin+16  || i6>imax-16)  && (i7<imin+16  || i7>imax-16)
-    &&  (i8<imin+16  || i8>imax-16)  && (i9<imin+16  || i9>imax-16)  && (i10<imin+16 || i10>imax-16) && (i11<imin+16 || i11>imax-16)
-    &&  (i12<imin+16 || i12>imax-16) && (i13<imin+16 || i13>imax-16) && (i14<imin+16 || i14>imax-16) && (i15<imin+16 || i15>imax-16) ) {
-        // load two contiguous blocks and blend
-        Vec16f b = Vec16f().load((float const *)a + imin);
-        Vec16f c = Vec16f().load((float const *)a + imax-15);
-        const int j0  = i0 <imin+16 ? i0 -imin : 31-imax+i0;
-        const int j1  = i1 <imin+16 ? i1 -imin : 31-imax+i1;
-        const int j2  = i2 <imin+16 ? i2 -imin : 31-imax+i2;
-        const int j3  = i3 <imin+16 ? i3 -imin : 31-imax+i3;
-        const int j4  = i4 <imin+16 ? i4 -imin : 31-imax+i4;
-        const int j5  = i5 <imin+16 ? i5 -imin : 31-imax+i5;
-        const int j6  = i6 <imin+16 ? i6 -imin : 31-imax+i6;
-        const int j7  = i7 <imin+16 ? i7 -imin : 31-imax+i7;
-        const int j8  = i8 <imin+16 ? i8 -imin : 31-imax+i8;
-        const int j9  = i9 <imin+16 ? i9 -imin : 31-imax+i9;
-        const int j10 = i10<imin+16 ? i10-imin : 31-imax+i10;
-        const int j11 = i11<imin+16 ? i11-imin : 31-imax+i11;
-        const int j12 = i12<imin+16 ? i12-imin : 31-imax+i12;
-        const int j13 = i13<imin+16 ? i13-imin : 31-imax+i13;
-        const int j14 = i14<imin+16 ? i14-imin : 31-imax+i14;
-        const int j15 = i15<imin+16 ? i15-imin : 31-imax+i15;
-        return blend16<j0,j1,j2,j3,j4,j5,j6,j7,j8,j9,j10,j11,j12,j13,j14,j15>(b, c);
-    }
-    // use lookup function
-    return lookup<imax+1>(Vec16i(i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14,i15), (const float *)a);
+    return Vec16f(gather8f<i0,i1,i2,i3,i4,i5,i6,i7>(a), gather8f<i8,i9,i10,i11,i12,i13,i14,i15>(a));
 }
 
 
 template <int i0, int i1, int i2, int i3, int i4, int i5, int i6, int i7>
 static inline Vec8d gather8d(void const * a) {
-    int constexpr indexs[8] = { i0, i1, i2, i3, i4, i5, i6, i7 }; // indexes as array
-    constexpr int imin = min_index(indexs);
-    constexpr int imax = max_index(indexs);
-    static_assert(imin >= 0, "Negative index in gather function");
-
-    if constexpr (imax - imin <= 7) {
-        // load one contiguous block and permute
-        if constexpr (imax > 7) {
-            // make sure we don't read past the end of the array
-            Vec8d b = Vec8d().load((double const *)a + imax-7);
-            return permute8<i0-imax+7, i1-imax+7, i2-imax+7, i3-imax+7, i4-imax+7, i5-imax+7, i6-imax+7, i7-imax+7> (b);
-        }
-        else {
-            Vec8d b = Vec8d().load((double const *)a + imin);
-            return permute8<i0-imin, i1-imin, i2-imin, i3-imin, i4-imin, i5-imin, i6-imin, i7-imin> (b);
-        }
-    }
-    if constexpr ((i0<imin+8 || i0>imax-8) && (i1<imin+8 || i1>imax-8) && (i2<imin+8 || i2>imax-8) && (i3<imin+8 || i3>imax-8)
-    &&  (i4<imin+8 || i4>imax-8) && (i5<imin+8 || i5>imax-8) && (i6<imin+8 || i6>imax-8) && (i7<imin+8 || i7>imax-8)) {
-        // load two contiguous blocks and blend
-        Vec8d b = Vec8d().load((double const *)a + imin);
-        Vec8d c = Vec8d().load((double const *)a + imax-7);
-        const int j0 = i0<imin+8 ? i0-imin : 15-imax+i0;
-        const int j1 = i1<imin+8 ? i1-imin : 15-imax+i1;
-        const int j2 = i2<imin+8 ? i2-imin : 15-imax+i2;
-        const int j3 = i3<imin+8 ? i3-imin : 15-imax+i3;
-        const int j4 = i4<imin+8 ? i4-imin : 15-imax+i4;
-        const int j5 = i5<imin+8 ? i5-imin : 15-imax+i5;
-        const int j6 = i6<imin+8 ? i6-imin : 15-imax+i6;
-        const int j7 = i7<imin+8 ? i7-imin : 15-imax+i7;
-        return blend8<j0, j1, j2, j3, j4, j5, j6, j7>(b, c);
-    }
-    // use lookup function
-    return lookup<imax+1>(Vec8q(i0,i1,i2,i3,i4,i5,i6,i7), (const double *)a);
+    return Vec8d(gather4d<i0,i1,i2,i3>(a), gather4d<i4,i5,i6,i7>(a));
 }
 
 

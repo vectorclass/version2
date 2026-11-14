@@ -18,6 +18,18 @@ namespace VCL_NAMESPACE {
 #endif
 
 
+#if VCL_ARCH_ARM64
+// Legacy detector reports x86 machine capability, not translated SSE support.
+int instrset_detect(void) { return 0; }
+bool hasFMA3(void) { return false; }
+bool hasFMA4(void) { return false; }
+bool hasXOP(void) { return false; }
+bool hasAVX512ER(void) { return false; }
+bool hasAVX512VBMI(void) { return false; }
+bool hasAVX512VBMI2(void) { return false; }
+bool hasF16C(void) { return false; }
+bool hasAVX512FP16(void) { return false; }
+#else
 // Define interface to xgetbv instruction
 static inline uint64_t xgetbv (int ctr) {
 #if (defined (_MSC_FULL_VER) && _MSC_FULL_VER >= 160040000) || (defined (__INTEL_COMPILER) && __INTEL_COMPILER >= 1200)
@@ -180,6 +192,7 @@ bool hasAVX512ER(void) {
     return ((abcd[1] & (1 << 27)) != 0);                   // ebx bit 27 indicates AVX512ER
 }
 
+#endif // x86 detection
 #ifdef VCL_NAMESPACE
 }
 #endif
