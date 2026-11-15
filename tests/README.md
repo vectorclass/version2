@@ -8,6 +8,11 @@ expected values. No application-specific test or proprietary dependency is part
 of this suite. POSIX protected-page tests currently target macOS/Linux; other
 test toolchains remain unvalidated.
 
+For testing on an Intel Windows machine, see the
+[Windows Intel agent handoff](../docs/validation/windows-intel-handoff.md).
+Native Windows testing is the priority; the handoff describes the required
+harness work before the full suite can run there.
+
 Run from the repository root with CMake 3.20+, Python 3.9+ and Clang/GCC:
 
 ```sh

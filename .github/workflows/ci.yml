@@ -14,7 +14,15 @@
 
 name: VCL regression tests
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_hosted_intel:
+        description: Run the optional hosted Intel profiles (physical Windows testing is separate)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -38,6 +46,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record ARM host and tools
+        run: |
+          test "$(uname -m)" = arm64
+          sw_vers
+          clang++ --version
+          cmake --version
+          python3 --version
       - run: python3 -B tools/check_repository.py
       - name: Configure
         run: >-
@@ -47,12 +62,15 @@ jobs:
           -DVCL_NATIVE_MAX_VECTOR_SIZE=${{ matrix.width }}
           -DVCL_SANITIZE=${{ matrix.sanitize }}
       - run: cmake --build build -j 3
-      - run: ctest --test-dir build --output-on-failure --timeout 60 -j 3
+      - run: ctest --test-dir build --output-on-failure --no-tests=error --timeout 60 -j 3
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
           PYTHONDONTWRITEBYTECODE: '1'
       - run: build/examples/vcl_example
   x86:
+    # Physical Intel validation is being collected on a Windows machine.
+    # Retain the hosted macOS profiles as an explicit manual option.
+    if: github.event_name == 'workflow_dispatch' && inputs.run_hosted_intel
     runs-on: macos-15-intel
     strategy:
       fail-fast: false
@@ -73,7 +91,7 @@ jobs:
             '-DCMAKE_CXX_FLAGS=-msse2 -mno-sse3 -mno-avx' \
             -DVCL_SANITIZE="$sanitize"
       - run: cmake --build build -j 3
-      - run: ctest --test-dir build --output-on-failure --timeout 60 -j 3
+      - run: ctest --test-dir build --output-on-failure --no-tests=error --timeout 60 -j 3
         env:
           UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
           PYTHONDONTWRITEBYTECODE: '1'

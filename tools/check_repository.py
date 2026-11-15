@@ -23,6 +23,11 @@ ROOT = Path(__file__).resolve().parents[1]
 NATIVE = ['vcl_config.h', 'instrset_neon.h', 'instrset_helpers.h',
           'vectori128_neon.h', 'vectori128_neon_div.h', 'vectori128_neon_perm.h',
           'vectorf128_neon.h', 'vectorf128_neon_helpers.h']
+TEST_SYSTEM_HEADERS = {
+    'algorithm', 'array', 'cfenv', 'climits', 'cmath', 'cstddef', 'cstdint',
+    'cstdio', 'cstdlib', 'cstring', 'initializer_list', 'limits', 'sys/mman.h',
+    'type_traits', 'unistd.h', 'utility', 'vector',
+}
 
 
 def main():
@@ -55,7 +60,22 @@ def main():
         assert 'Licensed under the Apache License, Version 2.0' in text[:1000]
     for path in (ROOT / 'tests').iterdir():
         if path.suffix in {'.h', '.cpp', '.py'}:
-            assert not re.search(rb'#include[^\n]*(?:GfxMath|curve_input|lx_plugin|lx_sdk)', path.read_bytes()), str(path)
+            # Test includes must be public library/test files or explicitly
+            # listed standard/system headers. Inspect Python string literals
+            # used for generated compile probes too, without naming external
+            # applications/SDKs.
+            sources = [path.read_text()]
+            if path.suffix == '.py':
+                sources = [node.value for node in ast.walk(ast.parse(sources[0]))
+                           if isinstance(node, ast.Constant) and isinstance(node.value, str)]
+            for source in sources:
+                for delimiter, header in re.findall(r'#\s*include\s*([<"])([^>"\r\n]+)[>"]', source):
+                    if delimiter == '<':
+                        assert header in TEST_SYSTEM_HEADERS, (str(path), header)
+                        continue
+                    candidates = [(ROOT / header).resolve(), (ROOT / 'tests' / header).resolve()]
+                    assert any(candidate.parent in {ROOT, ROOT / 'tests'} and candidate.is_file()
+                               for candidate in candidates), (str(path), header)
     print(json.dumps({'status': 'passed', 'public_files': len(files),
                       'local_documentation_links': links,
                       'native_headers_with_complete_notices': len(NATIVE)}, indent=2))
